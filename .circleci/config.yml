@@ -1,0 +1,26 @@
+version: 2
+
+jobs:
+  build:
+    working_directory: ~/aws-lambda-graphql
+    docker:
+      - image: circleci/node:10.12.0
+        environment:
+          CI: 1
+    steps:
+      - checkout
+      - run:
+          name: Upgrade yarn to 1.13.0
+          command: sudo npm install -g yarn@1.13.0
+      - run:
+          name: Installing javascript dependencies
+          command: yarn install
+      - run:
+          name: Testing the source code
+          command: yarn test:ci
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - build
