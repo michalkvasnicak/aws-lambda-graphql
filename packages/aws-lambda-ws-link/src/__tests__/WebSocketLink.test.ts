@@ -1,7 +1,7 @@
 import ApolloClient from 'apollo-client';
 import { InMemoryCache } from 'apollo-cache-inmemory';
-import { waitForClientToConnect } from 'aws-lambda-graphql/dist/fixtures/helpers';
-import { TestLambdaServer } from 'aws-lambda-graphql/dist/fixtures/server';
+import { waitForClientToConnect } from 'aws-lambda-graphql/src/fixtures/helpers';
+import { TestLambdaServer } from 'aws-lambda-graphql/src/fixtures/server';
 import gql from 'graphql-tag';
 import WebSocket from 'ws';
 import { Client, WebSocketLink } from '../WebSocketLink';
