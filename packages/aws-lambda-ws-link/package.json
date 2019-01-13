@@ -1,10 +1,10 @@
 {
   "name": "aws-lambda-ws-link",
-  "version": "0.1.0-alpha.0",
+  "version": "0.1.0",
   "sideEffects": false,
   "dependencies": {
     "apollo-link": "1.2.6",
-    "aws-lambda-graphql": "^0.1.0-alpha.0"
+    "aws-lambda-graphql": "^0.1.0"
   },
   "files": [
     "dist"
