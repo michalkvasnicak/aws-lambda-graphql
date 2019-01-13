@@ -1,5 +1,8 @@
 # AWS Lambda GraphQL with subscriptions
 
+![CircleCI](https://img.shields.io/circleci/project/github/michalkvasnicak/aws-lambda-graphql/master.svg?style=flat-square)
+![Version](https://img.shields.io/npm/v/aws-lambda-graphql.svg?style=flat-square)
+
 _This library is not ready for production and is not really as robust as [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws)_
 
 _This library uses typescript so for now use types as documentation_
