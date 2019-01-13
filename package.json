@@ -7,7 +7,7 @@
   },
   "scripts": {
     "test": "jest",
-    "test:ci": "jest --ci",
+    "test:ci": "jest --ci --runInBand",
     "test:coverage": "jest --coverage",
     "test:watch": "jest --watch"
   },
