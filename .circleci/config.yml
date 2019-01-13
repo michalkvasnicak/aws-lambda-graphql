@@ -16,6 +16,16 @@ jobs:
           name: Installing javascript dependencies
           command: yarn install
       - run:
+          name: Build aws-lambda-graphql
+          command: |
+            cd packages/aws-lambda-graphql
+            yarn build
+      - run:
+          name: Build aws-lambda-ws-link
+          command: |
+            cd packages/aws-lambda-ws-link
+            yarn build
+      - run:
           name: Testing the source code
           command: yarn test:ci
 
