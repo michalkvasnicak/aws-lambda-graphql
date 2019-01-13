@@ -59,8 +59,6 @@ function createDynamoDBEventProcessor({
       const event: ISubscriptionEvent = DynamoDB.Converter.unmarshall(record
         .dynamodb.NewImage as any) as any;
 
-      console.log(JSON.stringify(event, null, '  '));
-
       // iterate over subscribers that listen to this event
       // and for each connection:
       //  - create a schema (so we have subscribers registered in PubSub)
@@ -73,7 +71,6 @@ function createDynamoDBEventProcessor({
       for await (const subscribers of subscriptionManager.subscribersByEventName(
         event.event,
       )) {
-        console.log(JSON.stringify(subscribers, null, '  '));
         const promises = subscribers
           .map(async subscriber => {
             // create PubSub for this subscriber
@@ -101,8 +98,6 @@ function createDynamoDBEventProcessor({
             const result: IteratorResult<
               ExecutionResult
             > = await iterator.next();
-
-            console.log(JSON.stringify(result, null, '  '));
 
             if (result.value != null) {
               return connectionManager.sendToConnection(
