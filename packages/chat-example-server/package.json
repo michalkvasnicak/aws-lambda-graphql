@@ -1,0 +1,24 @@
+{
+  "name": "serverless-chat-example-server",
+  "private": true,
+  "version": "0.0.0",
+  "dependencies": {
+    "aws-lambda-graphql": "0.0.0",
+    "graphql": "14.0.2",
+    "graphql-tools": "4.0.3",
+    "ulid": "^2.3.0"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "8.10.17",
+    "@types/node": "8.10.39",
+    "@zeit/ncc": "0.8.1",
+    "typescript": "3.2.2"
+  },
+  "scripts": {
+    "build": "ncc build src/index.ts -o dist",
+    "predeploy": "yarn run build",
+    "deploy": "aws cloudformation package --template-file cloudformation.yml --s3-bucket brosoft-chat-app --output-template-file dist/template.yml && aws cloudformation deploy --template-file dist/template.yml --stack-name example-chat-server --capabilities CAPABILITY_IAM",
+    "prestart": "yarn run build",
+    "start": "node dist/index.js"
+  }
+}

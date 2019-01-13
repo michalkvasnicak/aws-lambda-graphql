@@ -1,0 +1,19 @@
+{
+  "private": true,
+  "devDependencies": {
+    "@types/jest": "23.3.10",
+    "jest": "23.6.0",
+    "lerna": "^3.10.5"
+  },
+  "scripts": {
+    "test": "jest",
+    "test:ci": "jest --ci",
+    "test:coverage": "jest --coverage",
+    "test:watch": "jest --watch"
+  },
+  "workspaces": {
+    "packages": [
+      "packages/*"
+    ]
+  }
+}

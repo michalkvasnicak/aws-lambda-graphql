@@ -1,0 +1,130 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Chat example server
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  ConnectionsDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      # see DynamoDBConnectionManager
+      TableName: Connections
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        # connection id
+        - AttributeName: id
+          KeyType: HASH
+
+  SubscriptionsDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      # see DynamoDBSubscriptionManager
+      TableName: Subscriptions
+      AttributeDefinitions:
+        - AttributeName: event
+          AttributeType: S
+        - AttributeName: subscriptionId
+          AttributeType: S
+      BillingMode: PAY_PER_REQUEST
+      KeySchema:
+        - AttributeName: event
+          KeyType: HASH
+        - AttributeName: subscriptionId
+          KeyType: RANGE
+
+  EventsDynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      # see DynamoDBEventStore
+      TableName: Events
+      KeySchema:
+        - AttributeName: id
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+      # see ISubscriptionEvent
+      AttributeDefinitions:
+        - AttributeName: id
+          AttributeType: S
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+
+  ServerFunction:
+    # server handler function
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./dist
+      FunctionName: chat-example-server
+      Handler: index.handler
+      MemorySize: 512
+      Runtime: nodejs8.10
+      Tags:
+        Project: serverless-chat-example
+      Timeout: 6
+
+      Policies:
+        - AWSLambdaExecute # Managed Policy
+        - Version: '2012-10-17' # Policy Document
+          Statement:
+            # AWS Api Gateway manager permission (we need this to be able to send events to clients)
+            - Effect: Allow
+              Action:
+                - execute-api:ManageConnections
+              Resource: 'arn:aws:execute-api:*:*:*/development/POST/@connections/*'
+            - Effect: Allow
+              Action:
+                - dynamodb:DeleteItem
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+              Resource: !GetAtt ConnectionsDynamoDBTable.Arn
+            - Effect: Allow
+              Action:
+                - dynamodb:DescribeStream
+                - dynamodb:GetRecords
+                - dynamodb:GetShardIterator
+                - dynamodb:ListStreams
+              Resource: !GetAtt EventsDynamoDBTable.StreamArn
+            - Effect: Allow
+              Action:
+                - dynamodb:PutItem
+              Resource: !GetAtt EventsDynamoDBTable.Arn
+            - Effect: Allow
+              Action:
+                - dynamodb:BatchWriteItem
+                - dynamodb:DeleteItem
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+                - dynamodb:Query
+              Resource: !GetAtt SubscriptionsDynamoDBTable.Arn
+
+      # attach event sources
+      Events:
+        HTTPEndpoint:
+          Type: Api
+          Properties:
+            Path: /
+            Method: POST
+        DynamoDBEventStream:
+          Type: DynamoDB
+          Properties:
+            Stream: !GetAtt EventsDynamoDBTable.StreamArn
+            StartingPosition: LATEST
+            BatchSize: 100
+
+Outputs:
+  ConnectionsTableARN:
+    Description: 'DynamoDB connections table ARN'
+    Value: !GetAtt ConnectionsDynamoDBTable.Arn
+  EventsTableARN:
+    Description: 'DynamoDB events table ARN'
+    Value: !GetAtt EventsDynamoDBTable.Arn
+  EventsTableStreamARN:
+    Description: 'DynamoDB events table ARN'
+    Value: !GetAtt EventsDynamoDBTable.StreamArn
+  SubscriptionsTableARN:
+    Description: 'DynamoDB subscriptions table ARN'
+    Value: !GetAtt SubscriptionsDynamoDBTable.Arn
+  ServerFunctionARN:
+    Description: 'Server function ARN'
+    Value: !GetAtt ServerFunction.Arn

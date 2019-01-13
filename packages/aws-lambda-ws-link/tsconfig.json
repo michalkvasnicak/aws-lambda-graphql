@@ -1,0 +1,18 @@
+{
+  "compilerOptions": {
+    "allowSyntheticDefaultImports": true,
+    "baseUrl": ".",
+    "declaration": true,
+    "esModuleInterop": true,
+    "lib": ["es2017", "esnext.asynciterable"],
+    "target": "es2017",
+    "paths": {
+      "aws-lambda-graphql": ["../aws-lambda-graphql"]
+    },
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "dist"
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "**/__tests__/**"]
+}

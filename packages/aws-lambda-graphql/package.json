@@ -1,0 +1,64 @@
+{
+  "name": "aws-lambda-graphql",
+  "version": "0.0.0",
+  "main": "dist/index.js",
+  "typings": "dist/index.d.ts",
+  "sideEffects": false,
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@types/aws-lambda": "8.10.17",
+    "@types/backo2": "1.0.0",
+    "backo2": "1.0.2",
+    "content-type": "^1.0.4",
+    "eventemitter3": "^3.1.0",
+    "iterall": "^1.2.2",
+    "ulid": "^2.3.0",
+    "xstate": "^4.2.3"
+  },
+  "peerDependencies": {
+    "aws-sdk": "^2.387.0",
+    "apollo-link": "^1.2.6",
+    "graphql": "^14.0.2",
+    "graphql-subscriptions": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=8"
+  },
+  "engineStrict": true,
+  "devDependencies": {
+    "@types/aws-sdk": "2.7.0",
+    "@types/content-type": "^1.1.2",
+    "@types/graphql": "14.0.3",
+    "@types/jest": "23.3.10",
+    "@types/node": "8.10.39",
+    "@types/websocket": "^0.0.40",
+    "apollo-link": "^1.2.6",
+    "aws-sdk": "2.387.0",
+    "graphql": "^14.0.2",
+    "graphql-subscriptions": "^1.0.0",
+    "graphql-tag": "^2.10.0",
+    "graphql-tools": "^4.0.3",
+    "jest": "23.6.0",
+    "mock-socket": "^8.0.5",
+    "prettier": "1.15.3",
+    "rimraf": "2.6.2",
+    "tslint": "5.12.0",
+    "tslint-config-airbnb": "5.11.1",
+    "tslint-config-prettier": "1.17.0",
+    "tslint-plugin-prettier": "2.0.1",
+    "ts-jest": "23.10.5",
+    "typescript": "3.2.2",
+    "wait-for-expect": "1.1.0"
+  },
+  "scripts": {
+    "prebuild": "rimraf dist",
+    "build": "tsc -p .",
+    "lint": "tslint -p .",
+    "test": "jest",
+    "test:ci": "jest --ci",
+    "test:coverage": "jest --coverage",
+    "test:watch": "jest --watch"
+  }
+}

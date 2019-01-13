@@ -1,0 +1,93 @@
+@startuml
+
+title How it works
+
+actor Client
+boundary "AWS API Gateway V2" as AWSAGWS
+participant "GraphQL server" as GQL
+database Storage
+
+== connect ==
+Client -> AWSAGWS: connect
+activate AWSAGWS
+
+AWSAGWS -> GQL: send event with $connect routeKey serveWebSocket handler
+activate GQL
+GQL -> Storage: register connection (connectionId)
+activate Storage
+Storage --> GQL: success
+deactivate Storage
+' GQL --> AWSAGWS: send GQL_CONNECTED message
+deactivate GQL
+
+AWSAGWS --> Client: send GQL_CONNECTED message
+deactivate AWSAGWS
+
+== operation (subscription) ==
+Client -> AWSAGWS: send GQL_OP message (id, operationName, query, variables)
+activate AWSAGWS
+
+AWSAGWS -> GQL: send event with $default routeKey to serveWebSocket handler
+activate GQL
+
+' hydrate connection
+GQL --> Storage: get registered connection by connectionId
+activate Storage
+Storage --> GQL: registered connection
+deactivate Storage
+
+' register subscriptions
+GQL -> Storage: register subscription
+activate Storage
+Storage -> GQL: subscription registered
+deactivate Storage
+
+GQL --> AWSAGWS: send GQL_OP_SUBSCRIBED (id)
+deactivate GQL
+
+AWSAGWS --> Client: send GQL_OP_SUBSCRIBED (id)
+
+== operation (query/mutation) ==
+Client -> AWSAGWS: send GQL_OP message (id, operationName, query, variables)
+activate AWSAGWS
+
+AWSAGWS -> GQL: send event with $default routeKey to serveWebSocket handler
+activate GQL
+
+' hydrate connection
+GQL -> Storage: get registered connection by connectionId
+activate Storage
+
+Storage --> GQL: registered connection
+deactivate Storage
+
+group Publish events 
+GQL -> Storage: write events
+Storage --> GQL: success
+end
+
+GQL --> AWSAGWS: send GQL_OP_RESULT (id, result)
+deactivate GQL
+AWSAGWS --> Client: send GQL_OP_RESULT (id, result)
+deactivate AWSAGWS
+
+group Process and send events to subscriptions
+Storage -> GQL: Send events to event processor handler
+activate GQL
+GQL -> Storage: For each event load all subscriptions that are listening to it
+activate Storage
+Storage --> GQL: Subscriptions
+deactivate Storage
+GQL -> AWSAGWS: Send GQL_OP_RESULT (id, result) to all relevant subscriptions
+deactivate GQL
+AWSAGWS -> Client: Send GQL_OP_RESULT ...
+end
+
+== disconnect ==
+Client -> AWSAGWS: disconnect
+deactivate AWSAGWS
+AWSAGWS -> GQL: send event with $disconnect routeKey to serveWebSocket handler
+GQL -> Storage: unregister connection (connectionId)
+Storage --> GQL: success
+
+@enduml
