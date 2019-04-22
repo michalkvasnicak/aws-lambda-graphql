@@ -4,6 +4,8 @@
 
 Install `serverless` package system-wide via:
 
+(Make sure you have serverless v1.38 or later)
+
 ```bash
 npm install -g serverless
 ```
