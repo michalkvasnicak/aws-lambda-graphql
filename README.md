@@ -144,7 +144,7 @@ const client = new ApolloClient({
 - [Chat App](./packages/chat-example-app) - React app
 - [Chat Server](./packages/chat-example-server)
   - contains AWS Lambda that handles HTTP, WebSocket and DynamoDB streams
-  - also contains example cloudformation template you can use to deploy your solution
+  - also includes serverless.yaml file for easy deployment
 
 ## Contributing
 
