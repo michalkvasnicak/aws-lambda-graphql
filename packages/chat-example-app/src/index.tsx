@@ -7,8 +7,10 @@ import { render } from 'react-dom';
 import { ApolloProvider } from 'react-apollo';
 import { Box, MessageInput, Messages } from './components';
 
+const LAMBDA_WEBSOCKET = `wss://kwno10mgz7.execute-api.eu-north-1.amazonaws.com/dev`
+
 const wsClient = new Client({
-  uri: `wss://iz6r1n6jn8.execute-api.eu-central-1.amazonaws.com/development`,
+  uri: LAMBDA_WEBSOCKET,
 });
 const link = new WebSocketLink(wsClient);
 

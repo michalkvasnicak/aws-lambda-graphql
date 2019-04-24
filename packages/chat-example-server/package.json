@@ -17,7 +17,7 @@
   "scripts": {
     "build": "ncc build src/index.ts -o dist",
     "predeploy": "yarn run build",
-    "deploy": "aws cloudformation package --template-file cloudformation.yml --s3-bucket brosoft-chat-app --output-template-file dist/template.yml && aws cloudformation deploy --template-file dist/template.yml --stack-name example-chat-server --capabilities CAPABILITY_IAM",
+    "deploy": "sls deploy",
     "prestart": "yarn run build",
     "start": "node dist/index.js"
   }
