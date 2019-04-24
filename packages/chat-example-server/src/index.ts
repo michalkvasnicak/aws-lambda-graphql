@@ -1,12 +1,12 @@
-import { APIGatewayEvent, DynamoDBStreamEvent } from 'aws-lambda';
+import { APIGatewayEvent, SNSEvent } from 'aws-lambda';
 import {
   APIGatewayWebSocketEvent,
-  createDynamoDBEventProcessor,
+  createSNSEventProcessor,
   createHttpHandler,
   createWsHandler,
-  DynamoDBConnectionManager,
-  DynamoDBEventStore,
-  DynamoDBSubscriptionManager,
+  MemoryConnectionManager,
+  MemoryEventStore,
+  MemorySubscriptionManager,
   PubSub,
   withFilter,
 } from 'aws-lambda-graphql';
@@ -14,7 +14,7 @@ import * as assert from 'assert';
 import { makeExecutableSchema } from 'graphql-tools';
 import { ulid } from 'ulid';
 
-const eventStore = new DynamoDBEventStore();
+const eventStore = new MemoryEventStore();
 const pubSub = new PubSub({ eventStore });
 
 type MessageType = 'greeting' | 'test';
@@ -92,10 +92,10 @@ const schema = makeExecutableSchema({
   },
 });
 
-const connectionManager = new DynamoDBConnectionManager();
-const subscriptionManager = new DynamoDBSubscriptionManager();
+const connectionManager = new MemoryConnectionManager();
+const subscriptionManager = new MemorySubscriptionManager();
 
-const eventProcessor = createDynamoDBEventProcessor({
+const eventProcessor = createSNSEventProcessor({
   connectionManager,
   schema,
   subscriptionManager,
@@ -111,25 +111,30 @@ const httpHandler = createHttpHandler({
 });
 
 export async function handler(
-  event: APIGatewayEvent | APIGatewayWebSocketEvent | DynamoDBStreamEvent,
+  event: APIGatewayEvent | APIGatewayWebSocketEvent | SNSEvent,
   context,
 ) {
-  console.log('received event', JSON.stringify(event, null, '  '));
+  console.log('▶️ received event', JSON.stringify(event, null, '  '));
   // detect event type
-  if ((event as DynamoDBStreamEvent).Records != null) {
+  if ((event as SNSEvent).Records != null) {
     // event is DynamoDB stream event
-    return eventProcessor(event as DynamoDBStreamEvent, context, null as any);
+    console.log('🚁 SNS Event')
+    return eventProcessor(event as SNSEvent, context, null);
   } else if (
     (event as APIGatewayWebSocketEvent).requestContext != null &&
     (event as APIGatewayWebSocketEvent).requestContext.routeKey != null
   ) {
     // event is web socket event from api gateway v2
+    console.log('🏎 Websocket Event')
+
     return wsHandler(event as APIGatewayWebSocketEvent, context);
   } else if (
     (event as APIGatewayEvent).requestContext != null &&
     (event as APIGatewayEvent).requestContext.path != null
   ) {
     // event is http event from api gateway v1
+    console.log('☎️ HTTP Event')
+
     return httpHandler(event as APIGatewayEvent, context, null as any);
   } else {
     throw new Error('Invalid event');

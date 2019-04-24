@@ -3,8 +3,15 @@ service: graphql-server-demo # NOTE: update this with your service name
 provider:
   name: aws
   runtime: nodejs8.10
+  region: eu-north-1
+  deploymentBucket: 
+    name: deployment-bucket-stockholm
 
   iamRoleStatements:
+    - Effect: "Allow"
+      Resource: "*"
+      Action:
+        - "sns:*"
     - Effect: Allow
       Action:
         - execute-api:ManageConnections
@@ -39,6 +46,7 @@ functions:
   mainHandler:
     handler: dist/index.handler
     events:
+      - sns: newevent
       - websocket: 
          route: $connect
       - websocket: 
