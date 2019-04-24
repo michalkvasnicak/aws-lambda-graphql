@@ -19,7 +19,7 @@ type Mutation {
 `;
 
 function createSchema({
-  pubSub = new PubSub({ eventStore: {} as any }),
+  pubSub = new PubSub({ eventStore: {} as any, topic: 'test' }),
 }: { pubSub?: PubSub } = {}) {
   return makeExecutableSchema({
     typeDefs,

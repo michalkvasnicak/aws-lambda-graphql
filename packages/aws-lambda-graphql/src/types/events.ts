@@ -1,5 +1,5 @@
 import { ISubscriptionEvent } from './subscriptions';
 
 export interface IEventStore {
-  publish(event: ISubscriptionEvent): Promise<any>;
+  publish(event: ISubscriptionEvent, topic: string): Promise<any>;
 }

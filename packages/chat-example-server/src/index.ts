@@ -15,8 +15,11 @@ import { makeExecutableSchema } from 'graphql-tools';
 import { ulid } from 'ulid';
 
 const eventStore = new MemoryEventStore();
-const pubSub = new PubSub({ eventStore });
 
+const pubSub = new PubSub({
+  eventStore,
+  topic: process.env.snsArn,
+});
 type MessageType = 'greeting' | 'test';
 
 type Message = {
@@ -45,7 +48,6 @@ const schema = makeExecutableSchema({
 
     type Mutation {
       sendMessage(text: String!, type: MessageType = greeting): Message!
-      
     }
 
     type Query {
@@ -118,14 +120,14 @@ export async function handler(
   // detect event type
   if ((event as SNSEvent).Records != null) {
     // event is DynamoDB stream event
-    console.log('🚁 SNS Event')
+    console.log('🚁 SNS Event');
     return eventProcessor(event as SNSEvent, context, null);
   } else if (
     (event as APIGatewayWebSocketEvent).requestContext != null &&
     (event as APIGatewayWebSocketEvent).requestContext.routeKey != null
   ) {
     // event is web socket event from api gateway v2
-    console.log('🏎 Websocket Event')
+    console.log('🏎 Websocket Event');
 
     return wsHandler(event as APIGatewayWebSocketEvent, context);
   } else if (
@@ -133,7 +135,7 @@ export async function handler(
     (event as APIGatewayEvent).requestContext.path != null
   ) {
     // event is http event from api gateway v1
-    console.log('☎️ HTTP Event')
+    console.log('☎️ HTTP Event');
 
     return httpHandler(event as APIGatewayEvent, context, null as any);
   } else {

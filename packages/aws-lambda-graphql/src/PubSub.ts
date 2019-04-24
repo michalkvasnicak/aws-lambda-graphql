@@ -2,13 +2,16 @@ import { IEventStore, OperationRequest, SubcribeResolveFn } from './types';
 
 type Options = {
   eventStore: IEventStore;
+  topic: string;
 };
 
 class PubSub {
   private eventStore: IEventStore;
+  private topic: string;
 
-  constructor({ eventStore }: Options) {
+  constructor({ eventStore, topic }: Options) {
     this.eventStore = eventStore;
+    this.topic = topic;
   }
 
   subscribe = (eventNames: string | string[]): SubcribeResolveFn => {
@@ -44,10 +47,13 @@ class PubSub {
    * So you should not expect to fire in same process
    */
   publish = async (eventName: string, payload: any) => {
-    await this.eventStore.publish({
-      payload,
-      event: eventName,
-    });
+    await this.eventStore.publish(
+      {
+        payload,
+        event: eventName,
+      },
+      this.topic,
+    );
   };
 }
 

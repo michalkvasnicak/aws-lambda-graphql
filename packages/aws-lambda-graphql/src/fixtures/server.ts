@@ -24,7 +24,7 @@ class TestLambdaServer {
     this.port = port;
 
     const schema = createSchema({
-      pubSub: new PubSub({ eventStore: this.eventStore }),
+      pubSub: new PubSub({ eventStore: this.eventStore, topic: 'test' }),
     });
 
     this.connectionManager = new WebSocketConnectionManager();

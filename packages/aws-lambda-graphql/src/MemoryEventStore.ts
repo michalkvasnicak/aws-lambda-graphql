@@ -9,10 +9,10 @@ class MemoryEventStore implements IEventStore {
     this.sns = new SNS();
   }
 
-  publish = async (event: ISubscriptionEvent): Promise<void> => {
+  publish = async (event: ISubscriptionEvent, topic): Promise<void> => {
     var params = {
       Message: JSON.stringify(event) /* required */,
-      TopicArn: 'arn:aws:sns:eu-north-1:149962407454:newevent',
+      TopicArn: topic,
     };
     console.log('🌟 pushing SNS:', params);
     try {

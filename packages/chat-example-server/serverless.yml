@@ -6,7 +6,8 @@ provider:
   region: eu-north-1
   deploymentBucket: 
     name: deployment-bucket-stockholm
-
+  environment:
+    snsArn: { "Fn::Join" : ["", ["arn:aws:sns:${self:custom.region}:", { "Ref" : "AWS::AccountId" }, ":${self:custom.eventDispatchTopic}" ] ]  }
   iamRoleStatements:
     - Effect: "Allow"
       Resource: "*"
@@ -17,11 +18,17 @@ provider:
         - execute-api:ManageConnections
       Resource: 'arn:aws:execute-api:*:*:*/development/POST/@connections/*'
 
+
+custom:
+  stage: ${opt:stage, self:provider.stage}
+  region: ${opt:region, self:provider.region}
+  eventDispatchTopic: "${self:service}-event-dispatch-${self:custom.stage}"
+
 functions:
   mainHandler:
     handler: dist/index.handler
     events:
-      - sns: newevent
+      - sns: ${self:custom.eventDispatchTopic}
       - websocket: 
          route: $connect
       - websocket: 
