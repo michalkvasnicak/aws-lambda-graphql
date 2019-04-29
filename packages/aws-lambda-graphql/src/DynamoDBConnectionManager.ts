@@ -1,6 +1,9 @@
-import { ApiGatewayManagementApi, DynamoDB } from 'aws-sdk';
+import AWS from 'aws-sdk';
 import { ExtendableError } from './errors';
 import { IConnection, IConnectEvent, IConnectionManager } from './types';
+
+const ensureApiGatewayManagementApi = require('aws-apigatewaymanagementapi')
+ensureApiGatewayManagementApi(AWS)
 
 export class ConnectionNotFoundError extends ExtendableError {}
 
@@ -10,11 +13,11 @@ type Options = {
 
 class DynamoDBConnectionManager implements IConnectionManager {
   private connectionsTable: string;
-  private db: DynamoDB.DocumentClient;
+  private db: AWS.DynamoDB.DocumentClient;
 
   constructor({ connectionsTable = 'Connections' }: Options = {}) {
     this.connectionsTable = connectionsTable;
-    this.db = new DynamoDB.DocumentClient();
+    this.db = new AWS.DynamoDB.DocumentClient();
   }
 
   hydrateConnection = async (connectionId: string): Promise<IConnection> => {
@@ -63,7 +66,7 @@ class DynamoDBConnectionManager implements IConnectionManager {
       data: { endpoint },
       id,
     } = connection;
-    const managementApi = new ApiGatewayManagementApi({
+    const managementApi = new AWS.ApiGatewayManagementApi({
       endpoint,
       apiVersion: '2018-11-29',
     });

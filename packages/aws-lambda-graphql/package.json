@@ -10,6 +10,7 @@
   "dependencies": {
     "@types/aws-lambda": "8.10.17",
     "@types/backo2": "1.0.0",
+    "aws-apigatewaymanagementapi": "^0.1.0",
     "backo2": "1.0.2",
     "content-type": "^1.0.4",
     "eventemitter3": "^3.1.0",

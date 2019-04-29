@@ -1,6 +1,10 @@
-import { ApiGatewayManagementApi } from 'aws-sdk';
+// import AWS from 'aws-sdk';
 import { ExtendableError } from './errors';
 import { IConnection, IConnectEvent, IConnectionManager } from './types';
+const AWS = require('aws-sdk');
+
+const ensureApiGatewayManagementApi = require('aws-apigatewaymanagementapi')
+ensureApiGatewayManagementApi(AWS)
 
 export class ConnectionNotFoundError extends ExtendableError {}
 
@@ -52,7 +56,7 @@ class MemoryConnectionManager implements IConnectionManager {
       data: { endpoint },
       id,
     } = connection;
-    const managementApi = new ApiGatewayManagementApi({
+    const managementApi = new AWS.ApiGatewayManagementApi({
       endpoint,
       apiVersion: '2018-11-29',
     });
@@ -73,7 +77,7 @@ class MemoryConnectionManager implements IConnectionManager {
   };
 
   unregisterConnection = async (connection: IConnection): Promise<void> => {
-    delete this.db[this.connectionsTable+connection.id]
+    delete this.db[this.connectionsTable + connection.id];
 
     // @todo delete all subscriptions too
   };
