@@ -27,7 +27,41 @@ custom:
 functions:
   mainHandler:
     handler: dist/index.handler
+    environment:
+      APIG_UID: !Ref "ApiGatewayRestApi"
+      WSS_UID: !Ref "WebsocketsApi"
+      APIG_URL:
+        !Join
+          - ''
+          - - 'https://'
+            - !Ref ApiGatewayRestApi
+            - '.execute-api.'
+            - ${opt:region, self:provider.region}
+            - '.amazonaws.com/'
+            - ${opt:stage, self:provider.stage}
+      WSS_URL:
+        !Join
+          - ''
+          - - 'wss://'
+            - !Ref WebsocketsApi
+            - '.execute-api.'
+            - ${opt:region, self:provider.region}
+            - '.amazonaws.com/'
+            - ${opt:stage, self:provider.stage}
     events:
+      - http:
+          path: /graphql
+          method: ANY
+          cors: true 
+          headers: 
+            - Content-Type
+            - X-Amz-Date
+            - Authorization
+            - X-Api-Key
+            - X-Amz-Security-Token
+            - X-Amz-User-Agent
+            - X-Apollo-Tracing
+            - test
       - sns: ${self:custom.eventDispatchTopic}
       - websocket: 
          route: $connect
