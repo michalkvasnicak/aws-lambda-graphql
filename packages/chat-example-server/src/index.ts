@@ -14,6 +14,16 @@ import * as assert from 'assert';
 import { makeExecutableSchema } from 'graphql-tools';
 import { ulid } from 'ulid';
 
+import {
+  GraphQLSchema,
+  GraphQLObjectType,
+  GraphQLString,
+  GraphQLBoolean,
+  GraphQLNonNull,
+  GraphQLFloat,
+  GraphQLID,
+} from 'graphql';
+
 const eventStore = new MemoryEventStore();
 
 const pubSub = new PubSub({
@@ -33,66 +43,88 @@ type SendMessageArgs = {
   type: MessageType;
 };
 
-const schema = makeExecutableSchema({
-  typeDefs: /* GraphQL */ `
-    enum MessageType {
-      greeting
-      test
-    }
-
-    type Message {
-      id: ID!
-      text: String!
-      type: MessageType!
-    }
-
-    type Mutation {
-      sendMessage(text: String!, type: MessageType = greeting): Message!
-    }
-
-    type Query {
-      serverTime: Float!
-    }
-
-    type Subscription {
-      messageFeed(type: MessageType): Message!
-    }
-  `,
-  resolvers: {
-    Mutation: {
-      async sendMessage(rootValue: any, { text, type }: SendMessageArgs) {
-        assert.ok(text.length > 0 && text.length < 100);
-        const payload: Message = { id: ulid(), text, type };
-
-        await pubSub.publish('NEW_MESSAGE', payload);
-
-        return payload;
-      },
-    },
-    Query: {
-      serverTime: () => Date.now(),
-    },
-    Subscription: {
-      messageFeed: {
-        resolve: (rootValue: Message) => {
-          // root value is the payload from sendMessage mutation
-          return rootValue;
-        },
-        subscribe: withFilter(
-          pubSub.subscribe('NEW_MESSAGE'),
-          (rootValue: Message, args: { type: null | MessageType }) => {
-            // this can be async too :)
-            if (args.type == null) {
-              return true;
-            }
-
-            return args.type === rootValue.type;
+export default function createSchemas() {
+  const schema = new GraphQLSchema({
+    query: new GraphQLObjectType({
+      name: 'Query',
+      fields: {
+        serverTime: {
+          type: GraphQLFloat,
+          resolve() {
+            return Date.now();
           },
-        ),
+        },
       },
-    },
-  },
-});
+    }),
+    mutation: new GraphQLObjectType({
+      name: 'Mutation',
+      fields: {
+        sendMessage: {
+          type: new GraphQLObjectType({
+            name: 'sendMessageMutation',
+            fields: {
+              text: {
+                type: GraphQLString,
+              },
+              id: {
+                type: GraphQLID,
+              },
+              type: {
+                type: GraphQLString,
+              },
+            },
+          }),
+          args: {
+            text: {
+              type: GraphQLString,
+            },
+            type: {
+              type: GraphQLString,
+            },
+          },
+          description: 'Send a new message to all',
+          async resolve(_, { text, type }) {
+            console.log('{ text, type }', { text, type });
+            const payload = { id: String(Math.random() * 1000), text, type };
+
+            console.log('send new message!', payload);
+
+            await pubSub.publish('NEW_MESSAGE', payload);
+
+            return payload; // { success: true };
+          },
+        },
+      },
+    }),
+    subscription: new GraphQLObjectType({
+      name: 'Subscription',
+      fields: {
+        messageFeed: {
+          type: new GraphQLObjectType({
+            name: 'newMessage',
+            fields: {
+              text: {
+                type: GraphQLString,
+              },
+              id: {
+                type: GraphQLID,
+              },
+              type: {
+                type: GraphQLString,
+              },
+            },
+          }),
+          resolve: a => a,
+          subscribe: pubSub.subscribe('NEW_MESSAGE'),
+        },
+      },
+    }),
+  });
+
+  return schema;
+}
+
+const schema = createSchemas();;
 
 const connectionManager = new MemoryConnectionManager();
 const subscriptionManager = new MemorySubscriptionManager();
@@ -110,6 +142,7 @@ const wsHandler = createWsHandler({
 const httpHandler = createHttpHandler({
   connectionManager,
   schema,
+  WSS_URL: process.env.WSS_URL
 });
 
 export async function handler(
