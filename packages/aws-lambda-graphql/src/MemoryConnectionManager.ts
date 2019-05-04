@@ -1,10 +1,9 @@
 // import AWS from 'aws-sdk';
 import { ExtendableError } from './errors';
 import { IConnection, IConnectEvent, IConnectionManager } from './types';
+import { addApiGatewayManagementApi } from './addAGMA';
 const AWS = require('aws-sdk');
-
-const ensureApiGatewayManagementApi = require('aws-apigatewaymanagementapi')
-ensureApiGatewayManagementApi(AWS)
+addApiGatewayManagementApi(AWS);
 
 export class ConnectionNotFoundError extends ExtendableError {}
 
