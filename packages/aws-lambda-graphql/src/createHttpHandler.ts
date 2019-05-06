@@ -119,7 +119,7 @@ function createHttpHandler({
   
   </html>`;
 
-  return async function serveHttp(event) {
+  return async function serveHttp(event, context) {
     try {
       const operation = parseGraphQLParams(event);
       console.log('operation', operation);
@@ -139,6 +139,7 @@ function createHttpHandler({
         const result = await execute({
           connectionManager,
           operation,
+          context,
           schema,
           connection: {} as any,
           pubSub: {} as any,
