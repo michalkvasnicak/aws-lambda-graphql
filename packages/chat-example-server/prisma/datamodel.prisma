@@ -14,3 +14,9 @@ type Post {
   content: String
   author: User!
 }
+
+type Message {
+  id: String
+  text: String
+  type: String
+}

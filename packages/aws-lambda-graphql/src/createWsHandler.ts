@@ -28,7 +28,7 @@ function createWsHandler({
   schema,
   subscriptionManager,
 }: Options): APIGatewayV2Handler {
-  return async function serveWebSocket(event) {
+  return async function serveWebSocket(event, context) {
     try {
       // based on routeKey, do actions
       switch (event.requestContext.routeKey) {
@@ -83,6 +83,7 @@ function createWsHandler({
             connection,
             connectionManager,
             operation,
+            context,
             schema,
             subscriptionManager,
             pubSub: new PubSub(),

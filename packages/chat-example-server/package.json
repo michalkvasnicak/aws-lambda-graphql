@@ -6,15 +6,17 @@
     "aws-lambda-graphql": "^0.1.0",
     "graphql": "14.0.2",
     "graphql-tools": "4.0.3",
-    "ulid": "^2.3.0",
+    "graphql-yoga": "^1.17.4",
     "nexus": "0.11.7",
     "nexus-prisma": "0.3.7",
-    "prisma-client-lib": "1.32.2"
+    "prisma-client-lib": "1.32.2",
+    "ulid": "^2.3.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "8.10.17",
     "@types/node": "8.10.39",
     "@zeit/ncc": "0.8.1",
+    "graphqlgen": "0.5.1",
     "typescript": "3.2.2"
   },
   "scripts": {

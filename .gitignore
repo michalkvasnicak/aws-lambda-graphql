@@ -2,3 +2,4 @@ node_modules
 dist
 *.log
 .netlify
+packages/chat-example-server/src/generated/*

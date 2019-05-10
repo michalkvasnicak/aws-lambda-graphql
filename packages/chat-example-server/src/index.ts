@@ -30,6 +30,109 @@ import * as path from 'path'
 import datamodelInfo from './generated/nexus-prisma'
 import { prisma } from './generated/prisma-client'
 
+// const User = prismaObjectType({
+//   name: 'User',
+//   definition(t) {
+//     t.prismaFields(['*'])
+//   },
+// })
+
+// const Post = prismaObjectType({
+//   name: 'Post',
+//   definition(t) {
+//     t.prismaFields(['*'])
+//   },
+// })
+
+// const Query = prismaObjectType({
+//   name: 'Query',
+//   definition(t) {
+//     t.prismaFields(['*'])
+//     // t.field('serverTime', {
+//     //   type: 'Time',
+//     //   resolve() {
+//     //     return {now: new Date()};
+//     //   },
+//     // })
+//   },
+// })
+// const Mutation = prismaObjectType({
+//   name: 'Mutation',
+//   definition(t) {
+//     t.prismaFields(['*'])
+//   },
+// })
+
+
+// export const Query = queryType({
+//   definition(t) {
+//     t.field('me', {
+//       type: 'User',
+//       resolve: (parent, args, ctx) => {
+//         const userId = getUserId(ctx)
+//         return ctx.prisma.user({ id: userId })
+//       },
+//     })
+
+//     t.list.field('feed', {
+//       type: 'Post',
+//       resolve: (parent, args, ctx) => {
+//         return ctx.prisma.posts({
+//           where: { published: true },
+//         })
+//       },
+//     })
+
+//     t.list.field('filterPosts', {
+//       type: 'Post',
+//       args: {
+//         searchString: stringArg({ nullable: true }),
+//       },
+//       resolve: (parent, { searchString }, ctx) => {
+//         return ctx.prisma.posts({
+//           where: {
+//             OR: [
+//               { title_contains: searchString },
+//               { content_contains: searchString },
+//             ],
+//           },
+//         })
+//       },
+//     })
+
+//     t.field('post', {
+//       type: 'Post',
+//       nullable: true,
+//       args: { id: idArg() },
+//       resolve: (parent, { id }, ctx) => {
+//         return ctx.prisma.post({ id })
+//       },
+//     })
+//   },
+// })
+
+
+
+// const serverQueries = new GraphQLObjectType({
+//   name: 'Query',
+//   fields: {
+//     serverTime: {
+//       type: GraphQLFloat,
+//       resolve() {
+//         return Date.now();
+//       },
+//     },
+//   },
+// })
+
+// const Subscription = prismaObjectType({
+//   name: 'Subscription',
+//   definition(t) {
+//     t.prismaFields(['*'])
+//   },
+// })
+
+
 const User = prismaObjectType({
   name: 'User',
   definition(t) {
@@ -57,9 +160,17 @@ const Query = queryType({
     t.list.field('feed', {
       type: 'Post',
       resolve: (parent, args, ctx) => {
-        return ctx.prisma.posts({
-          where: { published: true },
-        })
+        return [
+            {
+              "title": "Carlos1"
+            },
+            {
+              "title": "Carlos2"
+            }
+          ]
+        // return ctx.prisma.posts({
+        //   where: { published: true },
+        // })
       },
     })
 
@@ -80,14 +191,14 @@ const Query = queryType({
       },
     })
 
-    t.field('post', {
-      type: 'Post',
-      nullable: true,
-      args: { id: idArg() },
-      resolve: (parent, { id }, ctx) => {
-        return ctx.prisma.post({ id })
-      },
-    })
+    // t.field('post', {
+    //   type: 'Post',
+    //   nullable: true,
+    //   args: { id: idArg() },
+    //   resolve: (parent, { id }, ctx) => {
+    //     return ctx.prisma.post({ id })
+    //   },
+    // })
   },
 })
 
@@ -132,7 +243,7 @@ const Mutation = prismaObjectType({
       args: {
         id: idArg(),
       },
-      resolve: (parent, { id }, ctx) => {
+      resolve: (parent, { where : { id } }, ctx) => {
         return ctx.prisma.deletePost({ id })
       },
     })
@@ -152,6 +263,7 @@ const Mutation = prismaObjectType({
     })
   },
 })
+
 
 const schema = makePrismaSchema({
   // Provide all the GraphQL types we've implemented
@@ -324,7 +436,7 @@ export async function handler(
   ) {
     // event is web socket event from api gateway v2
     console.log('🏎 Websocket Event');
-
+    context.prisma = prisma
     return wsHandler(event as APIGatewayWebSocketEvent, context);
   } else if (
     (event as APIGatewayEvent).requestContext != null &&
