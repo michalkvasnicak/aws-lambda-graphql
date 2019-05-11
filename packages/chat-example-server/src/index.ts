@@ -13,6 +13,7 @@ import {
 import * as assert from 'assert';
 import { makeExecutableSchema } from 'graphql-tools';
 import { ulid } from 'ulid';
+import { mergeSchemas } from './mergeSchemas';
 
 import {
   GraphQLSchema,
@@ -24,11 +25,18 @@ import {
   GraphQLID,
 } from 'graphql';
 
-import { idArg, queryType, stringArg } from 'nexus'
-import { makePrismaSchema, prismaObjectType } from 'nexus-prisma'
-import * as path from 'path'
-import datamodelInfo from './generated/nexus-prisma'
-import { prisma } from './generated/prisma-client'
+import { idArg, queryType, stringArg } from 'nexus';
+import { makePrismaSchema, prismaObjectType } from 'nexus-prisma';
+import * as path from 'path';
+import datamodelInfo from './generated/nexus-prisma';
+import { prisma } from './generated/prisma-client';
+
+const eventStore = new MemoryEventStore();
+
+const pubSub = new PubSub({
+  eventStore,
+  topic: process.env.snsArn,
+});
 
 // const User = prismaObjectType({
 //   name: 'User',
@@ -62,7 +70,6 @@ import { prisma } from './generated/prisma-client'
 //     t.prismaFields(['*'])
 //   },
 // })
-
 
 // export const Query = queryType({
 //   definition(t) {
@@ -111,8 +118,6 @@ import { prisma } from './generated/prisma-client'
 //   },
 // })
 
-
-
 // const serverQueries = new GraphQLObjectType({
 //   name: 'Query',
 //   fields: {
@@ -132,7 +137,6 @@ import { prisma } from './generated/prisma-client'
 //   },
 // })
 
-
 const User = prismaObjectType({
   name: 'User',
   definition(t) {
@@ -142,37 +146,37 @@ const User = prismaObjectType({
       'email',
       {
         name: 'posts',
-        args: [], // remove the arguments from the `posts` field of the `User` type in the Prisma schema
+        args: [],
       },
-    ])
+    ]);
   },
-})
+});
 
 const Post = prismaObjectType({
   name: 'Post',
   definition(t) {
-    t.prismaFields(['*'])
+    t.prismaFields(['*']);
   },
-})
+});
 
 const Query = queryType({
   definition(t) {
     t.list.field('feed', {
       type: 'Post',
       resolve: (parent, args, ctx) => {
-        return [
-            {
-              "title": "Carlos1"
-            },
-            {
-              "title": "Carlos2"
-            }
-          ]
-        // return ctx.prisma.posts({
-        //   where: { published: true },
-        // })
+        // return [
+        //   {
+        //     title: 'Carlos1',
+        //   },
+        //   {
+        //     title: 'Carlos2',
+        //   },
+        // ];
+        return ctx.prisma.posts({
+          where: { published: true },
+        });
       },
-    })
+    });
 
     t.list.field('filterPosts', {
       type: 'Post',
@@ -187,20 +191,20 @@ const Query = queryType({
               { content_contains: searchString },
             ],
           },
-        })
+        });
       },
-    })
+    });
 
-    // t.field('post', {
-    //   type: 'Post',
-    //   nullable: true,
-    //   args: { id: idArg() },
-    //   resolve: (parent, { id }, ctx) => {
-    //     return ctx.prisma.post({ id })
-    //   },
-    // })
+    t.field('post', {
+      type: 'Post',
+      nullable: true,
+      args: { id: idArg() },
+      resolve: (parent, { id }, ctx) => {
+        return ctx.prisma.post({ id });
+      },
+    });
   },
-})
+});
 
 const Mutation = prismaObjectType({
   name: 'Mutation',
@@ -215,9 +219,9 @@ const Mutation = prismaObjectType({
         return ctx.prisma.createUser({
           name,
           email,
-        })
+        });
       },
-    })
+    });
 
     t.field('createDraft', {
       type: 'Post',
@@ -233,9 +237,9 @@ const Mutation = prismaObjectType({
           author: {
             connect: { email: authorEmail },
           },
-        })
+        });
       },
-    })
+    });
 
     t.field('deletePost', {
       type: 'Post',
@@ -243,10 +247,10 @@ const Mutation = prismaObjectType({
       args: {
         id: idArg(),
       },
-      resolve: (parent, { where : { id } }, ctx) => {
-        return ctx.prisma.deletePost({ id })
+      resolve: (parent, { id }, ctx) => {
+        return ctx.prisma.deletePost({ id });
       },
-    })
+    });
 
     t.field('publish', {
       type: 'Post',
@@ -258,14 +262,123 @@ const Mutation = prismaObjectType({
         return ctx.prisma.updatePost({
           where: { id },
           data: { published: true },
-        })
+        });
       },
-    })
+    });
+
+    t.field('sendMessage', {
+      type: 'Message',
+      nullable: true,
+      args: {
+        text: stringArg(),
+        type: stringArg(),
+      },
+      resolve: async (parent, { text, type }, ctx) => {
+        const payload = { id: String(Math.random() * 1000), text, type };
+        console.log('send new message!', payload);
+        await pubSub.publish('NEW_MESSAGE', payload);
+        return { id: String(Math.random() * 1000), text, type };
+      },
+    });
   },
-})
+});
 
+type Message = {
+  id: string;
+  text: string;
+  type: MessageType;
+};
 
-const schema = makePrismaSchema({
+const customSchema = new GraphQLSchema({
+  query: new GraphQLObjectType({
+    name: 'RootQueryType',
+    fields: {
+      health: {
+        type: GraphQLString,
+        resolve() {
+          return 'OK';
+        },
+      },
+    },
+  }),
+  subscription: new GraphQLObjectType({
+    name: 'RootSubscriptionType',
+    fields: {
+      currencyExchangeRateChange: {
+        type: GraphQLString,
+        resolve(payload) {
+          return {
+            currency: payload.baseCurrency,
+            targetCurrency: payload.targetCurrency,
+            rate: payload.price,
+            updatedAt: new Date(),
+          };
+        },
+        subscribe(_0, _1, { app }) {
+          return app.GraphQL.gqlPubsub.asyncIterator(['PRICE_CHANGED']);
+        },
+      },
+      messageFeed: {
+        type: new GraphQLObjectType({
+          name: 'Message2',
+          fields: {
+            text: {
+              type: GraphQLString,
+            },
+            id: {
+              type: GraphQLID,
+            },
+            type: {
+              type: GraphQLString,
+            },
+          },
+        }),
+        resolve: a => a,
+        subscribe: pubSub.subscribe('NEW_MESSAGE'),
+      },
+    },
+  }),
+});
+
+// const Subscription = new GraphQLObjectType({
+//   name: 'Subscription',
+//   fields: {
+//     messageFeed: {
+//       type: new GraphQLObjectType({
+//         name: 'Message',
+//         fields: {
+//           text: {
+//             type: GraphQLString,
+//           },
+//           id: {
+//             type: GraphQLID,
+//           },
+//           type: {
+//             type: GraphQLString,
+//           },
+//         },
+//       }),
+//       resolve: a => a,
+//       subscribe: pubSub.subscribe('NEW_MESSAGE'),
+//     },
+//   },
+// });
+
+// const Subscription = prismaObjectType({
+//   name: 'Subscription',
+//   definition(t) {
+//     t.field('messageFeed', {
+//       type: 'Message',
+//       resolve: async (root, args, ctx) => {
+//         return pubSub.subscribe('NEW_MESSAGE');
+//       },
+//       // subscribe: () => {
+//       // },
+//     });
+//   },
+// });
+
+const prismaSchema = makePrismaSchema({
   // Provide all the GraphQL types we've implemented
   types: [Query, Mutation, User, Post],
 
@@ -297,21 +410,19 @@ const schema = makePrismaSchema({
     ],
     contextType: 'types.Context',
   },
-})
-
-const eventStore = new MemoryEventStore();
-
-const pubSub = new PubSub({
-  eventStore,
-  topic: process.env.snsArn,
 });
+
+const schema = mergeSchemas({
+  schemas: [prismaSchema, customSchema],
+});
+
 type MessageType = 'greeting' | 'test';
 
-type Message = {
-  id: string;
-  text: string;
-  type: MessageType;
-};
+// type Message = {
+//   id: string;
+//   text: string;
+//   type: MessageType;
+// };
 
 type SendMessageArgs = {
   text: string;
@@ -417,7 +528,7 @@ const wsHandler = createWsHandler({
 const httpHandler = createHttpHandler({
   connectionManager,
   schema,
-  WSS_URL: process.env.WSS_URL
+  WSS_URL: process.env.WSS_URL,
 });
 
 export async function handler(
@@ -436,7 +547,7 @@ export async function handler(
   ) {
     // event is web socket event from api gateway v2
     console.log('🏎 Websocket Event');
-    context.prisma = prisma
+    context.prisma = prisma;
     return wsHandler(event as APIGatewayWebSocketEvent, context);
   } else if (
     (event as APIGatewayEvent).requestContext != null &&
@@ -444,7 +555,7 @@ export async function handler(
   ) {
     // event is http event from api gateway v1
     console.log('☎️ HTTP Event');
-    context.prisma = prisma
+    context.prisma = prisma;
     return httpHandler(event as APIGatewayEvent, context, null as any);
   } else {
     throw new Error('Invalid event');

@@ -21,3 +21,4 @@ output: ./src/generated/graphqlgen.ts
 resolver-scaffolding:
   output: ./src/generated/tmp-resolvers/
   layout: file-per-type
+

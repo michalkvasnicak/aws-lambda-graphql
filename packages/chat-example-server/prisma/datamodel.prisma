@@ -16,7 +16,7 @@ type Post {
 }
 
 type Message {
-  id: String
+  id: ID! @id
   text: String
   type: String
 }
