@@ -4,9 +4,17 @@
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "sideEffects": false,
+  "keywords": [
+    "aws",
+    "lambda",
+    "apollo",
+    "graphql",
+    "subscriptions"
+  ],
   "files": [
     "dist"
   ],
+  "description": "GraphQL server and client implementation for AWS Lambda with WebSocket support (API Gateway v1 + v2)",
   "dependencies": {
     "@types/aws-lambda": "8.10.17",
     "@types/backo2": "1.0.0",
