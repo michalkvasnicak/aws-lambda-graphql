@@ -1,5 +1,10 @@
 import { APIGatewayProxyResult, Context as AWSLambdaContext } from 'aws-lambda';
-import { ExecutionResult, GraphQLSchema } from 'graphql';
+import {
+  ExecutionResult,
+  GraphQLSchema,
+  ValidationContext,
+  ASTVisitor,
+} from 'graphql';
 import { PubSub } from 'graphql-subscriptions';
 import { isAsyncIterable } from 'iterall';
 import { ulid } from 'ulid';
@@ -21,12 +26,18 @@ type Options = {
   connectionManager: IConnectionManager;
   schema: GraphQLSchema;
   subscriptionManager: ISubscriptionManager;
+  /**
+   * An optional array of validation rules that will be applied on the document
+   * in additional to those defined by the GraphQL spec.
+   */
+  validationRules?: ((context: ValidationContext) => ASTVisitor)[];
 };
 
 function createWsHandler({
   connectionManager,
   schema,
   subscriptionManager,
+  validationRules,
 }: Options): APIGatewayV2Handler {
   return async function serveWebSocket(event) {
     try {
@@ -88,6 +99,7 @@ function createWsHandler({
             subscriptionManager,
             pubSub: new PubSub(),
             useSubscriptions: true,
+            validationRules,
           });
 
           // if result is async iterator, then it means that subscriptions was registered

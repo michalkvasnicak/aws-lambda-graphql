@@ -106,6 +106,7 @@ const wsHandler = createWsHandler({
   connectionManager,
   schema,
   subscriptionManager,
+  // validationRules
 });
 
 // use these handlers from your lambda and map them to
