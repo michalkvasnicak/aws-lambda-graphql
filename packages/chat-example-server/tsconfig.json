@@ -2,8 +2,9 @@
   "compilerOptions": {
     "rootDir": "src",
     "lib": ["esnext"],
-    "target": "es2015",
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "outDir": "dist",
+    "target": "es2015"
   },
   "include": ["src"],
   "exclude": ["node_modules"]

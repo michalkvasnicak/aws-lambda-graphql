@@ -91,23 +91,29 @@ function createWsHandler({
           });
 
           // if result is async iterator, then it means that subscriptions was registered
-          if (isAsyncIterable(result)) {
-            return {
-              body: formatMessage({
+          const response = isAsyncIterable(result)
+            ? formatMessage({
                 id: operation.operationId,
                 payload: {},
                 type: 'GQL_SUBSCRIBED',
-              }),
-              statusCode: 200,
-            };
-          }
+              })
+            : formatMessage({
+                id: operation.operationId,
+                payload: result as ExecutionResult,
+                type: 'GQL_OP_RESULT',
+              });
 
+          // send response to client so it can finish operation in case of query or mutation
+          await connectionManager.sendToConnection(connection, response);
+
+          // this is just to make sure
+          // when you deploy this using serverless cli
+          // then integration response is not assigned to $default route
+          // so this won't make any difference
+          // but the sendToConnection above will send the response to client
+          // so client'll receive the response for his operation
           return {
-            body: formatMessage({
-              id: operation.operationId,
-              payload: result as ExecutionResult,
-              type: 'GQL_OP_RESULT',
-            }),
+            body: response,
             statusCode: 200,
           };
         }

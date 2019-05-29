@@ -91,8 +91,10 @@ const schema = makeExecutableSchema({
   } as any,
 });
 
-const connectionManager = new DynamoDBConnectionManager();
 const subscriptionManager = new DynamoDBSubscriptionManager();
+const connectionManager = new DynamoDBConnectionManager({
+  subscriptions: subscriptionManager,
+});
 
 const eventProcessor = createDynamoDBEventProcessor({
   connectionManager,

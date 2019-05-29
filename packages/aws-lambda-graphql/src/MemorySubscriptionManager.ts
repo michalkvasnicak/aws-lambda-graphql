@@ -71,6 +71,19 @@ class MemorySubscriptionManager implements ISubscriptionManager {
       );
     }
   };
+
+  unsubscribeAllByConnectionId = (connectionId: string) => {
+    for (const key of this.subscriptions.keys()) {
+      this.subscriptions.set(
+        key,
+        this.subscriptions
+          .get(key)!
+          .filter(s => s.connection.id === connectionId),
+      );
+    }
+
+    return Promise.resolve();
+  };
 }
 
 export { MemorySubscriptionManager };
