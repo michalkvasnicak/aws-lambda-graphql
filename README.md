@@ -57,8 +57,10 @@ import { makeExecutableSchema } from 'graphql-tools';
 // by default uses Events table (can be changed)
 const eventStore = new DynamoDBEventStore();
 const pubSub = new PubSub({ eventStore });
-const connectionManager = new DynamoDBConnectionManager();
 const subscriptionManager = new DynamoDBSubscriptionManager();
+const connectionManager = new DynamoDBConnectionManager({
+  subscriptions: subscriptionManager,
+});
 
 const schema = makeExecutableSchema({
   typeDefs: /* GraphQL */ `
@@ -104,6 +106,7 @@ const wsHandler = createWsHandler({
   connectionManager,
   schema,
   subscriptionManager,
+  // validationRules
 });
 
 // use these handlers from your lambda and map them to

@@ -14,7 +14,7 @@ import {
   // @ts-ignore
   queryPromiseMock,
 } from 'aws-sdk';
-import DynamoDBSubscriptionManager from '../DynamoDBSubscriptionManager';
+import { DynamoDBSubscriptionManager } from '../DynamoDBSubscriptionManager';
 
 describe('DynamoDBSubscriptionManager', () => {
   beforeEach(() => {
@@ -34,6 +34,7 @@ describe('DynamoDBSubscriptionManager', () => {
 
       let pages = 0;
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       for await (const page of subscriptionManager.subscribersByEventName(
         'test',
       )) {
@@ -63,6 +64,7 @@ describe('DynamoDBSubscriptionManager', () => {
 
       let pages = 0;
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       for await (const page of subscriptionManager.subscribersByEventName(
         'test',
       )) {

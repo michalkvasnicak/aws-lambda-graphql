@@ -22,9 +22,13 @@ const queryMock = jest.fn(() => ({ promise: queryPromiseMock }));
 
 class DocumentClient {
   batchWrite = batchWriteMock;
+
   delete = deleteMock;
+
   get = getMock;
+
   put = putMock;
+
   query = queryMock;
 }
 

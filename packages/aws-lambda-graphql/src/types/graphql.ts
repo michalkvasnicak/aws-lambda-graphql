@@ -1,6 +1,7 @@
 import { DocumentNode, GraphQLSchema, GraphQLResolveInfo } from 'graphql';
 import { PubSub } from 'graphql-subscriptions';
 import { IConnection, IConnectionManager } from './connections';
+// eslint-disable-next-line import/no-cycle
 import { ISubscriptionManager } from './subscriptions';
 
 /**
@@ -43,10 +44,10 @@ export interface OperationRequest {
 }
 
 export type SubcribeResolveFn = (
-  rootValue?: any,
-  args?: any,
-  context?: IContext,
-  info?: GraphQLResolveInfo,
+  rootValue: any,
+  args: any,
+  context: IContext,
+  info: GraphQLResolveInfo,
 ) => Promise<AsyncIterator<any> & AsyncIterable<any>>;
 
 export type SchemaCreatorFn = (options: {}) => GraphQLSchema;

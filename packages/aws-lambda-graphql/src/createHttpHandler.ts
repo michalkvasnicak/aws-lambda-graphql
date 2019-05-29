@@ -1,9 +1,9 @@
 import { APIGatewayProxyHandler, APIGatewayProxyEvent } from 'aws-lambda';
 import * as contentType from 'content-type';
-import { GraphQLSchema } from 'graphql';
+import { GraphQLSchema, ValidationContext, ASTVisitor } from 'graphql';
 import * as querystring from 'querystring';
 import { ExtendableError } from './errors';
-import execute from './execute';
+import { execute } from './execute';
 import { IConnectionManager, OperationRequest } from './types';
 
 class HTTPError extends ExtendableError {
@@ -26,10 +26,10 @@ function parseGraphQLParams(event: APIGatewayProxyEvent): OperationRequest {
 
       switch (parsedType.type) {
         case 'application/json': {
-          return JSON.parse(event.body);
+          return JSON.parse(event.body!);
         }
         case 'application/x-www-form-urlencoded': {
-          return querystring.parse(event.body) as any;
+          return querystring.parse(event.body!) as any;
         }
         default: {
           throw new HTTPError(400, 'Invalid request content type');
@@ -46,12 +46,18 @@ type Options = {
   connectionManager: IConnectionManager;
   schema: GraphQLSchema;
   formatResponse?: (body: any) => string;
+  /**
+   * An optional array of validation rules that will be applied on the document
+   * in additional to those defined by the GraphQL spec.
+   */
+  validationRules?: ((context: ValidationContext) => ASTVisitor)[];
 };
 
 function createHttpHandler({
   connectionManager,
   schema,
   formatResponse = JSON.stringify,
+  validationRules,
 }: Options): APIGatewayProxyHandler {
   return async function serveHttp(event) {
     try {
@@ -64,6 +70,7 @@ function createHttpHandler({
         pubSub: {} as any,
         subscriptionManager: {} as any,
         useSubscriptions: false,
+        validationRules,
       });
 
       return {

@@ -7,8 +7,8 @@ import {
 } from './types';
 
 // polyfill Symbol.asyncIterator
-if (Symbol['asyncIterator'] === undefined) {
-  (Symbol as any)['asyncIterator'] = Symbol.for('asyncIterator');
+if (Symbol.asyncIterator === undefined) {
+  (Symbol as any).asyncIterator = Symbol.for('asyncIterator');
 }
 
 class MemorySubscriptionManager implements ISubscriptionManager {
@@ -70,6 +70,19 @@ class MemorySubscriptionManager implements ISubscriptionManager {
         subscriptions.filter(s => s.connection.id !== subscriber.connection.id),
       );
     }
+  };
+
+  unsubscribeAllByConnectionId = (connectionId: string) => {
+    for (const key of this.subscriptions.keys()) {
+      this.subscriptions.set(
+        key,
+        this.subscriptions
+          .get(key)!
+          .filter(s => s.connection.id === connectionId),
+      );
+    }
+
+    return Promise.resolve();
   };
 }
 

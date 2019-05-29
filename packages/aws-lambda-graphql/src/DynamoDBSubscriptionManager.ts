@@ -5,11 +5,10 @@ import {
   ISubscriptionManager,
   OperationRequest,
 } from './types';
-import { valueFromASTUntyped } from 'graphql';
 
 // polyfill Symbol.asyncIterator
-if (Symbol['asyncIterator'] === undefined) {
-  (Symbol as any)['asyncIterator'] = Symbol.for('asyncIterator');
+if (Symbol.asyncIterator === undefined) {
+  (Symbol as any).asyncIterator = Symbol.for('asyncIterator');
 }
 
 interface DynamoDBSubscriber extends ISubscriber {
@@ -26,6 +25,7 @@ type Options = {
 
 class DynamoDBSubscriptionManager implements ISubscriptionManager {
   private tableName: string;
+
   private db: DynamoDB.DocumentClient;
 
   constructor({ subscriptionsTableName = 'Subscriptions' }: Options = {}) {
@@ -42,7 +42,7 @@ class DynamoDBSubscriptionManager implements ISubscriptionManager {
     return {
       next: async () => {
         if (done) {
-          return { value: undefined, done: true };
+          return { value: [], done: true };
         }
 
         const result = await this.db
@@ -111,6 +111,41 @@ class DynamoDBSubscriptionManager implements ISubscriptionManager {
         },
       })
       .promise();
+  };
+
+  unsubscribeAllByConnectionId = async (connectionId: string) => {
+    let cursor: DynamoDB.DocumentClient.Key | undefined;
+
+    do {
+      const { Items, LastEvaluatedKey } = await this.db
+        .scan({
+          TableName: this.tableName,
+          ExclusiveStartKey: cursor,
+          FilterExpression: 'begins_with(subscriptionId, :connection_id)',
+          ExpressionAttributeValues: {
+            ':connection_id': connectionId,
+          },
+        })
+        .promise();
+
+      if (Items == null) {
+        return;
+      }
+
+      await this.db
+        .batchWrite({
+          RequestItems: {
+            [this.tableName]: Items.map(item => ({
+              DeleteRequest: {
+                Key: { event: item.event, subscriptionId: item.subscriptionId },
+              },
+            })),
+          },
+        })
+        .promise();
+
+      cursor = LastEvaluatedKey;
+    } while (cursor);
   };
 }
 

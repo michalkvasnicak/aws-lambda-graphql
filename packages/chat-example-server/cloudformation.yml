@@ -96,6 +96,7 @@ Resources:
                 - dynamodb:GetItem
                 - dynamodb:PutItem
                 - dynamodb:Query
+                - dynamodb:Scan
               Resource: !GetAtt SubscriptionsDynamoDBTable.Arn
 
       # attach event sources

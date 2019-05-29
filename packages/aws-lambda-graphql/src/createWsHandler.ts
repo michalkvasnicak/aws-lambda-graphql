@@ -1,10 +1,15 @@
 import { APIGatewayProxyResult, Context as AWSLambdaContext } from 'aws-lambda';
-import { ExecutionResult, GraphQLSchema } from 'graphql';
+import {
+  ExecutionResult,
+  GraphQLSchema,
+  ValidationContext,
+  ASTVisitor,
+} from 'graphql';
 import { PubSub } from 'graphql-subscriptions';
 import { isAsyncIterable } from 'iterall';
 import { ulid } from 'ulid';
-import execute from './execute';
-import formatMessage from './formatMessage';
+import { execute } from './execute';
+import { formatMessage } from './formatMessage';
 import { extractEndpointFromEvent, parseOperationFromEvent } from './helpers';
 import {
   APIGatewayWebSocketEvent,
@@ -21,12 +26,18 @@ type Options = {
   connectionManager: IConnectionManager;
   schema: GraphQLSchema;
   subscriptionManager: ISubscriptionManager;
+  /**
+   * An optional array of validation rules that will be applied on the document
+   * in additional to those defined by the GraphQL spec.
+   */
+  validationRules?: ((context: ValidationContext) => ASTVisitor)[];
 };
 
 function createWsHandler({
   connectionManager,
   schema,
   subscriptionManager,
+  validationRules,
 }: Options): APIGatewayV2Handler {
   return async function serveWebSocket(event) {
     try {
@@ -65,6 +76,7 @@ function createWsHandler({
           );
           await connectionManager.unregisterConnection(connection);
 
+          // eslint-disable-next-line consistent-return
           return;
         }
         case '$default': {
@@ -87,26 +99,33 @@ function createWsHandler({
             subscriptionManager,
             pubSub: new PubSub(),
             useSubscriptions: true,
+            validationRules,
           });
 
           // if result is async iterator, then it means that subscriptions was registered
-          if (isAsyncIterable(result)) {
-            return {
-              body: formatMessage({
+          const response = isAsyncIterable(result)
+            ? formatMessage({
                 id: operation.operationId,
                 payload: {},
                 type: 'GQL_SUBSCRIBED',
-              }),
-              statusCode: 200,
-            };
-          }
+              })
+            : formatMessage({
+                id: operation.operationId,
+                payload: result as ExecutionResult,
+                type: 'GQL_OP_RESULT',
+              });
 
+          // send response to client so it can finish operation in case of query or mutation
+          await connectionManager.sendToConnection(connection, response);
+
+          // this is just to make sure
+          // when you deploy this using serverless cli
+          // then integration response is not assigned to $default route
+          // so this won't make any difference
+          // but the sendToConnection above will send the response to client
+          // so client'll receive the response for his operation
           return {
-            body: formatMessage({
-              id: operation.operationId,
-              payload: result as ExecutionResult,
-              type: 'GQL_OP_RESULT',
-            }),
+            body: response,
             statusCode: 200,
           };
         }

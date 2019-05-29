@@ -1,6 +1,7 @@
 import Backoff from 'backo2';
 import { w3cwebsocket } from 'websocket';
-import OperationProcessor from './operationProcessor';
+import { StateSchema } from 'xstate';
+import { OperationProcessor } from './operationProcessor';
 
 export interface ClientContext {
   backoff: Backoff;
@@ -25,15 +26,15 @@ export interface ClientContext {
   webSockImpl: typeof w3cwebsocket;
 }
 
-export interface ClientStateSchema {
+export interface ClientStateSchema extends StateSchema {
   states: {
-    idle: {};
-    connecting: {};
-    disconnecting: {};
-    connected: {};
-    reconnecting: {};
-    reconnected: {};
-    error: {};
+    idle: any;
+    connecting: any;
+    disconnecting: any;
+    connected: any;
+    reconnecting: any;
+    reconnected: any;
+    error: any;
   };
 }
 

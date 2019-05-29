@@ -6,8 +6,8 @@ import {
   getAsyncIterator,
   isAsyncIterable,
 } from 'iterall';
-import formatMessage from './formatMessage';
-import execute from './execute';
+import { formatMessage } from './formatMessage';
+import { execute } from './execute';
 import {
   IConnectionManager,
   ISubscriptionEvent,
@@ -39,8 +39,8 @@ class PubSub {
 }
 
 // polyfill Symbol.asyncIterator
-if (Symbol['asyncIterator'] === undefined) {
-  (Symbol as any)['asyncIterator'] = Symbol.for('asyncIterator');
+if (Symbol.asyncIterator === undefined) {
+  (Symbol as any).asyncIterator = Symbol.for('asyncIterator');
 }
 
 function createDynamoDBEventProcessor({
@@ -56,8 +56,9 @@ function createDynamoDBEventProcessor({
       }
 
       // now construct event from dynamodb image
-      const event: ISubscriptionEvent = DynamoDB.Converter.unmarshall(record
-        .dynamodb.NewImage as any) as any;
+      const event: ISubscriptionEvent = DynamoDB.Converter.unmarshall(
+        record.dynamodb!.NewImage as any,
+      ) as any;
 
       // iterate over subscribers that listen to this event
       // and for each connection:
@@ -91,7 +92,7 @@ function createDynamoDBEventProcessor({
             if (!isAsyncIterable(iterable)) {
               // something went wrong, probably there is an error
               console.log(iterable);
-              return;
+              return Promise.resolve();
             }
 
             const iterator = getAsyncIterator(iterable);
@@ -109,6 +110,8 @@ function createDynamoDBEventProcessor({
                 }),
               );
             }
+
+            return Promise.resolve();
           })
           .map(promise => promise.catch(e => console.log(e)));
 

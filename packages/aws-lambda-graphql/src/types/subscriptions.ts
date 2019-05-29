@@ -1,4 +1,5 @@
 import { IConnection } from './connections';
+// eslint-disable-next-line import/no-cycle
 import { OperationRequest } from './graphql';
 
 export interface ISubscriptionEvent {
@@ -40,4 +41,11 @@ export interface ISubscriptionManager {
    * @param subscriber
    */
   unsubscribe(subscriber: ISubscriber): Promise<any>;
+
+  /**
+   * Unsubscribes all subscriptions for connection id
+   *
+   * @param connectionId
+   */
+  unsubscribeAllByConnectionId(connectionId: string): Promise<any>;
 }

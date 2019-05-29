@@ -1,23 +1,31 @@
 import { ulid } from 'ulid';
 import { Server as WSServer } from 'ws';
-import { createWsHandler, APIGatewayV2Handler, PubSub } from '../';
-import createSchema from './schema';
-import createMemoryEventProcessor, {
+import { createWsHandler, APIGatewayV2Handler, PubSub } from '..';
+import { createSchema } from './schema';
+import {
+  createMemoryEventProcessor,
   EventProcessorFn,
 } from '../createMemoryEventProcessor';
-import MemoryEventStore from '../MemoryEventStore';
-import MemorySubscriptionManager from '../MemorySubscriptionManager';
-import WebSocketConnectionManager from '../WebSocketConnectionManager';
+import { MemoryEventStore } from '../MemoryEventStore';
+import { MemorySubscriptionManager } from '../MemorySubscriptionManager';
+import { WebSocketConnectionManager } from '../WebSocketConnectionManager';
 
 class TestLambdaServer {
   connectionManager: WebSocketConnectionManager;
+
   eventStore: MemoryEventStore;
+
   subscriptionManager: MemorySubscriptionManager;
+
   eventProcessor: EventProcessorFn;
-  eventProcessingInterval: NodeJS.Timer;
+
+  eventProcessingInterval: NodeJS.Timer | undefined;
+
   handler: APIGatewayV2Handler;
+
   port: number;
-  wsServer: WSServer;
+
+  wsServer: WSServer | undefined;
 
   constructor({ port = 3001 }: { port?: number } = {}) {
     this.eventStore = new MemoryEventStore();
@@ -43,11 +51,15 @@ class TestLambdaServer {
 
   close = async () => {
     const wsClose = new Promise((resolve, reject) => {
-      this.wsServer.close(err => {
-        clearInterval(this.eventProcessingInterval);
+      if (this.wsServer == null) {
+        reject(new Error('Server not initialized'));
+      } else {
+        this.wsServer.close(err => {
+          clearInterval(this.eventProcessingInterval!);
 
-        return err ? reject(err) : resolve();
-      });
+          return err ? reject(err) : resolve();
+        });
+      }
     });
 
     return wsClose;
@@ -92,7 +104,7 @@ class TestLambdaServer {
         });
 
         ws.on('message', async data => {
-          const result = await this.handler(
+          const defaultResult = await this.handler(
             {
               requestContext: {
                 connectionId,
@@ -104,8 +116,8 @@ class TestLambdaServer {
             {} as any,
           );
 
-          if (result) {
-            ws.send(result.body);
+          if (defaultResult) {
+            ws.send(defaultResult.body);
           }
         });
 
@@ -130,7 +142,7 @@ class TestLambdaServer {
       this.wsServer.on('listening', () => {
         // start event processing
         this.eventProcessingInterval = setInterval(this.processEvents, 20);
-        this.wsServer.removeListener('error', reject);
+        this.wsServer!.removeListener('error', reject);
         resolve();
       });
 

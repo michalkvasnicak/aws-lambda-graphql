@@ -1,20 +1,30 @@
 import { ApiGatewayManagementApi, DynamoDB } from 'aws-sdk';
 import { ExtendableError } from './errors';
-import { IConnection, IConnectEvent, IConnectionManager } from './types';
+import {
+  IConnection,
+  IConnectEvent,
+  IConnectionManager,
+  ISubscriptionManager,
+} from './types';
 
 export class ConnectionNotFoundError extends ExtendableError {}
 
 type Options = {
   connectionsTable?: string;
+  subscriptions: ISubscriptionManager;
 };
 
 class DynamoDBConnectionManager implements IConnectionManager {
   private connectionsTable: string;
+
   private db: DynamoDB.DocumentClient;
 
-  constructor({ connectionsTable = 'Connections' }: Options = {}) {
+  private subscriptions: ISubscriptionManager;
+
+  constructor({ connectionsTable = 'Connections', subscriptions }: Options) {
     this.connectionsTable = connectionsTable;
     this.db = new DynamoDB.DocumentClient();
+    this.subscriptions = subscriptions;
   }
 
   hydrateConnection = async (connectionId: string): Promise<IConnection> => {
@@ -45,7 +55,7 @@ class DynamoDBConnectionManager implements IConnectionManager {
       .put({
         TableName: this.connectionsTable,
         Item: {
-          createdAt: new Date(),
+          createdAt: new Date().toString(),
           id: connection.id,
           data: connection.data,
         },
@@ -84,16 +94,17 @@ class DynamoDBConnectionManager implements IConnectionManager {
   };
 
   unregisterConnection = async (connection: IConnection): Promise<void> => {
-    await this.db
-      .delete({
-        Key: {
-          id: connection.id,
-        },
-        TableName: this.connectionsTable,
-      })
-      .promise();
-
-    // @todo delete all subscriptions too
+    await Promise.all([
+      this.db
+        .delete({
+          Key: {
+            id: connection.id,
+          },
+          TableName: this.connectionsTable,
+        })
+        .promise(),
+      this.subscriptions.unsubscribeAllByConnectionId(connection.id),
+    ]);
   };
 }
 

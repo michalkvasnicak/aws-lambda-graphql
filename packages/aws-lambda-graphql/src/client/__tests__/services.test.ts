@@ -11,6 +11,7 @@ const operationProcessor = {
 };
 const webSockImpl: any = WebSocket;
 const uri = 'ws://localhost:8080';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const server = new Server(uri);
 
 describe('services', () => {
@@ -134,7 +135,7 @@ describe('services', () => {
 
       cleanup();
 
-      expect(socket.onclose).toBeNull();
+      expect(socket.onclose).toBeUndefined();
       expect(operationProcessor.stop).toHaveBeenCalledTimes(1);
     });
 
@@ -152,7 +153,7 @@ describe('services', () => {
 
       (socket.onclose as any)({});
 
-      expect(socket.onclose).toBeNull();
+      expect(socket.onclose).toBeUndefined();
       expect(cbMock).toHaveBeenCalledTimes(1);
       expect(cbMock).toHaveBeenCalledWith('DISCONNECTED');
     });

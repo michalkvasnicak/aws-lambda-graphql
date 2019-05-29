@@ -1,6 +1,6 @@
 import gql from 'graphql-tag';
 import WebSocket from 'ws';
-import { GQLServerAllEvents, SERVER_EVENT_TYPES, Client } from '../';
+import { GQLServerAllEvents, SERVER_EVENT_TYPES, Client } from '..';
 import {
   execute,
   subscribe,

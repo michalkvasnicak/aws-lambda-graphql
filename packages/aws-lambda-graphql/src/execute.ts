@@ -1,4 +1,5 @@
 import {
+  ASTVisitor,
   DocumentNode,
   getOperationAST,
   GraphQLSchema,
@@ -8,6 +9,7 @@ import {
   specifiedRules,
   subscribe as gqlSubscribe,
   validate,
+  ValidationContext,
 } from 'graphql';
 import { PubSub } from 'graphql-subscriptions';
 import {
@@ -39,6 +41,11 @@ type Options = {
    * Basically for HTTP this is always false, for WS/event processor this is always true
    */
   useSubscriptions?: boolean;
+  /**
+   * An optional array of validation rules that will be applied on the document
+   * in additional to those defined by the GraphQL spec.
+   */
+  validationRules?: ((context: ValidationContext) => ASTVisitor)[];
 };
 
 /**
@@ -60,6 +67,7 @@ async function execute({
   subscriptionManager,
   registerSubscriptions = true,
   useSubscriptions = false,
+  validationRules = [],
 }: Options): Promise<ExecutionResult | AsyncIterator<ExecutionResult>> {
   // extract query from operation (parse if is string);
   const document: DocumentNode =
@@ -68,7 +76,10 @@ async function execute({
       : parse(operation.query);
 
   // validate document
-  const validationErrors = validate(schema, document, specifiedRules);
+  const validationErrors = validate(schema, document, [
+    ...specifiedRules,
+    ...validationRules,
+  ]);
 
   if (validationErrors.length > 0) {
     return {
@@ -96,7 +107,7 @@ async function execute({
   const operationAST = getOperationAST(document, operation.operationName || '');
 
   if (useSubscriptions) {
-    if (operationAST.operation === 'subscription') {
+    if (operationAST!.operation === 'subscription') {
       return gqlSubscribe({
         document,
         rootValue,
@@ -109,7 +120,7 @@ async function execute({
         variableValues: operation.variables,
       });
     }
-  } else if (!useSubscriptions && operationAST.operation === 'subscription') {
+  } else if (!useSubscriptions && operationAST!.operation === 'subscription') {
     throw new Error('Cannot subscribe using HTTP');
   }
 

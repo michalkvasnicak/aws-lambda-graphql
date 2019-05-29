@@ -1,4 +1,4 @@
-import OperationProcessor from '../operationProcessor';
+import { OperationProcessor } from '../operationProcessor';
 
 describe('OperationProcessor', () => {
   const socket = { send: jest.fn() };
@@ -52,7 +52,7 @@ describe('OperationProcessor', () => {
       () => {
         done(new Error('Should not call next'));
       },
-      err => {
+      () => {
         expect(op.executedOperations).toEqual({});
         done();
       },

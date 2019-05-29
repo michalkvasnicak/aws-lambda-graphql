@@ -2,16 +2,16 @@ import { DynamoDBRecord } from 'aws-lambda';
 import { DynamoDB } from 'aws-sdk';
 import { parse } from 'graphql';
 import { $$asyncIterator, createAsyncIterator } from 'iterall';
-import formatMessage from '../formatMessage';
-import createDynamoDBEventProcessor from '../createDynamoDBEventProcessor';
+import { formatMessage } from '../formatMessage';
+import { createDynamoDBEventProcessor } from '../createDynamoDBEventProcessor';
 import { createSchema } from '../fixtures/schema';
 import { ISubscriber } from '../types';
 
 const query = parse(/* GraphQL */ `
-      subscription Test($authorId: ID!) {
-        textFeed(authorId: $authorId)
-      }
-    `);
+  subscription Test($authorId: ID!) {
+    textFeed(authorId: $authorId)
+  }
+`);
 
 describe('createDynamoDBEventProcessor', () => {
   it('works correctly', async () => {

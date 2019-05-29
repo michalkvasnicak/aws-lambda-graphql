@@ -8,6 +8,7 @@ type Options = {
 
 class DynamoDBEventStore implements IEventStore {
   private db: DynamoDB.DocumentClient;
+
   private tableName: string;
 
   constructor({ eventsTable = 'Events' }: Options = {}) {

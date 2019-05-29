@@ -1,6 +1,6 @@
 import { ulid } from 'ulid';
 import { formatMessage } from '../formatMessage';
-import createWsHandler from '../createWsHandler';
+import { createWsHandler } from '../createWsHandler';
 import { createSchema } from '../fixtures/schema';
 
 describe('createWsHandler', () => {
@@ -142,6 +142,7 @@ describe('createWsHandler', () => {
   describe('message phase', () => {
     const connectionManager = {
       hydrateConnection: jest.fn(),
+      sendToConnection: jest.fn(),
     };
     const subscriptionManager = {
       subscribe: jest.fn(),
@@ -149,6 +150,7 @@ describe('createWsHandler', () => {
 
     beforeEach(() => {
       connectionManager.hydrateConnection.mockReset();
+      connectionManager.sendToConnection.mockReset();
       subscriptionManager.subscribe.mockReset();
     });
 
@@ -230,6 +232,7 @@ describe('createWsHandler', () => {
 
       expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
       expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1');
+      expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
     });
 
     it('returns http 200 with GQL_OP_RESULT on mutation operation', async () => {
@@ -281,6 +284,7 @@ describe('createWsHandler', () => {
 
       expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
       expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1');
+      expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
     });
 
     it('returns http 200 with GQL_SUBSCRIBED on subscription operation', async () => {
@@ -333,6 +337,7 @@ describe('createWsHandler', () => {
       expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
       expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1');
       expect(subscriptionManager.subscribe).toHaveBeenCalledTimes(1);
+      expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
     });
 
     it('returns http 200 with GQL_OP_RESULT on invalid operation', async () => {
@@ -382,6 +387,7 @@ describe('createWsHandler', () => {
 
       expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
       expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1');
+      expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
     });
   });
 });
