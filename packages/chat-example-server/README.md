@@ -18,6 +18,6 @@ yarn deploy
 npm run deploy
 ```
 
-## Update 
+## Update
 
-Update **LAMBDA_WEBSOCKET** inside `chat-example-app/src/index.tsx` with your new endpoint from serverless deployment.
+Update **REACT_APP_LAMBDA_WEBSOCKET_URI** inside `chat-example-app/.env` with your new endpoint from serverless deployment.
