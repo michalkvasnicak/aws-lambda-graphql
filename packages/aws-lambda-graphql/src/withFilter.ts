@@ -16,7 +16,7 @@ function withFilter(
   return async (rootValue: any, args: any, context: any, info: any) => {
     const asyncIterator = await asyncIteratorFn(rootValue, args, context, info);
 
-    const getNextPromise = () => {
+    const getNextPromise = (): Promise<any> => {
       return asyncIterator.next().then(payload => {
         if (payload.done === true) {
           return payload;
@@ -40,10 +40,10 @@ function withFilter(
         return getNextPromise();
       },
       return() {
-        return asyncIterator.return();
+        return asyncIterator.return!();
       },
-      throw(error) {
-        return asyncIterator.throw(error);
+      throw(error: any) {
+        return asyncIterator.throw!(error);
       },
       [$$asyncIterator]() {
         return this;

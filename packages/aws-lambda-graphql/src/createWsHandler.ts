@@ -3,8 +3,8 @@ import { ExecutionResult, GraphQLSchema } from 'graphql';
 import { PubSub } from 'graphql-subscriptions';
 import { isAsyncIterable } from 'iterall';
 import { ulid } from 'ulid';
-import execute from './execute';
-import formatMessage from './formatMessage';
+import { execute } from './execute';
+import { formatMessage } from './formatMessage';
 import { extractEndpointFromEvent, parseOperationFromEvent } from './helpers';
 import {
   APIGatewayWebSocketEvent,
@@ -65,6 +65,7 @@ function createWsHandler({
           );
           await connectionManager.unregisterConnection(connection);
 
+          // eslint-disable-next-line consistent-return
           return;
         }
         case '$default': {

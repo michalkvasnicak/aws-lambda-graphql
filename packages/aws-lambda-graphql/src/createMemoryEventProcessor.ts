@@ -4,8 +4,8 @@ import {
   getAsyncIterator,
   isAsyncIterable,
 } from 'iterall';
-import formatMessage from './formatMessage';
-import execute from './execute';
+import { formatMessage } from './formatMessage';
+import { execute } from './execute';
 import {
   IConnectionManager,
   ISubscriptionEvent,
@@ -13,8 +13,8 @@ import {
 } from './types';
 
 // polyfill Symbol.asyncIterator
-if (Symbol['asyncIterator'] === undefined) {
-  (Symbol as any)['asyncIterator'] = Symbol.for('asyncIterator');
+if (Symbol.asyncIterator === undefined) {
+  (Symbol as any).asyncIterator = Symbol.for('asyncIterator');
 }
 
 type Options = {
@@ -82,7 +82,7 @@ function createMemoryEventProcessor({
             if (!isAsyncIterable(iterable)) {
               // something went wrong, probably there is an error
               console.log(iterable);
-              return;
+              return Promise.resolve();
             }
 
             const iterator = getAsyncIterator(iterable);
@@ -100,6 +100,8 @@ function createMemoryEventProcessor({
                 }),
               );
             }
+
+            return Promise.resolve();
           })
           .map(promise => promise.catch(e => console.log(e)));
 

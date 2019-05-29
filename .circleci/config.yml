@@ -5,25 +5,17 @@ jobs:
     working_directory: ~/aws-lambda-graphql
     docker:
       - image: circleci/node:10.12.0
-        environment:
-          CI: 1
     steps:
       - checkout
       - run:
-          name: Upgrade yarn to 1.13.0
-          command: sudo npm install -g yarn@1.13.0
+          name: Upgrade yarn to 1.16.0
+          command: sudo npm install -g yarn@1.16.0
       - run:
           name: Installing javascript dependencies
           command: yarn install
       - run:
-          name: Build aws-lambda-graphql
+          name: Build packages (typecheck)
           command: |
-            cd packages/aws-lambda-graphql
-            yarn build
-      - run:
-          name: Build aws-lambda-ws-link
-          command: |
-            cd packages/aws-lambda-ws-link
             yarn build
       - run:
           name: Testing the source code

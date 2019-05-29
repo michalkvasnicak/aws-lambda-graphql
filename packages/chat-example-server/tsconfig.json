@@ -1,12 +1,9 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
+    "rootDir": "src",
     "lib": ["esnext"],
     "target": "es2015",
-    "moduleResolution": "node",
-    "paths": {
-      "aws-lambda-graphql": ["../aws-lambda-graphql"]
-    }
+    "moduleResolution": "node"
   },
   "include": ["src"],
   "exclude": ["node_modules"]

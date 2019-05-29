@@ -1,9 +1,9 @@
 import { makeExecutableSchema } from 'graphql-tools';
-import PubSub from '../PubSub';
-import withFilter from '../withFilter';
+import { PubSub } from '../PubSub';
+import { withFilter } from '../withFilter';
 
 const typeDefs = /* GraphQL */ `
-type Mutation {
+  type Mutation {
     testMutation(text: String!): String!
     testPublish(authorId: ID!, text: String!): String!
   }
@@ -45,14 +45,14 @@ function createSchema({
       },
       Subscription: {
         textFeed: {
-          resolve: payload => payload.text,
+          resolve: (payload: { text: string }) => payload.text,
           subscribe: withFilter(
             pubSub.subscribe('test'),
             (payload, args) => payload.authorId === args.authorId,
           ),
         },
       },
-    },
+    } as any,
   });
 }
 

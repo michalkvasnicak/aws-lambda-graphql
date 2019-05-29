@@ -1,6 +1,6 @@
 import { APIGatewayProxyEvent } from 'aws-lambda';
-import createSchema from '../fixtures/schema';
-import createHttpHandler from '../createHttpHandler';
+import { createSchema } from '../fixtures/schema';
+import { createHttpHandler } from '../createHttpHandler';
 
 describe('createHttpHandler', () => {
   it('serves JSON POST requests', async () => {
@@ -33,10 +33,10 @@ describe('createHttpHandler', () => {
     const event: APIGatewayProxyEvent = {
       body: JSON.stringify({
         query: /* GraphQL */ `
-            subscription {
-              textFeed(authorId: "1")
-            }
-          `,
+          subscription {
+            textFeed(authorId: "1")
+          }
+        `,
       }),
       headers: {
         'Content-Type': 'application/json',

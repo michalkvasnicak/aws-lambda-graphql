@@ -1,5 +1,5 @@
 import { createAsyncIterator } from 'iterall';
-import withFilter from '../withFilter';
+import { withFilter } from '../withFilter';
 
 describe('withFilter', () => {
   it('filters async iterator based on function result', async () => {

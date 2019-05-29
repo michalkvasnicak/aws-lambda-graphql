@@ -51,16 +51,16 @@ export function subscribe({
   query,
   variables,
 }: { client: Client } & GraphQLRequest): Iterator<any> {
-  const events = [];
+  const events: any[] = [];
 
   const subscriber = {
-    next(event) {
+    next(event: any) {
       events.push(event);
     },
     complete() {
       events.push(new Error('Subscription cannot be done'));
     },
-    error(err) {
+    error(err: any) {
       events.push(err);
     },
   };

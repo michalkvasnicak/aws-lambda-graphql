@@ -3,8 +3,9 @@
   "version": "0.1.0",
   "sideEffects": false,
   "dependencies": {
-    "apollo-link": "1.2.6",
-    "aws-lambda-graphql": "^0.1.0"
+    "apollo-link": "1.2.11",
+    "aws-lambda-graphql": "^0.1.0",
+    "zen-observable-ts": "0.8.18"
   },
   "files": [
     "dist"
@@ -12,28 +13,21 @@
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "devDependencies": {
-    "@types/graphql": "14.0.3",
-    "@types/jest": "23.3.10",
+    "@types/graphql": "14.2.0",
     "@types/ws": "6.0.1",
     "apollo-cache-inmemory": "^1.3.12",
     "apollo-client": "^2.4.8",
-    "graphql": "^14.0.2",
+    "graphql": "^14.3.1",
     "graphql-tag": "2.10.0",
-    "jest": "23.6.0",
-    "prettier": "1.15.3",
+    "jest": "24.8.0",
     "rimraf": "2.6.2",
-    "ts-jest": "23.10.5",
-    "tslint": "5.12.0",
-    "tslint-config-airbnb": "5.11.1",
-    "tslint-config-prettier": "1.17.0",
-    "tslint-plugin-prettier": "2.0.1",
-    "typescript": "3.2.2",
+    "typescript": "3.4.5",
     "ws": "6.1.2"
   },
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "tsc -p .",
-    "lint": "tslint -p .",
+    "lint": "eslint --ext .js,.jsx,.ts,.tsx",
     "test": "jest",
     "test:ci": "jest --ci",
     "test:coverage": "jest --coverage",

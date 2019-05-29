@@ -1,5 +1,5 @@
 import React, { memo } from 'react';
-import Box from './Box';
+import { Box } from './Box';
 
 type Props = {
   odd: boolean;

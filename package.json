@@ -1,11 +1,46 @@
 {
   "private": true,
   "devDependencies": {
-    "@types/jest": "23.3.10",
-    "jest": "23.6.0",
-    "lerna": "^3.10.5"
+    "@babel/core": "7.4.4",
+    "@babel/plugin-proposal-class-properties": "7.4.4",
+    "@babel/preset-env": "7.4.4",
+    "@babel/preset-react": "7.0.0",
+    "@babel/preset-typescript": "7.3.3",
+    "@types/jest": "24.0.13",
+    "@typescript-eslint/eslint-plugin": "1.9.0",
+    "eslint": "5.16.0",
+    "eslint-config-airbnb-typescript": "3.0.0",
+    "eslint-config-prettier": "4.1.0",
+    "eslint-plugin-import": "2.17.2",
+    "eslint-plugin-jsx-a11y": "6.2.1",
+    "eslint-plugin-prettier": "3.0.1",
+    "eslint-plugin-react": "7.12.4",
+    "husky": "2.3.0",
+    "jest": "24.8.0",
+    "lerna": "3.14.1",
+    "lint-staged": "^8.1.7",
+    "prettier": "1.17.1",
+    "typescript": "3.4.5"
+  },
+  "husky": {
+    "hooks": {
+      "pre-commit": "lint-staged"
+    }
+  },
+  "lint-staged": {
+    "*.json": [
+      "prettier --write",
+      "git add"
+    ],
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "git add"
+    ]
   },
   "scripts": {
+    "build": "tsc -b .",
+    "lint": "eslint \"packages/*/src/**/*.{ts,tsx}\"",
+    "lint-staged": "lint-staged",
     "test": "jest",
     "test:ci": "jest --ci --runInBand",
     "test:coverage": "jest --coverage",
@@ -15,5 +50,6 @@
     "packages": [
       "packages/*"
     ]
-  }
+  },
+  "version": "0.0.0"
 }

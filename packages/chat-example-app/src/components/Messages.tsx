@@ -7,8 +7,8 @@ import React, {
   useState,
 } from 'react';
 import { OnSubscriptionDataOptions, Subscription } from 'react-apollo';
-import Box from './Box';
-import Message from './Message';
+import { Box } from './Box';
+import { Message } from './Message';
 
 type Message = {
   id: string;

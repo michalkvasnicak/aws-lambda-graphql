@@ -1,29 +1,25 @@
 import Backoff from 'backo2';
-import {
-  default as EventEmitterType,
-  EventEmitter,
-  ListenerFn,
-} from 'eventemitter3';
+import * as EventEmitter from 'eventemitter3';
 import { interpret, Interpreter } from 'xstate/lib/interpreter';
 import { w3cwebsocket } from 'websocket';
 import {
   GQLServerAllEvents,
-  GQLServerEvents,
+  GQLOperationResult,
   SERVER_EVENT_TYPES,
 } from '../protocol';
 import { OperationRequest } from '../types';
 import { clientMachine } from './machine';
-import OperationProcessor from './operationProcessor';
+import { OperationProcessor } from './operationProcessor';
 import { ClientContext, ClientEvents, ClientStateSchema } from './types';
 
 declare let window: any;
-const _global =
+const globalRef: any =
   typeof global !== 'undefined'
     ? global
     : typeof window !== 'undefined'
     ? window
     : {};
-const NativeWebSocket = _global.WebSocket || _global.MozWebSocket;
+const NativeWebSocket = globalRef.WebSocket || globalRef.MozWebSocket;
 
 type Options = {
   options?: {
@@ -49,8 +45,11 @@ type Options = {
 
 class Client {
   private machine: Interpreter<ClientContext, ClientStateSchema, ClientEvents>;
+
   private lazy: boolean;
-  private ee: EventEmitterType;
+
+  private ee: EventEmitter<any>;
+
   private operationProcessor: OperationProcessor;
 
   constructor({
@@ -72,7 +71,7 @@ class Client {
     }
 
     this.lazy = lazy;
-    this.ee = new EventEmitter();
+    this.ee = new EventEmitter.EventEmitter() as any;
     this.operationProcessor = new OperationProcessor({ operationTimeout });
     this.machine = interpret(
       clientMachine.withContext({
@@ -120,32 +119,32 @@ class Client {
       | 'message'
       | 'reconnecting'
       | 'reconnected',
-    listener: ListenerFn,
+    listener: EventEmitter.ListenerFn,
   ): Function => {
     this.ee.on(event, listener);
 
     return () => this.ee.off(event, listener);
   };
 
-  public onConnecting = (listener: ListenerFn): Function =>
+  public onConnecting = (listener: EventEmitter.ListenerFn): Function =>
     this.on('connecting', listener);
 
-  public onConnected = (listener: ListenerFn): Function =>
+  public onConnected = (listener: EventEmitter.ListenerFn): Function =>
     this.on('connected', listener);
 
-  public onDisconnected = (listener: ListenerFn): Function =>
+  public onDisconnected = (listener: EventEmitter.ListenerFn): Function =>
     this.on('disconnected', listener);
 
-  public onError = (listener: ListenerFn): Function =>
+  public onError = (listener: EventEmitter.ListenerFn): Function =>
     this.on('error', listener);
 
-  public onMessage = (listener: ListenerFn): Function =>
+  public onMessage = (listener: EventEmitter.ListenerFn): Function =>
     this.on('message', listener);
 
-  public onReconnecting = (listener: ListenerFn): Function =>
+  public onReconnecting = (listener: EventEmitter.ListenerFn): Function =>
     this.on('reconnecting', listener);
 
-  public onReconnected = (listener: ListenerFn): Function =>
+  public onReconnected = (listener: EventEmitter.ListenerFn): Function =>
     this.on('reconnected', listener);
 
   private handleMessage = (event: { data: string }) => {
@@ -155,16 +154,12 @@ class Client {
       switch (message.type) {
         case SERVER_EVENT_TYPES.GQL_OP_RESULT: {
           this.operationProcessor.processOperationResult(
-            message as GQLServerEvents.GQLOperationResult,
+            message as GQLOperationResult,
           );
           break;
         }
-        case SERVER_EVENT_TYPES.GQL_CONNECTED: {
-          // connected
-        }
-        case SERVER_EVENT_TYPES.GQL_ERROR: {
-          // error
-        }
+        case SERVER_EVENT_TYPES.GQL_CONNECTED:
+        case SERVER_EVENT_TYPES.GQL_ERROR:
         case SERVER_EVENT_TYPES.GQL_SUBSCRIBED: {
           // subcribed
           break;

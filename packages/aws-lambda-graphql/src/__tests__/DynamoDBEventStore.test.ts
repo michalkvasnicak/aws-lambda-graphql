@@ -1,6 +1,6 @@
 // @ts-ignore
 import { putPromiseMock } from 'aws-sdk';
-import DynamoDBEventStore from '../DynamoDBEventStore';
+import { DynamoDBEventStore } from '../DynamoDBEventStore';
 
 describe('DynamoDBEventStore', () => {
   beforeEach(() => {

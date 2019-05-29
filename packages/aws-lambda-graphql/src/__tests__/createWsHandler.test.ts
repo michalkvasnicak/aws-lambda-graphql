@@ -1,6 +1,6 @@
 import { ulid } from 'ulid';
 import { formatMessage } from '../formatMessage';
-import createWsHandler from '../createWsHandler';
+import { createWsHandler } from '../createWsHandler';
 import { createSchema } from '../fixtures/schema';
 
 describe('createWsHandler', () => {

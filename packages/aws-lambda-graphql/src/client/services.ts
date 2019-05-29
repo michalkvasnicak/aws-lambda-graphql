@@ -14,23 +14,19 @@ export function connect({
     try {
       const socket = new webSockImpl(uri);
 
-      function onOpen() {
+      socket.onerror = err => {
+        socket!.onopen = undefined as any;
+        socket!.onerror = undefined as any;
+        reject(err);
+      };
+      socket.onopen = () => {
         // reset backoff
         backoff.reset();
 
-        socket.onopen = null;
-        socket.onerror = null;
+        socket!.onopen = undefined as any;
+        socket!.onerror = undefined as any;
         resolve(socket);
-      }
-
-      function onError(err: Error) {
-        socket.onopen = null;
-        socket.onerror = null;
-        reject(err);
-      }
-
-      socket.onerror = onError;
-      socket.onopen = onOpen;
+      };
       socket.onmessage = handleMessage;
     } catch (e) {
       reject(e);
@@ -42,7 +38,7 @@ export function connect({
  * After connection is successful assign returned socket to context
  */
 export function onConnectSuccess() {
-  return assign((ctx, event) => ({ ...ctx, socket: event.data }));
+  return assign<any>((ctx, event) => ({ ...ctx, socket: event.data }));
 }
 
 export async function reconnect(context: ClientContext): Promise<w3cwebsocket> {
@@ -60,26 +56,24 @@ export function disconnect({ socket }: ClientContext): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
       if (socket == null) {
-        return resolve();
-      }
-
-      function onClose() {
-        socket.onerror = null;
-        socket.onclose = null;
         resolve();
+      } else {
+        /* eslint-disable no-param-reassign */
+        socket.onclose = () => {
+          socket!.onerror = undefined as any;
+          socket!.onclose = undefined as any;
+          resolve();
+        };
+        socket.onerror = err => {
+          socket!.onerror = undefined as any;
+          socket!.onclose = undefined as any;
+          reject(err);
+        };
+        /* eslint-enable no-param-reassign */
+
+        // disconnect socket
+        socket.close();
       }
-
-      function onError(err: Error) {
-        socket.onerror = null;
-        socket.onclose = null;
-        reject(err);
-      }
-
-      socket.onclose = onClose;
-      socket.onerror = onError;
-
-      // disconnect socket
-      socket.close();
     } catch (e) {
       reject(e);
     }
@@ -102,20 +96,21 @@ export function processOperations({
 }: ClientContext) {
   return (callback: Sender<ClientEvents>) => {
     // start operation processor
-    operationProcessor.start(socket);
-
-    function onClose() {
-      socket.onclose = null;
-      operationProcessor.stop();
-      callback('DISCONNECTED'); // this will trigger reconnect or error
-    }
+    operationProcessor.start(socket!);
 
     // register to connection close
-    socket.onclose = onClose;
+    // eslint-disable-next-line no-param-reassign
+    socket!.onclose = () => {
+      // eslint-disable-next-line no-param-reassign
+      socket!.onclose = undefined as any;
+      operationProcessor.stop();
+      callback('DISCONNECTED'); // this will trigger reconnect or error
+    };
 
     return () => {
       operationProcessor.stop();
-      socket.onclose = null;
+      // eslint-disable-next-line no-param-reassign
+      socket!.onclose = undefined as any;
     };
   };
 }

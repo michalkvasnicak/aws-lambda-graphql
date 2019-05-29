@@ -7,8 +7,8 @@ import {
 } from './types';
 
 // polyfill Symbol.asyncIterator
-if (Symbol['asyncIterator'] === undefined) {
-  (Symbol as any)['asyncIterator'] = Symbol.for('asyncIterator');
+if (Symbol.asyncIterator === undefined) {
+  (Symbol as any).asyncIterator = Symbol.for('asyncIterator');
 }
 
 class MemorySubscriptionManager implements ISubscriptionManager {

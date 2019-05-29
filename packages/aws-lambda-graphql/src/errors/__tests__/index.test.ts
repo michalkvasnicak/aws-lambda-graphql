@@ -1,4 +1,4 @@
-import { ExtendableError } from '../';
+import { ExtendableError } from '..';
 
 describe('ExtendableError', () => {
   it('works correctly', () => {

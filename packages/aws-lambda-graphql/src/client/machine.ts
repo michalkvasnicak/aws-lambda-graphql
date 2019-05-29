@@ -18,7 +18,7 @@ const clientMachine = Machine<ClientContext, ClientStateSchema, ClientEvents>({
         src: services.connect,
         onDone: {
           target: 'connected',
-          actions: [services.onConnectSuccess()],
+          actions: services.onConnectSuccess(),
         },
         onError: [
           {

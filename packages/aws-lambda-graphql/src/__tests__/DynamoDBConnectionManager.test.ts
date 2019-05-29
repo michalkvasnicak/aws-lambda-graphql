@@ -16,7 +16,8 @@ import {
   // @ts-ignore
   putPromiseMock,
 } from 'aws-sdk';
-import DynamoDBConnectionManager, {
+import {
+  DynamoDBConnectionManager,
   ConnectionNotFoundError,
 } from '../DynamoDBConnectionManager';
 

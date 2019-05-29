@@ -1,6 +1,6 @@
 import { isAsyncIterable } from 'iterall';
 import { PubSub as BasePubSub } from 'graphql-subscriptions';
-import PubSub from '../PubSub';
+import { PubSub } from '../PubSub';
 
 describe('PubSub', () => {
   const eventStore = {

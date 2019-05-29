@@ -5,11 +5,10 @@ import {
   ISubscriptionManager,
   OperationRequest,
 } from './types';
-import { valueFromASTUntyped } from 'graphql';
 
 // polyfill Symbol.asyncIterator
-if (Symbol['asyncIterator'] === undefined) {
-  (Symbol as any)['asyncIterator'] = Symbol.for('asyncIterator');
+if (Symbol.asyncIterator === undefined) {
+  (Symbol as any).asyncIterator = Symbol.for('asyncIterator');
 }
 
 interface DynamoDBSubscriber extends ISubscriber {
@@ -26,6 +25,7 @@ type Options = {
 
 class DynamoDBSubscriptionManager implements ISubscriptionManager {
   private tableName: string;
+
   private db: DynamoDB.DocumentClient;
 
   constructor({ subscriptionsTableName = 'Subscriptions' }: Options = {}) {
@@ -41,9 +41,9 @@ class DynamoDBSubscriptionManager implements ISubscriptionManager {
 
     return {
       next: async () => {
-        if (done) {
+        /* if (done) {
           return { value: undefined, done: true };
-        }
+        } */
 
         const result = await this.db
           .query({
@@ -67,7 +67,7 @@ class DynamoDBSubscriptionManager implements ISubscriptionManager {
         // need to load data from connections table
         const value = result.Items as DynamoDBSubscriber[];
 
-        return { value, done: value.length === 0 };
+        return { value, done: value.length === 0 || done };
       },
       [Symbol.asyncIterator]() {
         return this;

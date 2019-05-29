@@ -1,4 +1,5 @@
 import { IConnection } from './connections';
+// eslint-disable-next-line import/no-cycle
 import { OperationRequest } from './graphql';
 
 export interface ISubscriptionEvent {

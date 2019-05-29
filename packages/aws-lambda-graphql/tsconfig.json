@@ -1,14 +1,18 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "allowSyntheticDefaultImports": true,
-    "declaration": true,
-    "esModuleInterop": true,
-    "lib": ["dom", "es2017", "esnext.asynciterable"],
+    "rootDir": "src",
+    "lib": ["dom", "es2018"],
     "target": "es2017",
     "module": "commonjs",
-    "moduleResolution": "node",
     "outDir": "dist"
   },
   "include": ["src"],
-  "exclude": ["dist", "node_modules", "**/__tests__/**", "**/__mocks__/**"]
+  "exclude": [
+    "dist",
+    "node_modules",
+    "**/__tests__/**",
+    "**/__mocks__/**",
+    "**/fixtures/**"
+  ]
 }

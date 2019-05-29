@@ -1,18 +1,13 @@
 {
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "allowSyntheticDefaultImports": true,
-    "baseUrl": ".",
-    "declaration": true,
-    "esModuleInterop": true,
-    "lib": ["es2017", "esnext.asynciterable"],
+    "rootDir": "src",
+    "lib": ["es2018"],
     "target": "es2017",
-    "paths": {
-      "aws-lambda-graphql": ["../aws-lambda-graphql"]
-    },
     "module": "commonjs",
-    "moduleResolution": "node",
     "outDir": "dist"
   },
   "include": ["src"],
-  "exclude": ["node_modules", "**/__tests__/**"]
+  "exclude": ["dist", "node_modules", "**/__tests__/**"],
+  "references": [{ "path": "../aws-lambda-graphql" }]
 }

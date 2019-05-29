@@ -2,8 +2,8 @@ import { Observable } from 'apollo-link';
 import { getOperationAST, parse, print } from 'graphql';
 import { ulid } from 'ulid';
 import { w3cwebsocket } from 'websocket';
-import formatMessage from '../formatMessage';
-import { GQLServerEvents } from '../protocol';
+import { formatMessage } from '../formatMessage';
+import { GQLOperationResult } from '../protocol';
 import { OperationRequest } from '../types';
 
 type ExecutedOperation = {
@@ -25,9 +25,13 @@ type Options = {
 
 class OperationProcessor {
   public executedOperations: { [id: string]: ExecutedOperation };
+
   private queuedOperations: ExecutedOperation[];
+
   private operationTimeout: number;
+
   private stopped: boolean;
+
   private socket: null | w3cwebsocket;
 
   constructor({ operationTimeout = Infinity }: Options = {}) {
@@ -47,8 +51,8 @@ class OperationProcessor {
               ? operation.query
               : parse(operation.query),
             operation.operationName || '',
-          ).operation === 'subscription';
-        let tmt = null;
+          )!.operation === 'subscription';
+        let tmt: any = null;
         const id = ulid();
         const op: ExecutedOperation = {
           id,
@@ -82,9 +86,7 @@ class OperationProcessor {
     });
   };
 
-  public processOperationResult = (
-    event: GQLServerEvents.GQLOperationResult,
-  ) => {
+  public processOperationResult = (event: GQLOperationResult) => {
     // if operation is a subscription, just stream a value
     // otherwise stream value and close observable (and remove it from operations)
     const operation = this.executedOperations[event.id];
@@ -136,7 +138,10 @@ class OperationProcessor {
       type: 'GQL_OP',
     };
 
-    this.socket.send(formatMessage(message));
+    if (this.socket) {
+      this.socket.send(formatMessage(message));
+    }
+
     operation.startTimeout();
   };
 

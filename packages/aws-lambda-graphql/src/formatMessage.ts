@@ -1,11 +1,17 @@
-import { GQLClientEvents, GQLServerEvents } from './protocol';
+import {
+  GQLOperation,
+  GQLConnectedEvent,
+  GQLErrorEvent,
+  GQLOperationResult,
+  GQLSubscribed,
+} from './protocol';
 
 type AllowedProtocolEvents =
-  | GQLClientEvents.GQLOperation
-  | GQLServerEvents.GQLConnectedEvent
-  | GQLServerEvents.GQLErrorEvent
-  | GQLServerEvents.GQLOperationResult
-  | GQLServerEvents.GQLSubscribed;
+  | GQLOperation
+  | GQLConnectedEvent
+  | GQLErrorEvent
+  | GQLOperationResult
+  | GQLSubscribed;
 
 function formatMessage(event: AllowedProtocolEvents): string {
   return JSON.stringify(event);

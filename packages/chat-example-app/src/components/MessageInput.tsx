@@ -18,7 +18,7 @@ function MessageInput(props: any) {
 
   return (
     <Mutation mutation={sendMessageMutation}>
-      {sendMessage => (
+      {(sendMessage: any) => (
         <Input
           onKeyUp={(e: KeyboardEvent<HTMLInputElement>) => {
             if (e.key === 'Enter' && value.length > 0) {

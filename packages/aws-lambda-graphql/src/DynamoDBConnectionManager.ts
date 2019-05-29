@@ -10,6 +10,7 @@ type Options = {
 
 class DynamoDBConnectionManager implements IConnectionManager {
   private connectionsTable: string;
+
   private db: DynamoDB.DocumentClient;
 
   constructor({ connectionsTable = 'Connections' }: Options = {}) {
@@ -84,16 +85,16 @@ class DynamoDBConnectionManager implements IConnectionManager {
   };
 
   unregisterConnection = async (connection: IConnection): Promise<void> => {
-    await this.db
-      .delete({
-        Key: {
-          id: connection.id,
-        },
-        TableName: this.connectionsTable,
-      })
-      .promise();
-
-    // @todo delete all subscriptions too
+    await Promise.all([
+      this.db
+        .delete({
+          Key: {
+            id: connection.id,
+          },
+          TableName: this.connectionsTable,
+        })
+        .promise(),
+    ]);
   };
 }
 

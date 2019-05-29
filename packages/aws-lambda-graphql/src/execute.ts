@@ -96,7 +96,7 @@ async function execute({
   const operationAST = getOperationAST(document, operation.operationName || '');
 
   if (useSubscriptions) {
-    if (operationAST.operation === 'subscription') {
+    if (operationAST!.operation === 'subscription') {
       return gqlSubscribe({
         document,
         rootValue,
@@ -109,7 +109,7 @@ async function execute({
         variableValues: operation.variables,
       });
     }
-  } else if (!useSubscriptions && operationAST.operation === 'subscription') {
+  } else if (!useSubscriptions && operationAST!.operation === 'subscription') {
     throw new Error('Cannot subscribe using HTTP');
   }
 
