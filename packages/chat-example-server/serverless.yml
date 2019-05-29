@@ -2,7 +2,8 @@ service: graphql-server-demo # NOTE: update this with your service name
 
 provider:
   name: aws
-  runtime: nodejs8.10
+  runtime: nodejs10.x
+  region: eu-central-1 # NOTE: change with your preferred region
 
   iamRoleStatements:
     - Effect: Allow
