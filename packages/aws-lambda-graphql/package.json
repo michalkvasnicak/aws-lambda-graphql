@@ -3,6 +3,13 @@
   "version": "0.2.0",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
+  "bugs": {
+    "url": "https://github.com/michalkvasnicak/aws-lambda-graphql/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/michalkvasnicak/aws-lambda-graphql"
+  },
   "sideEffects": false,
   "keywords": [
     "aws",
@@ -12,7 +19,9 @@
     "subscriptions"
   ],
   "files": [
-    "dist"
+    "dist",
+    "README.md",
+    "LICENSE"
   ],
   "description": "GraphQL server and client implementation for AWS Lambda with WebSocket support (API Gateway v1 + v2)",
   "dependencies": {
