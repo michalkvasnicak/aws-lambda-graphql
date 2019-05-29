@@ -7,7 +7,7 @@ import { render } from 'react-dom';
 import { ApolloProvider } from 'react-apollo';
 import { Box, MessageInput, Messages } from './components';
 
-const LAMBDA_WEBSOCKET = `wss://kwno10mgz7.execute-api.eu-north-1.amazonaws.com/dev`;
+const LAMBDA_WEBSOCKET = process.env.REACT_APP_LAMBA_WEBSOCKET_URI as string;
 
 const wsClient = new Client({
   uri: LAMBDA_WEBSOCKET,
