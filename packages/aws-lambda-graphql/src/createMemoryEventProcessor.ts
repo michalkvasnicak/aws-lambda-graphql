@@ -72,6 +72,7 @@ function createMemoryEventProcessor({
               connectionManager,
               subscriptionManager,
               schema,
+              event: {} as any, // we don't have api gateway event here
               connection: subscriber.connection,
               operation: subscriber.operation,
               pubSub: pubSub as any,
@@ -81,7 +82,6 @@ function createMemoryEventProcessor({
 
             if (!isAsyncIterable(iterable)) {
               // something went wrong, probably there is an error
-              console.log(iterable);
               return Promise.resolve();
             }
 
