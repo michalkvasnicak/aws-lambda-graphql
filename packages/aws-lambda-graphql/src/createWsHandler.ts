@@ -22,7 +22,7 @@ export type APIGatewayV2Handler = (
   context: AWSLambdaContext,
 ) => Promise<APIGatewayProxyResult | void>;
 
-type Options = {
+interface WSHandlerOptions {
   connectionManager: IConnectionManager;
   schema: GraphQLSchema;
   subscriptionManager: ISubscriptionManager;
@@ -31,14 +31,14 @@ type Options = {
    * in additional to those defined by the GraphQL spec.
    */
   validationRules?: ((context: ValidationContext) => ASTVisitor)[];
-};
+}
 
 function createWsHandler({
   connectionManager,
   schema,
   subscriptionManager,
   validationRules,
-}: Options): APIGatewayV2Handler {
+}: WSHandlerOptions): APIGatewayV2Handler {
   return async function serveWebSocket(event) {
     try {
       // based on routeKey, do actions
@@ -94,6 +94,7 @@ function createWsHandler({
           const result = await execute({
             connection,
             connectionManager,
+            event,
             operation,
             schema,
             subscriptionManager,

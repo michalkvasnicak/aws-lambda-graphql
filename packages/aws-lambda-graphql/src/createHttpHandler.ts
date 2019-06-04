@@ -42,7 +42,7 @@ function parseGraphQLParams(event: APIGatewayProxyEvent): OperationRequest {
   }
 }
 
-type Options = {
+interface HttpHandlerOptions {
   connectionManager: IConnectionManager;
   schema: GraphQLSchema;
   formatResponse?: (body: any) => string;
@@ -51,19 +51,20 @@ type Options = {
    * in additional to those defined by the GraphQL spec.
    */
   validationRules?: ((context: ValidationContext) => ASTVisitor)[];
-};
+}
 
 function createHttpHandler({
   connectionManager,
   schema,
   formatResponse = JSON.stringify,
   validationRules,
-}: Options): APIGatewayProxyHandler {
+}: HttpHandlerOptions): APIGatewayProxyHandler {
   return async function serveHttp(event) {
     try {
       const operation = parseGraphQLParams(event);
       const result = await execute({
         connectionManager,
+        event,
         operation,
         schema,
         connection: {} as any,

@@ -1,13 +1,16 @@
+import { APIGatewayEvent } from 'aws-lambda';
 import { DocumentNode, GraphQLSchema, GraphQLResolveInfo } from 'graphql';
 import { PubSub } from 'graphql-subscriptions';
 import { IConnection, IConnectionManager } from './connections';
 // eslint-disable-next-line import/no-cycle
 import { ISubscriptionManager } from './subscriptions';
+import { APIGatewayWebSocketEvent } from './aws';
 
 /**
  * Superset of context passed to every operation invoked by websocket
  */
 export interface IContext {
+  event: APIGatewayEvent | APIGatewayWebSocketEvent;
   $$internal: {
     /**
      * Current connection that invoked execution

@@ -79,6 +79,9 @@ const eventProcessor = createDynamoDBEventProcessor({
   subscriptionManager,
 });
 const wsHandler = createWsHandler({
+  context: ({ event }) => ({
+    event, // current processed event (see IContext)
+  }),
   connectionManager,
   schema,
   subscriptionManager,

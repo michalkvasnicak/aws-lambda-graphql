@@ -1,3 +1,4 @@
+import { APIGatewayEvent } from 'aws-lambda';
 import {
   ASTVisitor,
   DocumentNode,
@@ -13,6 +14,7 @@ import {
 } from 'graphql';
 import { PubSub } from 'graphql-subscriptions';
 import {
+  APIGatewayWebSocketEvent,
   IConnection,
   IContext,
   IConnectionManager,
@@ -20,10 +22,15 @@ import {
   OperationRequest,
 } from './types';
 
-type Options = {
+export interface ExecuteOptions {
   connection: IConnection;
   connectionManager: IConnectionManager;
-  context?: any | (() => any | Promise<any>);
+  context?:
+    | { [key: string]: any }
+    | ((
+        ctx: IContext,
+      ) => { [key: string]: any } | Promise<{ [key: string]: any }>);
+  event: APIGatewayEvent | APIGatewayWebSocketEvent;
   operation: OperationRequest;
   pubSub: PubSub;
   /**
@@ -46,7 +53,7 @@ type Options = {
    * in additional to those defined by the GraphQL spec.
    */
   validationRules?: ((context: ValidationContext) => ASTVisitor)[];
-};
+}
 
 /**
  * Execute methods executes graphql operations
@@ -60,6 +67,7 @@ async function execute({
   connection,
   connectionManager,
   context,
+  event,
   operation,
   pubSub,
   rootValue,
@@ -68,7 +76,7 @@ async function execute({
   registerSubscriptions = true,
   useSubscriptions = false,
   validationRules = [],
-}: Options): Promise<ExecutionResult | AsyncIterator<ExecutionResult>> {
+}: ExecuteOptions): Promise<ExecutionResult | AsyncIterator<ExecutionResult>> {
   // extract query from operation (parse if is string);
   const document: DocumentNode =
     typeof operation.query !== 'string'
@@ -98,10 +106,21 @@ async function execute({
     registerSubscriptions,
     subscriptionManager,
   };
+  const internalContext: IContext = {
+    event,
+    $$internal: {
+      connection,
+      connectionManager,
+      operation,
+      pubSub,
+      registerSubscriptions,
+      subscriptionManager,
+    },
+  };
 
   // instantiate context
   const contextValue: { [key: string]: any } =
-    typeof context === 'function' ? await context() : context;
+    typeof context === 'function' ? await context(internalContext) : context;
 
   // detect operation type
   const operationAST = getOperationAST(document, operation.operationName || '');
@@ -114,7 +133,7 @@ async function execute({
         schema,
         contextValue: {
           ...contextValue,
-          $$internal,
+          ...internalContext,
         },
         operationName: operation.operationName,
         variableValues: operation.variables,
