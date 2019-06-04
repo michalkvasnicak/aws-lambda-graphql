@@ -8,7 +8,7 @@ import {
 import { PubSub } from 'graphql-subscriptions';
 import { isAsyncIterable } from 'iterall';
 import { ulid } from 'ulid';
-import { execute } from './execute';
+import { execute, ExecuteOptions } from './execute';
 import { formatMessage } from './formatMessage';
 import { extractEndpointFromEvent, parseOperationFromEvent } from './helpers';
 import {
@@ -24,6 +24,7 @@ export type APIGatewayV2Handler = (
 
 interface WSHandlerOptions {
   connectionManager: IConnectionManager;
+  context?: ExecuteOptions['context'];
   schema: GraphQLSchema;
   subscriptionManager: ISubscriptionManager;
   /**
@@ -35,6 +36,7 @@ interface WSHandlerOptions {
 
 function createWsHandler({
   connectionManager,
+  context,
   schema,
   subscriptionManager,
   validationRules,
@@ -94,6 +96,7 @@ function createWsHandler({
           const result = await execute({
             connection,
             connectionManager,
+            context,
             event,
             operation,
             schema,
