@@ -3,7 +3,7 @@ import * as contentType from 'content-type';
 import { GraphQLSchema, ValidationContext, ASTVisitor } from 'graphql';
 import * as querystring from 'querystring';
 import { ExtendableError } from './errors';
-import { execute } from './execute';
+import { execute, ExecuteOptions } from './execute';
 import { IConnectionManager, OperationRequest } from './types';
 
 class HTTPError extends ExtendableError {
@@ -44,6 +44,7 @@ function parseGraphQLParams(event: APIGatewayProxyEvent): OperationRequest {
 
 interface HttpHandlerOptions {
   connectionManager: IConnectionManager;
+  context?: ExecuteOptions['context'];
   schema: GraphQLSchema;
   formatResponse?: (body: any) => string;
   /**
@@ -55,6 +56,7 @@ interface HttpHandlerOptions {
 
 function createHttpHandler({
   connectionManager,
+  context,
   schema,
   formatResponse = JSON.stringify,
   validationRules,
@@ -66,6 +68,7 @@ function createHttpHandler({
         connectionManager,
         event,
         operation,
+        context,
         schema,
         connection: {} as any,
         pubSub: {} as any,
