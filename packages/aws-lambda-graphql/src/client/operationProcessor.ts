@@ -1,6 +1,5 @@
 import { Observable } from 'apollo-link';
 import { getOperationAST, parse, print } from 'graphql';
-import uuidv1 from 'uuid/v1';
 import { w3cwebsocket } from 'websocket';
 import { formatMessage } from '../formatMessage';
 import { GQLOperationResult } from '../protocol';
@@ -17,10 +16,6 @@ type ExecutedOperation = {
 
 type Options = {
   /**
-   * Operation id generator used to generate unique ids for requests
-   */
-  generateId?: () => string;
-  /**
    * Number of ms to wait for operation result (in case of subscriptions this is ignored)
    * 0/Infinity is the same
    */
@@ -30,7 +25,7 @@ type Options = {
 class OperationProcessor {
   public executedOperations: { [id: string]: ExecutedOperation };
 
-  private generateId: () => string;
+  private nextOperationId: number;
 
   private queuedOperations: ExecutedOperation[];
 
@@ -40,11 +35,8 @@ class OperationProcessor {
 
   private socket: null | w3cwebsocket;
 
-  constructor({
-    generateId = uuidv1,
-    operationTimeout = Infinity,
-  }: Options = {}) {
-    this.generateId = generateId;
+  constructor({ operationTimeout = Infinity }: Options) {
+    this.nextOperationId = 0;
     this.stopped = true;
     this.operationTimeout = operationTimeout;
     this.queuedOperations = [];
@@ -63,7 +55,7 @@ class OperationProcessor {
             operation.operationName || '',
           )!.operation === 'subscription';
         let tmt: any = null;
-        const id = this.generateId();
+        const id = this.generateNextOperationId();
         const op: ExecutedOperation = {
           id,
           isSubscription,
@@ -124,6 +116,10 @@ class OperationProcessor {
   public stop = () => {
     this.stopped = true;
     this.socket = null;
+  };
+
+  private generateNextOperationId = (): string => {
+    return (++this.nextOperationId).toString();
   };
 
   private send = (operation: ExecutedOperation) => {
