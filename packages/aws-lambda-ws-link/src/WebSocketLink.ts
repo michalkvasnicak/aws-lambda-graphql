@@ -1,5 +1,5 @@
 import { ApolloLink, Operation } from 'apollo-link';
-import { Client } from 'aws-lambda-graphql';
+import { Client } from 'aws-lambda-graphql/dist/client';
 
 class WebSocketLink extends ApolloLink {
   client: Client;
