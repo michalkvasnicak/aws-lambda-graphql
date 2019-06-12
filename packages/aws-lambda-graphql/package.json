@@ -27,12 +27,11 @@
   "dependencies": {
     "@types/aws-lambda": "8.10.17",
     "@types/backo2": "1.0.0",
-    "@types/uuid": "3.4.4",
     "backo2": "1.0.2",
     "content-type": "^1.0.4",
     "eventemitter3": "^3.1.2",
     "iterall": "^1.2.2",
-    "uuid": "^3.3.2",
+    "ulid": "^2.3.0",
     "xstate": "^4.2.3"
   },
   "peerDependencies": {
@@ -64,7 +63,7 @@
     "wait-for-expect": "1.1.0"
   },
   "scripts": {
-    "prebuild": "rimraf dist",
+    "prebuild": "rimraf dist && rimraf tsconfig.tsbuildinfo",
     "build": "tsc -p .",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx",
     "test": "jest",

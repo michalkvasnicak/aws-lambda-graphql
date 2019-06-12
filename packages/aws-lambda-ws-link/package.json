@@ -18,9 +18,9 @@
     "subscriptions"
   ],
   "dependencies": {
-    "apollo-link": "1.2.11",
+    "apollo-link": "^1.2.11",
     "aws-lambda-graphql": "^0.4.0",
-    "zen-observable-ts": "0.8.18"
+    "zen-observable-ts": "^0.8.18"
   },
   "files": [
     "dist",
@@ -42,7 +42,7 @@
     "ws": "6.1.2"
   },
   "scripts": {
-    "prebuild": "rimraf dist",
+    "prebuild": "rimraf dist && rimraf tsconfig.tsbuildinfo",
     "build": "tsc -p .",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx",
     "test": "jest",
