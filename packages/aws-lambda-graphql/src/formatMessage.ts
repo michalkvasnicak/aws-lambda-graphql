@@ -4,6 +4,8 @@ import {
   GQLErrorEvent,
   GQLOperationResult,
   GQLSubscribed,
+  GQLUnsubscribe,
+  GQLUnsubscribed,
 } from './protocol';
 
 type AllowedProtocolEvents =
@@ -11,7 +13,9 @@ type AllowedProtocolEvents =
   | GQLConnectedEvent
   | GQLErrorEvent
   | GQLOperationResult
-  | GQLSubscribed;
+  | GQLSubscribed
+  | GQLUnsubscribe
+  | GQLUnsubscribed;
 
 function formatMessage(event: AllowedProtocolEvents): string {
   return JSON.stringify(event);

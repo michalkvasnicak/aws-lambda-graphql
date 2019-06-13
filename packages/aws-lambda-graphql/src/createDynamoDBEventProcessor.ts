@@ -13,6 +13,7 @@ import {
   ISubscriptionEvent,
   ISubscriptionManager,
 } from './types';
+import { SERVER_EVENT_TYPES } from './protocol';
 
 type Options = {
   connectionManager: IConnectionManager;
@@ -106,7 +107,7 @@ function createDynamoDBEventProcessor({
                 formatMessage({
                   id: subscriber.operationId,
                   payload: result.value,
-                  type: 'GQL_OP_RESULT',
+                  type: SERVER_EVENT_TYPES.GQL_OP_RESULT,
                 }),
               );
             }

@@ -1,4 +1,5 @@
 import { OperationProcessor } from '../operationProcessor';
+import { SERVER_EVENT_TYPES } from '../../protocol';
 
 describe('OperationProcessor', () => {
   const socket = { send: jest.fn() };
@@ -35,7 +36,7 @@ describe('OperationProcessor', () => {
     op.processOperationResult({
       id,
       payload: { data: { test: 'test' } },
-      type: 'GQL_OP_RESULT',
+      type: SERVER_EVENT_TYPES.GQL_OP_RESULT,
     });
   });
 
@@ -94,7 +95,7 @@ describe('OperationProcessor', () => {
     op.processOperationResult({
       id,
       payload: { data: { test: 'test' } },
-      type: 'GQL_OP_RESULT',
+      type: SERVER_EVENT_TYPES.GQL_OP_RESULT,
     });
   });
 });

@@ -113,6 +113,18 @@ class DynamoDBSubscriptionManager implements ISubscriptionManager {
       .promise();
   };
 
+  unsubscribeOperation = async (connectionId: string, operationId: string) => {
+    await this.db
+      .delete({
+        TableName: this.tableName,
+        Key: {
+          event: '', // found event name
+          subscriptionId: `${connectionId}:${operationId}`,
+        },
+      })
+      .promise();
+  };
+
   unsubscribeAllByConnectionId = async (connectionId: string) => {
     let cursor: DynamoDB.DocumentClient.Key | undefined;
 

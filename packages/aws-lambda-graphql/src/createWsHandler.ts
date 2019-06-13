@@ -15,7 +15,9 @@ import {
   APIGatewayWebSocketEvent,
   IConnectionManager,
   ISubscriptionManager,
+  IdentifiedOperationRequest,
 } from './types';
+import { SERVER_EVENT_TYPES, CLIENT_EVENT_TYPES } from './protocol';
 
 export type APIGatewayV2Handler = (
   event: APIGatewayWebSocketEvent,
@@ -63,7 +65,7 @@ function createWsHandler({
             body: formatMessage({
               id: ulid(),
               payload: {},
-              type: 'GQL_CONNECTED',
+              type: SERVER_EVENT_TYPES.GQL_CONNECTED,
             }),
             statusCode: 200,
           };
@@ -93,12 +95,30 @@ function createWsHandler({
           // parse operation from body
           const operation = parseOperationFromEvent(event);
 
+          if (operation.type === CLIENT_EVENT_TYPES.GQL_UNSUBSCRIBE) {
+            // unsubscribe client
+            const response = formatMessage({
+              id: operation.id,
+              type: SERVER_EVENT_TYPES.GQL_UNSUBSCRIBED,
+            });
+
+            await subscriptionManager.unsubscribeOperation(
+              connection.id,
+              operation.id,
+            );
+
+            return {
+              body: response,
+              statusCode: 200,
+            };
+          }
+
           const result = await execute({
             connection,
             connectionManager,
             context,
             event,
-            operation,
+            operation: operation as IdentifiedOperationRequest,
             schema,
             subscriptionManager,
             pubSub: new PubSub(),
@@ -109,14 +129,14 @@ function createWsHandler({
           // if result is async iterator, then it means that subscriptions was registered
           const response = isAsyncIterable(result)
             ? formatMessage({
-                id: operation.operationId,
+                id: (operation as IdentifiedOperationRequest).operationId,
                 payload: {},
-                type: 'GQL_SUBSCRIBED',
+                type: SERVER_EVENT_TYPES.GQL_SUBSCRIBED,
               })
             : formatMessage({
-                id: operation.operationId,
+                id: (operation as IdentifiedOperationRequest).operationId,
                 payload: result as ExecutionResult,
-                type: 'GQL_OP_RESULT',
+                type: SERVER_EVENT_TYPES.GQL_OP_RESULT,
               });
 
           // send response to client so it can finish operation in case of query or mutation

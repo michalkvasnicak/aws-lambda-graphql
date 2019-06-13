@@ -46,6 +46,10 @@ export interface OperationRequest {
   variables?: { [key: string]: any };
 }
 
+export interface IdentifiedOperationRequest extends OperationRequest {
+  operationId: string;
+}
+
 export type SubcribeResolveFn = (
   rootValue: any,
   args: any,

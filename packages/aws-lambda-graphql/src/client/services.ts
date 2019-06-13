@@ -52,9 +52,14 @@ export async function reconnect(context: ClientContext): Promise<w3cwebsocket> {
 
 export const onReconnectSuccess = onConnectSuccess;
 
-export function disconnect({ socket }: ClientContext): Promise<void> {
+export function disconnect({
+  operationProcessor,
+  socket,
+}: ClientContext): Promise<void> {
   return new Promise((resolve, reject) => {
     try {
+      operationProcessor.unsubscribeFromAllOperations();
+
       if (socket == null) {
         resolve();
       } else {
