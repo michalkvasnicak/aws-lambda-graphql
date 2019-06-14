@@ -158,22 +158,28 @@ class OperationProcessor {
   };
 
   private unsubscribeOperation = (id: string) => {
-    delete this.executedOperations[id];
-    this.queuedOperations = this.queuedOperations.filter(op => {
-      if (op.id === id) {
-        if (op.type === CLIENT_EVENT_TYPES.GQL_OP && op.isSubscription) {
-          // send STOP event
-          this.send({
-            id,
-            type: CLIENT_EVENT_TYPES.GQL_UNSUBSCRIBE,
-          });
-        }
+    const executedOperation = this.executedOperations[id];
 
-        return false;
+    if (executedOperation) {
+      if (executedOperation.isSubscription) {
+        // send STOP event
+        this.send({
+          id,
+          type: CLIENT_EVENT_TYPES.GQL_UNSUBSCRIBE,
+        });
       }
 
-      return true;
-    });
+      delete this.executedOperations[id];
+    } else {
+      // this operation is only queued, so it hasn't been sent yet
+      this.queuedOperations = this.queuedOperations.filter(op => {
+        if (op.id === id) {
+          return false;
+        }
+
+        return true;
+      });
+    }
   };
 
   private send = (operation: ExecutedOperation) => {
