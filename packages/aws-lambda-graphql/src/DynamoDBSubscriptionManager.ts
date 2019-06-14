@@ -3,13 +3,24 @@ import {
   IConnection,
   ISubscriber,
   ISubscriptionManager,
-  OperationRequest,
+  IdentifiedOperationRequest,
 } from './types';
 
 // polyfill Symbol.asyncIterator
 if (Symbol.asyncIterator === undefined) {
   (Symbol as any).asyncIterator = Symbol.for('asyncIterator');
 }
+
+/**
+ * DynamoDB table structures
+ *
+ * Subscriptions:
+ *  event: primary key (HASH)
+ *  subscriptionId: range key (RANGE) - connectionId:operationId (this is always unique per client)
+ *
+ * SubscriptionOperations:
+ *  subscriptionId: primary key (HASH) - connectionId:operationId (this is always unique per client)
+ */
 
 interface DynamoDBSubscriber extends ISubscriber {
   /**
@@ -21,15 +32,22 @@ interface DynamoDBSubscriber extends ISubscriber {
 
 type Options = {
   subscriptionsTableName?: string;
+  subscriptionOperationsTableName?: string;
 };
 
 class DynamoDBSubscriptionManager implements ISubscriptionManager {
-  private tableName: string;
+  private subscriptionsTableName: string;
+
+  private subscriptionOperationsTableName: string;
 
   private db: DynamoDB.DocumentClient;
 
-  constructor({ subscriptionsTableName = 'Subscriptions' }: Options = {}) {
-    this.tableName = subscriptionsTableName;
+  constructor({
+    subscriptionsTableName = 'Subscriptions',
+    subscriptionOperationsTableName = 'SubscriptionOperations',
+  }: Options = {}) {
+    this.subscriptionsTableName = subscriptionsTableName;
+    this.subscriptionOperationsTableName = subscriptionOperationsTableName;
     this.db = new DynamoDB.DocumentClient();
   }
 
@@ -48,7 +66,7 @@ class DynamoDBSubscriptionManager implements ISubscriptionManager {
         const result = await this.db
           .query({
             ExclusiveStartKey,
-            TableName: this.tableName,
+            TableName: this.subscriptionsTableName,
             Limit: 50,
             KeyConditionExpression: 'event = :event',
             ExpressionAttributeValues: {
@@ -78,51 +96,119 @@ class DynamoDBSubscriptionManager implements ISubscriptionManager {
   subscribe = async (
     names: string[],
     connection: IConnection,
-    operation: OperationRequest & { operationId: string },
+    operation: IdentifiedOperationRequest,
   ): Promise<void> => {
+    const subscriptionId = this.generateSubscriptionId(
+      connection.id,
+      operation.operationId,
+    );
+
+    // we can only subscribe to one subscription in GQL document
+    if (names.length !== 1) {
+      throw new Error('Only one active operation per event name is allowed');
+    }
+    const [name] = names;
+
     await this.db
       .batchWrite({
         RequestItems: {
-          [this.tableName]: names.map(name => ({
-            PutRequest: {
-              Item: {
-                connection,
-                operation,
-                event: name,
-                subscriptionId: `${connection.id}:${operation.operationId}`,
-                operationId: operation.operationId,
-              } as DynamoDBSubscriber,
+          [this.subscriptionsTableName]: [
+            {
+              PutRequest: {
+                Item: {
+                  connection,
+                  operation,
+                  event: name,
+                  subscriptionId,
+                  operationId: operation.operationId,
+                } as DynamoDBSubscriber,
+              },
             },
-          })),
+          ],
+          [this.subscriptionOperationsTableName]: [
+            {
+              PutRequest: {
+                Item: {
+                  subscriptionId,
+                  event: name,
+                },
+              },
+            },
+          ],
         },
       })
       .promise();
   };
 
   unsubscribe = async (subscriber: ISubscriber) => {
+    const subscriptionId = this.generateSubscriptionId(
+      subscriber.connection.id,
+      subscriber.operationId,
+    );
+
     await this.db
-      .delete({
-        TableName: this.tableName,
-        Key: {
-          event: subscriber.event,
-          subscriptionId: `${subscriber.connection.id}:${
-            subscriber.operationId
-          }`,
-        },
+      .transactWrite({
+        TransactItems: [
+          {
+            Delete: {
+              TableName: this.subscriptionsTableName,
+              Key: {
+                event: subscriber.event,
+                subscriptionId,
+              },
+            },
+          },
+          {
+            Delete: {
+              TableName: this.subscriptionOperationsTableName,
+              Key: {
+                subscriptionId,
+              },
+            },
+          },
+        ],
       })
       .promise();
   };
 
   unsubscribeOperation = async (connectionId: string, operationId: string) => {
-    await this.db
-      .delete({
-        TableName: this.tableName,
+    const operation = await this.db
+      .get({
+        TableName: this.subscriptionOperationsTableName,
         Key: {
-          event: '', // found event name
-          subscriptionId: `${connectionId}:${operationId}`,
+          subscriptionId: this.generateSubscriptionId(
+            connectionId,
+            operationId,
+          ),
         },
       })
       .promise();
+
+    if (operation.Item) {
+      await this.db
+        .transactWrite({
+          TransactItems: [
+            {
+              Delete: {
+                TableName: this.subscriptionsTableName,
+                Key: {
+                  event: operation.Item.event,
+                  subscriptionId: operation.Item.subscriptionId,
+                },
+              },
+            },
+            {
+              Delete: {
+                TableName: this.subscriptionOperationsTableName,
+                Key: {
+                  subscriptionId: operation.Item.subscriptionId,
+                },
+              },
+            },
+          ],
+        })
+        .promise();
+    }
   };
 
   unsubscribeAllByConnectionId = async (connectionId: string) => {
@@ -131,7 +217,7 @@ class DynamoDBSubscriptionManager implements ISubscriptionManager {
     do {
       const { Items, LastEvaluatedKey } = await this.db
         .scan({
-          TableName: this.tableName,
+          TableName: this.subscriptionsTableName,
           ExclusiveStartKey: cursor,
           FilterExpression: 'begins_with(subscriptionId, :connection_id)',
           ExpressionAttributeValues: {
@@ -147,9 +233,14 @@ class DynamoDBSubscriptionManager implements ISubscriptionManager {
       await this.db
         .batchWrite({
           RequestItems: {
-            [this.tableName]: Items.map(item => ({
+            [this.subscriptionsTableName]: Items.map(item => ({
               DeleteRequest: {
                 Key: { event: item.event, subscriptionId: item.subscriptionId },
+              },
+            })),
+            [this.subscriptionOperationsTableName]: Items.map(item => ({
+              DeleteRequest: {
+                Key: { subscriptionId: item.subscriptionId },
               },
             })),
           },
@@ -158,6 +249,13 @@ class DynamoDBSubscriptionManager implements ISubscriptionManager {
 
       cursor = LastEvaluatedKey;
     } while (cursor);
+  };
+
+  generateSubscriptionId = (
+    connectionId: string,
+    operationId: string,
+  ): string => {
+    return `${connectionId}:${operationId}`;
   };
 }
 

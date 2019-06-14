@@ -19,6 +19,10 @@ const putPromiseMock = jest.fn();
 const putMock = jest.fn(() => ({ promise: putPromiseMock }));
 const queryPromiseMock = jest.fn();
 const queryMock = jest.fn(() => ({ promise: queryPromiseMock }));
+const transactWritePromiseMock = jest.fn();
+const transactWriteMock = jest.fn(() => ({
+  promise: transactWritePromiseMock,
+}));
 
 class DocumentClient {
   batchWrite = batchWriteMock;
@@ -30,6 +34,8 @@ class DocumentClient {
   put = putMock;
 
   query = queryMock;
+
+  transactWrite = transactWriteMock;
 }
 
 const DynamoDB = { DocumentClient, Converter: BaseDynamoDB.Converter };
@@ -49,4 +55,6 @@ export {
   putPromiseMock,
   queryMock,
   queryPromiseMock,
+  transactWriteMock,
+  transactWritePromiseMock,
 };
