@@ -1,6 +1,6 @@
 {
   "name": "aws-lambda-graphql",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "bugs": {
