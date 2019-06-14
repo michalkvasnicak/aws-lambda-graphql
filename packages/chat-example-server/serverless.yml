@@ -36,6 +36,13 @@ provider:
         - dynamodb:Query
         - dynamodb:Scan
       Resource: !GetAtt SubscriptionsDynamoDBTable.Arn
+    - Effect: Allow
+      Action:
+        - dynamodb:BatchWriteItem
+        - dynamodb:DeleteItem
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+      Resource: !GetAtt SubscriptionOperationsDynamoDBTable.Arn
 
 functions:
   mainHandler:
@@ -83,6 +90,19 @@ resources:
             KeyType: HASH
           - AttributeName: subscriptionId
             KeyType: RANGE
+
+    SubscriptionOperationsDynamoDBTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        # see DynamoDBSubscriptionManager
+        TableName: SubscriptionOperations
+        AttributeDefinitions:
+          - AttributeName: subscriptionId
+            AttributeType: S
+        BillingMode: PAY_PER_REQUEST
+        KeySchema:
+          - AttributeName: subscriptionId
+            KeyType: HASH
 
     EventsDynamoDBTable:
       Type: AWS::DynamoDB::Table

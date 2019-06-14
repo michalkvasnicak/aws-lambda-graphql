@@ -4,8 +4,6 @@ import {
   // @ts-ignore
   batchWritePromiseMock,
   // @ts-ignore
-  deleteMock,
-  // @ts-ignore
   deletePromiseMock,
   // @ts-ignore
   getPromiseMock,
@@ -13,6 +11,10 @@ import {
   putPromiseMock,
   // @ts-ignore
   queryPromiseMock,
+  // @ts-ignore
+  transactWriteMock,
+  // @ts-ignore
+  transactWritePromiseMock,
 } from 'aws-sdk';
 import { DynamoDBSubscriptionManager } from '../DynamoDBSubscriptionManager';
 
@@ -24,6 +26,7 @@ describe('DynamoDBSubscriptionManager', () => {
     getPromiseMock.mockReset();
     putPromiseMock.mockReset();
     queryPromiseMock.mockReset();
+    transactWritePromiseMock.mockReset();
   });
 
   describe('subscribersByEventName', () => {
@@ -84,7 +87,7 @@ describe('DynamoDBSubscriptionManager', () => {
 
       await expect(
         subscriptionManager.subscribe(
-          ['name1', 'name2'],
+          ['name1'],
           { id: '1' } as any,
           { operationId: '1' } as any,
         ),
@@ -93,43 +96,38 @@ describe('DynamoDBSubscriptionManager', () => {
       expect(batchWritePromiseMock).toHaveBeenCalledTimes(1);
       expect((batchWriteMock as jest.Mock).mock.calls[0][0])
         .toMatchInlineSnapshot(`
-Object {
-  "RequestItems": Object {
-    "Subscriptions": Array [
-      Object {
-        "PutRequest": Object {
-          "Item": Object {
-            "connection": Object {
-              "id": "1",
-            },
-            "event": "name1",
-            "operation": Object {
-              "operationId": "1",
-            },
-            "operationId": "1",
-            "subscriptionId": "1:1",
-          },
-        },
-      },
-      Object {
-        "PutRequest": Object {
-          "Item": Object {
-            "connection": Object {
-              "id": "1",
-            },
-            "event": "name2",
-            "operation": Object {
-              "operationId": "1",
-            },
-            "operationId": "1",
-            "subscriptionId": "1:1",
-          },
-        },
-      },
-    ],
-  },
-}
-`);
+                Object {
+                  "RequestItems": Object {
+                    "SubscriptionOperations": Array [
+                      Object {
+                        "PutRequest": Object {
+                          "Item": Object {
+                            "event": "name1",
+                            "subscriptionId": "1:1",
+                          },
+                        },
+                      },
+                    ],
+                    "Subscriptions": Array [
+                      Object {
+                        "PutRequest": Object {
+                          "Item": Object {
+                            "connection": Object {
+                              "id": "1",
+                            },
+                            "event": "name1",
+                            "operation": Object {
+                              "operationId": "1",
+                            },
+                            "operationId": "1",
+                            "subscriptionId": "1:1",
+                          },
+                        },
+                      },
+                    ],
+                  },
+                }
+            `);
     });
   });
 
@@ -137,7 +135,7 @@ Object {
     it('unsubscribes correctly', async () => {
       const subscriptionManager = new DynamoDBSubscriptionManager();
 
-      (deletePromiseMock as jest.Mock).mockResolvedValueOnce({});
+      (transactWritePromiseMock as jest.Mock).mockResolvedValueOnce({});
 
       await expect(
         subscriptionManager.unsubscribe({
@@ -148,15 +146,31 @@ Object {
         }),
       ).resolves.toBeUndefined();
 
-      expect(deletePromiseMock).toHaveBeenCalledTimes(1);
-      expect((deleteMock as jest.Mock).mock.calls[0][0]).toEqual(
-        expect.objectContaining({
-          Key: {
-            event: 'test',
-            subscriptionId: '1:1',
-          },
-        }),
-      );
+      expect(transactWritePromiseMock).toHaveBeenCalledTimes(1);
+      expect((transactWriteMock as jest.Mock).mock.calls[0][0])
+        .toMatchInlineSnapshot(`
+        Object {
+          "TransactItems": Array [
+            Object {
+              "Delete": Object {
+                "Key": Object {
+                  "event": "test",
+                  "subscriptionId": "1:1",
+                },
+                "TableName": "Subscriptions",
+              },
+            },
+            Object {
+              "Delete": Object {
+                "Key": Object {
+                  "subscriptionId": "1:1",
+                },
+                "TableName": "SubscriptionOperations",
+              },
+            },
+          ],
+        }
+      `);
     });
   });
 });

@@ -1,6 +1,11 @@
-import { GQLClientAllEvents } from '../protocol';
+import {
+  GQLClientAllEvents,
+  CLIENT_EVENT_TYPES,
+  GQLOperation,
+  GQLUnsubscribe,
+} from '../protocol';
 import { ExtendableError } from '../errors';
-import { APIGatewayWebSocketEvent, OperationRequest } from '../types';
+import { APIGatewayWebSocketEvent, IdentifiedOperationRequest } from '../types';
 
 export class MalformedOperationError extends ExtendableError {
   constructor(reason?: string) {
@@ -15,7 +20,7 @@ export class InvalidOperationError extends ExtendableError {
 
 export function parseOperationFromEvent(
   event: APIGatewayWebSocketEvent,
-): OperationRequest & { operationId: string } {
+): GQLUnsubscribe | IdentifiedOperationRequest {
   const operation: GQLClientAllEvents = JSON.parse(event.body);
 
   if (typeof operation !== 'object' && operation !== null) {
@@ -26,19 +31,32 @@ export function parseOperationFromEvent(
     throw new MalformedOperationError('Type is missing');
   }
 
-  if ((operation as GQLClientAllEvents).type !== 'GQL_OP') {
-    throw new InvalidOperationError('Only GQL_OP operations are accepted');
+  if (
+    (operation as GQLClientAllEvents).type !== CLIENT_EVENT_TYPES.GQL_OP &&
+    (operation as GQLClientAllEvents).type !==
+      CLIENT_EVENT_TYPES.GQL_UNSUBSCRIBE
+  ) {
+    throw new InvalidOperationError(
+      'Only GQL_OP or GQL_UNSUBSCRIBE operations are accepted',
+    );
   }
 
-  if ((operation as GQLClientAllEvents).id == null) {
+  if ((operation as GQLOperation).id == null) {
     throw new MalformedOperationError('Property id is missing');
   }
 
-  if ((operation as GQLClientAllEvents).payload == null) {
+  if (
+    (operation as GQLClientAllEvents).type ===
+    CLIENT_EVENT_TYPES.GQL_UNSUBSCRIBE
+  ) {
+    return operation as GQLUnsubscribe;
+  }
+
+  if ((operation as GQLOperation).payload == null) {
     throw new MalformedOperationError('Property payload is missing');
   }
 
-  const payloadType = typeof (operation as GQLClientAllEvents).payload;
+  const payloadType = typeof (operation as GQLOperation).payload;
 
   if (payloadType !== 'object') {
     throw new MalformedOperationError(
@@ -47,7 +65,7 @@ export function parseOperationFromEvent(
   }
 
   return {
-    ...operation.payload,
+    ...(operation as GQLOperation).payload,
     operationId: operation.id,
   };
 }

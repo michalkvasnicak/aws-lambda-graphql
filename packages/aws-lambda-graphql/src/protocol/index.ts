@@ -1,17 +1,17 @@
 import { DocumentNode, ExecutionResult } from 'graphql';
 
-const CLIENT_EVENT_TYPES = {
-  GQL_OP: 'GQL_OP',
-};
+export enum CLIENT_EVENT_TYPES {
+  GQL_OP = 'GQL_OP',
+  GQL_UNSUBSCRIBE = 'GQL_UNSUBSCRIBE',
+}
 
-const SERVER_EVENT_TYPES = {
-  GQL_CONNECTED: 'GQL_CONNECTED',
-  GQL_ERROR: 'GQL_ERROR',
-  GQL_OP_RESULT: 'GQL_OP_RESULT',
-  GQL_SUBSCRIBED: 'GQL_SUBSCRIBED',
-};
-
-export { CLIENT_EVENT_TYPES, SERVER_EVENT_TYPES };
+export enum SERVER_EVENT_TYPES {
+  GQL_CONNECTED = 'GQL_CONNECTED',
+  GQL_ERROR = 'GQL_ERROR',
+  GQL_OP_RESULT = 'GQL_OP_RESULT',
+  GQL_SUBSCRIBED = 'GQL_SUBSCRIBED',
+  GQL_UNSUBSCRIBED = 'GQL_UNSUNBSCRIBED',
+}
 
 export interface GQLOperation {
   id: string;
@@ -22,7 +22,19 @@ export interface GQLOperation {
     query: string | DocumentNode;
     variables?: { [key: string]: any };
   };
-  type: typeof CLIENT_EVENT_TYPES['GQL_OP'];
+  type: CLIENT_EVENT_TYPES.GQL_OP;
+}
+
+export interface GQLUnsubscribe {
+  /** The ID of GQLOperation used to subscribe */
+  id: string;
+  type: CLIENT_EVENT_TYPES.GQL_UNSUBSCRIBE;
+}
+
+export interface GQLUnsubscribed {
+  /** The ID of GQLOperation used to subscribe */
+  id: string;
+  type: SERVER_EVENT_TYPES.GQL_UNSUBSCRIBED;
 }
 
 export interface GQLConnectedEvent {
@@ -30,7 +42,7 @@ export interface GQLConnectedEvent {
   payload: {
     [key: string]: any;
   };
-  type: typeof SERVER_EVENT_TYPES['GQL_CONNECTED'];
+  type: SERVER_EVENT_TYPES.GQL_CONNECTED;
 }
 
 export interface GQLErrorEvent {
@@ -38,7 +50,7 @@ export interface GQLErrorEvent {
   payload: {
     message: string;
   };
-  type: typeof SERVER_EVENT_TYPES['GQL_ERROR'];
+  type: SERVER_EVENT_TYPES.GQL_ERROR;
 }
 
 export interface GQLOperationResult {
@@ -47,7 +59,7 @@ export interface GQLOperationResult {
    */
   id: string;
   payload: ExecutionResult;
-  type: typeof SERVER_EVENT_TYPES['GQL_OP_RESULT'];
+  type: SERVER_EVENT_TYPES.GQL_OP_RESULT;
 }
 
 export interface GQLSubscribed {
@@ -56,13 +68,14 @@ export interface GQLSubscribed {
    */
   id: string;
   payload: { [key: string]: any };
-  type: typeof SERVER_EVENT_TYPES['GQL_SUBSCRIBED'];
+  type: SERVER_EVENT_TYPES.GQL_SUBSCRIBED;
 }
 
-export type GQLClientAllEvents = GQLOperation;
+export type GQLClientAllEvents = GQLOperation | GQLUnsubscribe;
 
 export type GQLServerAllEvents =
   | GQLConnectedEvent
   | GQLErrorEvent
   | GQLOperationResult
-  | GQLSubscribed;
+  | GQLSubscribed
+  | GQLUnsubscribed;

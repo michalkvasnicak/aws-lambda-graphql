@@ -8,6 +8,7 @@ const backoff = {
 const operationProcessor = {
   start: jest.fn(),
   stop: jest.fn(),
+  unsubscribeFromAllOperations: jest.fn(),
 };
 const webSockImpl: any = WebSocket;
 const uri = 'ws://localhost:8080';
@@ -20,6 +21,7 @@ describe('services', () => {
     backoff.reset.mockReset();
     operationProcessor.start.mockReset();
     operationProcessor.stop.mockReset();
+    operationProcessor.unsubscribeFromAllOperations.mockReset();
   });
 
   describe('connect service', () => {
@@ -66,7 +68,12 @@ describe('services', () => {
 
   describe('disconnect service', () => {
     it('resolves immediately if there is no socket', async () => {
-      await expect(services.disconnect({} as any)).resolves.toBeUndefined();
+      await expect(
+        services.disconnect({ operationProcessor } as any),
+      ).resolves.toBeUndefined();
+      expect(
+        operationProcessor.unsubscribeFromAllOperations,
+      ).toHaveBeenCalledTimes(1);
     });
 
     it('disconnects socket if there is any', async () => {
@@ -77,11 +84,14 @@ describe('services', () => {
       } as any);
 
       await expect(
-        services.disconnect({ socket } as any),
+        services.disconnect({ operationProcessor, socket } as any),
       ).resolves.toBeUndefined();
 
       expect(socket.onerror).toBeFalsy();
       expect(socket.onclose).toBeFalsy();
+      expect(
+        operationProcessor.unsubscribeFromAllOperations,
+      ).toHaveBeenCalledTimes(1);
     });
   });
 

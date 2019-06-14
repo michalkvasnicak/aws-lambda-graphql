@@ -1,6 +1,6 @@
 import { IConnection } from './connections';
 // eslint-disable-next-line import/no-cycle
-import { OperationRequest } from './graphql';
+import { OperationRequest, IdentifiedOperationRequest } from './graphql';
 
 export interface ISubscriptionEvent {
   event: string;
@@ -32,7 +32,7 @@ export interface ISubscriptionManager {
   subscribe(
     names: string[],
     connection: IConnection,
-    operation: OperationRequest & { operationId: string },
+    operation: IdentifiedOperationRequest,
   ): Promise<any>;
 
   /**
@@ -41,6 +41,11 @@ export interface ISubscriptionManager {
    * @param subscriber
    */
   unsubscribe(subscriber: ISubscriber): Promise<any>;
+
+  /**
+   * Unsubscribes client from specific subscription
+   */
+  unsubscribeOperation(connectionId: string, operationId: string): Promise<any>;
 
   /**
    * Unsubscribes all subscriptions for connection id

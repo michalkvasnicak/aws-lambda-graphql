@@ -65,7 +65,7 @@ export function subscribe({
     },
   };
 
-  client
+  const ob = client
     .request({
       extensions,
       operationName,
@@ -85,6 +85,8 @@ export function subscribe({
 
         return { done: false, value: event };
       }
+
+      ob.unsubscribe();
 
       return { done: true, value: undefined };
     },

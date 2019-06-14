@@ -11,6 +11,7 @@ import {
   ISubscriptionEvent,
   ISubscriptionManager,
 } from './types';
+import { SERVER_EVENT_TYPES } from './protocol';
 
 // polyfill Symbol.asyncIterator
 if (Symbol.asyncIterator === undefined) {
@@ -96,7 +97,7 @@ function createMemoryEventProcessor({
                 formatMessage({
                   id: subscriber.operationId,
                   payload: result.value,
-                  type: 'GQL_OP_RESULT',
+                  type: SERVER_EVENT_TYPES.GQL_OP_RESULT,
                 }),
               );
             }

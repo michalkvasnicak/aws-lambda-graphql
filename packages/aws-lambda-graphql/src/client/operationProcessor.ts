@@ -1,18 +1,29 @@
-import { Observable } from 'apollo-link';
+import { ExecutionResult, Observable } from 'apollo-link';
 import { getOperationAST, parse, print } from 'graphql';
 import { w3cwebsocket } from 'websocket';
 import { formatMessage } from '../formatMessage';
-import { GQLOperationResult } from '../protocol';
+import { CLIENT_EVENT_TYPES, GQLOperationResult } from '../protocol';
 import { OperationRequest } from '../types';
 
-type ExecutedOperation = {
+interface GQLOperationRequest {
   id: string;
   isSubscription: boolean;
   observer: ZenObservable.SubscriptionObserver<any>;
   operation: OperationRequest;
   clearTimeout: () => void;
   startTimeout: () => void;
-};
+  type: CLIENT_EVENT_TYPES.GQL_OP;
+}
+
+interface GQLUnsubscribeRequest {
+  /**
+   * Same as ID of operation used to start the subscription
+   */
+  id: string;
+  type: CLIENT_EVENT_TYPES.GQL_UNSUBSCRIBE;
+}
+
+type ExecutedOperation = GQLOperationRequest | GQLUnsubscribeRequest;
 
 type Options = {
   /**
@@ -23,7 +34,7 @@ type Options = {
 };
 
 class OperationProcessor {
-  public executedOperations: { [id: string]: ExecutedOperation };
+  public executedOperations: { [id: string]: GQLOperationRequest };
 
   private nextOperationId: number;
 
@@ -44,7 +55,9 @@ class OperationProcessor {
     this.socket = null;
   }
 
-  public execute = (operation: OperationRequest) => {
+  public execute = (
+    operation: OperationRequest,
+  ): Observable<ExecutionResult> => {
     return new Observable(observer => {
       try {
         const isSubscription =
@@ -55,8 +68,9 @@ class OperationProcessor {
             operation.operationName || '',
           )!.operation === 'subscription';
         let tmt: any = null;
+        let closed: boolean = false;
         const id = this.generateNextOperationId();
-        const op: ExecutedOperation = {
+        const op: GQLOperationRequest = {
           id,
           isSubscription,
           observer,
@@ -77,14 +91,29 @@ class OperationProcessor {
               }, this.operationTimeout);
             }
           },
+          type: CLIENT_EVENT_TYPES.GQL_OP,
         };
 
         this.executedOperations[op.id] = op;
 
         this.send(op);
+
+        if (isSubscription) {
+          return {
+            get closed() {
+              return closed;
+            },
+            unsubscribe: () => {
+              closed = true;
+              this.unsubscribeOperation(op.id);
+            },
+          };
+        }
       } catch (e) {
         observer.error(e);
       }
+
+      return undefined;
     });
   };
 
@@ -118,8 +147,39 @@ class OperationProcessor {
     this.socket = null;
   };
 
+  public unsubscribeFromAllOperations = () => {
+    Object.keys(this.executedOperations).forEach(id => {
+      this.unsubscribeOperation(id);
+    });
+  };
+
   private generateNextOperationId = (): string => {
     return (++this.nextOperationId).toString();
+  };
+
+  private unsubscribeOperation = (id: string) => {
+    const executedOperation = this.executedOperations[id];
+
+    if (executedOperation) {
+      if (executedOperation.isSubscription) {
+        // send STOP event
+        this.send({
+          id,
+          type: CLIENT_EVENT_TYPES.GQL_UNSUBSCRIBE,
+        });
+      }
+
+      delete this.executedOperations[id];
+    } else {
+      // this operation is only queued, so it hasn't been sent yet
+      this.queuedOperations = this.queuedOperations.filter(op => {
+        if (op.id === id) {
+          return false;
+        }
+
+        return true;
+      });
+    }
   };
 
   private send = (operation: ExecutedOperation) => {
@@ -132,23 +192,29 @@ class OperationProcessor {
   };
 
   private sendRaw = (operation: ExecutedOperation) => {
-    const message = {
-      id: operation.id,
-      payload: {
-        ...operation.operation,
-        query:
-          typeof operation.operation.query !== 'string'
-            ? print(operation.operation.query)
-            : operation.operation.query,
-      },
-      type: 'GQL_OP',
-    };
-
-    if (this.socket) {
-      this.socket.send(formatMessage(message));
+    if (operation.type === CLIENT_EVENT_TYPES.GQL_OP) {
+      operation.startTimeout();
     }
 
-    operation.startTimeout();
+    if (this.socket) {
+      this.socket.send(
+        formatMessage(
+          operation.type === CLIENT_EVENT_TYPES.GQL_OP
+            ? {
+                type: CLIENT_EVENT_TYPES.GQL_OP,
+                id: operation.id,
+                payload: {
+                  ...operation.operation,
+                  query:
+                    typeof operation.operation.query !== 'string'
+                      ? print(operation.operation.query)
+                      : operation.operation.query,
+                },
+              }
+            : { type: CLIENT_EVENT_TYPES.GQL_UNSUBSCRIBE, id: operation.id },
+        ),
+      );
+    }
   };
 
   private flushQueuedMessages = () => {
