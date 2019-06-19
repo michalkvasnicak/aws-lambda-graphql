@@ -115,9 +115,12 @@ export async function handler(
   event: APIGatewayEvent | APIGatewayWebSocketEvent | DynamoDBStreamEvent,
   context,
 ) {
+  console.log('Handler has been called!', context.functionName);
+
   // detect event type
   if ((event as DynamoDBStreamEvent).Records != null) {
     // event is DynamoDB stream event
+    console.log('DynamoDBStreamEvent');
     return eventProcessor(event as DynamoDBStreamEvent, context, null as any);
   }
   if (
@@ -125,6 +128,7 @@ export async function handler(
     (event as APIGatewayWebSocketEvent).requestContext.routeKey != null
   ) {
     // event is web socket event from api gateway v2
+    console.log('APIGatewayWebSocketEvent');
     return wsHandler(event as APIGatewayWebSocketEvent, context);
   }
   if (
@@ -132,6 +136,7 @@ export async function handler(
     (event as APIGatewayEvent).requestContext.path != null
   ) {
     // event is http event from api gateway v1
+    console.log('APIGatewayEvent');
     return httpHandler(event as APIGatewayEvent, context, null as any);
   }
   throw new Error('Invalid event');

@@ -1,9 +1,16 @@
 service: graphql-server-demo # NOTE: update this with your service name
 
 plugins:
-  - serverless-dynamodb-local
-  - serverless-offline
   - serverless-webpack
+  - serverless-dynamodb-local
+  - serverless-plugin-offline-dynamodb-stream
+  - serverless-offline
+
+custom:
+  dynamodb:
+    start:
+      inMemory: true
+      migrate: true
 
 provider:
   name: aws
@@ -57,11 +64,14 @@ functions:
           route: $connect
       - websocket:
           route: $disconnect
-      - websocket: $default
+      - websocket:
+          route: $default
       - stream:
+          enabled: true
           type: dynamodb
-          arn:
-            Fn::GetAtt: [EventsDynamoDBTable, StreamArn]
+          tableName: EventsDynamoDBTable
+          # arn:
+          #   Fn::GetAtt: [EventsDynamoDBTable, StreamArn]
 
 resources:
   Resources:

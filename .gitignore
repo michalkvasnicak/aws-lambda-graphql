@@ -3,4 +3,3 @@ dist
 *.log
 .netlify
 tsconfig.tsbuildinfo
-.webpack
