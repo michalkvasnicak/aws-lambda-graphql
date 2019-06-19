@@ -9,10 +9,17 @@
     "ulid": "2.3.0"
   },
   "devDependencies": {
+    "@babel/preset-env": "^7.4.5",
     "@types/aws-lambda": "8.10.17",
     "@types/node": "8.10.39",
     "@zeit/ncc": "0.18.5",
-    "typescript": "3.4.5"
+    "babel-loader": "^8.0.6",
+    "serverless": "^1.45.1",
+    "serverless-dynamodb-local": "^0.2.38",
+    "serverless-offline": "https://github.com/dherault/serverless-offline.git#websocket-fixes",
+    "serverless-webpack": "^5.3.1",
+    "typescript": "3.4.5",
+    "webpack-node-externals": "^1.7.2"
   },
   "scripts": {
     "build": "ncc build src/index.ts -o dist",

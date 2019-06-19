@@ -1,5 +1,10 @@
 service: graphql-server-demo # NOTE: update this with your service name
 
+plugins:
+  - serverless-dynamodb-local
+  - serverless-offline
+  - serverless-webpack
+
 provider:
   name: aws
   runtime: nodejs10.x
@@ -46,17 +51,17 @@ provider:
 
 functions:
   mainHandler:
-    handler: dist/index.handler
+    handler: src/index.handler
     events:
-      - websocket: 
-         route: $connect
-      - websocket: 
-         route: $disconnect
+      - websocket:
+          route: $connect
+      - websocket:
+          route: $disconnect
       - websocket: $default
       - stream:
           type: dynamodb
           arn:
-            Fn::GetAtt: [ EventsDynamoDBTable, StreamArn ]
+            Fn::GetAtt: [EventsDynamoDBTable, StreamArn]
 
 resources:
   Resources:
