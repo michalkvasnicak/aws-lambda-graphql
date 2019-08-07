@@ -6,7 +6,7 @@ import { APIGatewayEventRequestContext } from 'aws-lambda';
  * connectionId can be used to identify/terminate the connection to client
  * routeKey can be used to route event by specific parts of communication flow
  */
-export interface WebSocketRequestContext<MessageRouteKey>
+export interface WebSocketRequestContext<MessageRouteKey extends string>
   extends APIGatewayEventRequestContext {
   connectionId: string;
   domainName: string;

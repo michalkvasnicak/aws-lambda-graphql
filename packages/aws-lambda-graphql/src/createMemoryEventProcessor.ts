@@ -42,14 +42,17 @@ class PubSub {
   }
 }
 
-export type EventProcessorFn = (events: ISubscriptionEvent[]) => Promise<void>;
+export type EventProcessorFn = (
+  events: ISubscriptionEvent[],
+  lambdaContext?: any,
+) => Promise<void>;
 
 function createMemoryEventProcessor({
   connectionManager,
   schema,
   subscriptionManager,
 }: Options): EventProcessorFn {
-  return async function processEvents(events) {
+  return async function processEvents(events, lambdaContext = {}) {
     for (const event of events) {
       // iterate over subscribers that listen to this event
       // and for each connection:
@@ -74,6 +77,7 @@ function createMemoryEventProcessor({
               subscriptionManager,
               schema,
               event: {} as any, // we don't have api gateway event here
+              lambdaContext: lambdaContext as any, // we don't have a lambda's context here
               connection: subscriber.connection,
               operation: subscriber.operation,
               pubSub: pubSub as any,

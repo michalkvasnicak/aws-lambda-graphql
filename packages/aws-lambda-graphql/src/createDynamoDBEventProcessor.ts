@@ -49,7 +49,10 @@ function createDynamoDBEventProcessor({
   schema,
   subscriptionManager,
 }: Options): DynamoDBStreamHandler {
-  return async function processDynamoDBStreamEvents({ Records }) {
+  return async function processDynamoDBStreamEvents(
+    { Records },
+    lambdaContext,
+  ) {
     for (const record of Records) {
       // process only INSERT events
       if (record.eventName !== 'INSERT') {
@@ -84,6 +87,7 @@ function createDynamoDBEventProcessor({
               subscriptionManager,
               schema,
               event: {} as any, // we don't have an API GW event here
+              lambdaContext,
               connection: subscriber.connection,
               operation: subscriber.operation,
               pubSub: pubSub as any,

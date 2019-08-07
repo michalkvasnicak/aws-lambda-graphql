@@ -1,4 +1,4 @@
-import { APIGatewayProxyResult, Context as AWSLambdaContext } from 'aws-lambda';
+import { APIGatewayProxyResult, Context as LambdaContext } from 'aws-lambda';
 import {
   ExecutionResult,
   GraphQLSchema,
@@ -21,7 +21,7 @@ import { SERVER_EVENT_TYPES, CLIENT_EVENT_TYPES } from './protocol';
 
 export type APIGatewayV2Handler = (
   event: APIGatewayWebSocketEvent,
-  context: AWSLambdaContext,
+  context: LambdaContext,
 ) => Promise<APIGatewayProxyResult | void>;
 
 interface WSHandlerOptions {
@@ -43,7 +43,7 @@ function createWsHandler({
   subscriptionManager,
   validationRules,
 }: WSHandlerOptions): APIGatewayV2Handler {
-  return async function serveWebSocket(event) {
+  return async function serveWebSocket(event, lambdaContext) {
     try {
       // based on routeKey, do actions
       switch (event.requestContext.routeKey) {
@@ -118,6 +118,7 @@ function createWsHandler({
             connectionManager,
             context,
             event,
+            lambdaContext,
             operation: operation as IdentifiedOperationRequest,
             schema,
             subscriptionManager,

@@ -1,6 +1,7 @@
 import { makeExecutableSchema } from 'graphql-tools';
 import { PubSub } from '../PubSub';
 import { withFilter } from '../withFilter';
+import { IContext } from '../types';
 
 const typeDefs = /* GraphQL */ `
   type Mutation {
@@ -25,13 +26,26 @@ function createSchema({
     typeDefs,
     resolvers: {
       Mutation: {
-        testMutation(rootValue: any, args: { text: string }) {
+        testMutation(
+          rootValue: any,
+          args: { text: string },
+          context: IContext,
+        ) {
+          if (context.lambdaContext == null) {
+            throw new Error('Missing lambda context');
+          }
+
           return args.text;
         },
         async testPublish(
           rootValue: any,
           args: { authorId: string; text: string },
+          context: IContext,
         ) {
+          if (context.lambdaContext == null) {
+            throw new Error('Missing lambda context');
+          }
+
           await pubSub.publish('test', args);
 
           return args.text;
@@ -39,13 +53,27 @@ function createSchema({
       },
       Query: {
         delayed: () => new Promise(r => setTimeout(() => r(true), 100)),
-        testQuery() {
+        testQuery(parent: any, args: any, context: IContext) {
+          if (context.lambdaContext == null) {
+            throw new Error('Missing lambda context');
+          }
+
           return 'test';
         },
       },
       Subscription: {
         textFeed: {
-          resolve: (payload: { text: string }) => payload.text,
+          resolve: (
+            payload: { text: string },
+            args: any,
+            context: IContext,
+          ) => {
+            if (context.lambdaContext == null) {
+              throw new Error('Missing lambda context');
+            }
+
+            return payload.text;
+          },
           subscribe: withFilter(
             pubSub.subscribe('test'),
             (payload, args) => payload.authorId === args.authorId,

@@ -61,12 +61,13 @@ function createHttpHandler({
   formatResponse = JSON.stringify,
   validationRules,
 }: HttpHandlerOptions): APIGatewayProxyHandler {
-  return async function serveHttp(event) {
+  return async function serveHttp(event, lambdaContext) {
     try {
       const operation = parseGraphQLParams(event);
       const result = await execute({
         connectionManager,
         event,
+        lambdaContext,
         operation,
         context,
         schema,

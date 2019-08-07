@@ -1,4 +1,4 @@
-import { APIGatewayEvent } from 'aws-lambda';
+import { APIGatewayEvent, Context as LambdaContext } from 'aws-lambda';
 import { DocumentNode, GraphQLSchema, GraphQLResolveInfo } from 'graphql';
 import { PubSub } from 'graphql-subscriptions';
 import { IConnection, IConnectionManager } from './connections';
@@ -11,6 +11,10 @@ import { APIGatewayWebSocketEvent } from './aws';
  */
 export interface IContext {
   event: APIGatewayEvent | APIGatewayWebSocketEvent;
+  /**
+   * Lambda's context can be an empty object in case if custom event processors
+   */
+  lambdaContext: LambdaContext;
   $$internal: {
     /**
      * Current connection that invoked execution
