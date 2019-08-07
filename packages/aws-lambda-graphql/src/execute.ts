@@ -1,4 +1,4 @@
-import { APIGatewayEvent } from 'aws-lambda';
+import { APIGatewayEvent, Context as LambdaContext } from 'aws-lambda';
 import {
   ASTVisitor,
   DocumentNode,
@@ -31,6 +31,7 @@ export interface ExecuteOptions {
         ctx: IContext,
       ) => { [key: string]: any } | Promise<{ [key: string]: any }>);
   event: APIGatewayEvent | APIGatewayWebSocketEvent;
+  lambdaContext?: LambdaContext;
   operation: OperationRequest;
   pubSub: PubSub;
   /**
@@ -68,6 +69,7 @@ async function execute({
   connectionManager,
   context,
   event,
+  lambdaContext = {} as any,
   operation,
   pubSub,
   rootValue,
@@ -98,16 +100,9 @@ async function execute({
   // this is internal context that should not be used by a user in resolvers
   // this is only added to provide access for PubSub to get connection managers and other
   // internal stuff
-  const $$internal: IContext['$$internal'] = {
-    connection,
-    connectionManager,
-    operation,
-    pubSub,
-    registerSubscriptions,
-    subscriptionManager,
-  };
   const internalContext: IContext = {
     event,
+    lambdaContext,
     $$internal: {
       connection,
       connectionManager,
@@ -132,8 +127,8 @@ async function execute({
         rootValue,
         schema,
         contextValue: {
-          ...contextValue,
           ...internalContext,
+          ...contextValue,
         },
         operationName: operation.operationName,
         variableValues: operation.variables,
@@ -148,8 +143,8 @@ async function execute({
     rootValue,
     schema,
     contextValue: {
+      ...internalContext,
       ...contextValue,
-      $$internal,
     },
     operationName: operation.operationName,
     variableValues: operation.variables,
