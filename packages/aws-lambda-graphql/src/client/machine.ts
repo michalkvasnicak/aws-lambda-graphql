@@ -74,6 +74,10 @@ const clientMachine = Machine<ClientContext, ClientStateSchema, ClientEvents>({
       },
     },
     reconnected: {
+      invoke: {
+        id: 'processOperations',
+        src: services.processOperations,
+      },
       on: {
         // connections has been closed :(
         DISCONNECTED: [
