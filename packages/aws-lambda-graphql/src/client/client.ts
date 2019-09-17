@@ -31,7 +31,8 @@ type Options = {
     operationTimeout?: number;
     reconnect?: boolean;
     /**
-     * How many times we should try to reconnect?
+     * How many times we should try to reconnect after connection failed?
+     * This property does not have an effect on timed out connections.
      * If Infinity is given, then it is inifinite
      */
     reconnectAttempts?: number;
