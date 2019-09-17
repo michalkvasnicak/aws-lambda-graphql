@@ -1,13 +1,13 @@
 {
   "name": "serverless-chat-example-app",
   "private": true,
-  "version": "0.7.0",
+  "version": "0.7.1",
   "dependencies": {
     "@napred/browser": "0.7.0",
     "@napred/ds": "0.7.0",
     "apollo-cache-inmemory": "1.6.0",
     "apollo-client": "2.6.0",
-    "aws-lambda-ws-link": "^0.7.0",
+    "aws-lambda-ws-link": "^0.7.1",
     "graphql": "14.3.1",
     "graphql-tag": "2.10.1",
     "react": "16.8.6",
