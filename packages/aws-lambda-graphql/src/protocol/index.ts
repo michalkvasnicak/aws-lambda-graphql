@@ -1,16 +1,16 @@
 import { DocumentNode, ExecutionResult } from 'graphql';
 
 export enum CLIENT_EVENT_TYPES {
-  GQL_OP = 'GQL_OP',
-  GQL_UNSUBSCRIBE = 'GQL_UNSUBSCRIBE',
+  GQL_OP = 'start',
+  GQL_UNSUBSCRIBE = 'stop',
 }
 
 export enum SERVER_EVENT_TYPES {
-  GQL_CONNECTED = 'GQL_CONNECTED',
-  GQL_ERROR = 'GQL_ERROR',
-  GQL_OP_RESULT = 'GQL_OP_RESULT',
-  GQL_SUBSCRIBED = 'GQL_SUBSCRIBED',
-  GQL_UNSUBSCRIBED = 'GQL_UNSUNBSCRIBED',
+  GQL_CONNECTED = 'connection_ack',
+  GQL_ERROR = 'error',
+  GQL_OP_RESULT = 'data',
+  GQL_SUBSCRIBED = 'data',
+  GQL_UNSUBSCRIBED = 'complete',
 }
 
 export interface GQLOperation {

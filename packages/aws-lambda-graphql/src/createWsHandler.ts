@@ -141,7 +141,9 @@ function createWsHandler({
               });
 
           // send response to client so it can finish operation in case of query or mutation
-          await connectionManager.sendToConnection(connection, response);
+          if (!isAsyncIterable(result)) {
+            await connectionManager.sendToConnection(connection, response);
+          }
 
           // this is just to make sure
           // when you deploy this using serverless cli
