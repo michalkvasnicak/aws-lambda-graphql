@@ -226,7 +226,7 @@ class DynamoDBSubscriptionManager implements ISubscriptionManager {
         })
         .promise();
 
-      if (Items == null) {
+      if (Items == null || !Items.length) {
         return;
       }
 
