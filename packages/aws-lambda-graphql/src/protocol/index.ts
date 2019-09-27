@@ -1,17 +1,17 @@
 import { DocumentNode, ExecutionResult } from 'graphql';
 
 export enum CLIENT_EVENT_TYPES {
-  GQL_OP = 'start',
-  GQL_UNSUBSCRIBE = 'stop',
+  GQL_START = 'start',
+  GQL_STOP = 'stop',
   GQL_CONNECTION_INIT = 'connection_init',
 }
 
 export enum SERVER_EVENT_TYPES {
-  GQL_CONNECTED = 'connection_ack',
+  GQL_CONNECTION_ACK = 'connection_ack',
   GQL_ERROR = 'error',
-  GQL_OP_RESULT = 'data',
-  GQL_SUBSCRIBED = 'data',
-  GQL_UNSUBSCRIBED = 'complete',
+  GQL_DATA = 'data',
+  GQL_SUBSCRIBED = 'data', // is not used in apollo-client
+  GQL_COMPLETE = 'complete',
 }
 
 export interface GQLOperation {
@@ -23,13 +23,13 @@ export interface GQLOperation {
     query: string | DocumentNode;
     variables?: { [key: string]: any };
   };
-  type: CLIENT_EVENT_TYPES.GQL_OP;
+  type: CLIENT_EVENT_TYPES.GQL_START;
 }
 
 export interface GQLUnsubscribe {
   /** The ID of GQLOperation used to subscribe */
   id: string;
-  type: CLIENT_EVENT_TYPES.GQL_UNSUBSCRIBE;
+  type: CLIENT_EVENT_TYPES.GQL_STOP;
 }
 
 export interface GQLConnectionInit {
@@ -43,7 +43,7 @@ export interface GQLConnectionInit {
 export interface GQLUnsubscribed {
   /** The ID of GQLOperation used to subscribe */
   id: string;
-  type: SERVER_EVENT_TYPES.GQL_UNSUBSCRIBED;
+  type: SERVER_EVENT_TYPES.GQL_COMPLETE;
 }
 
 export interface GQLConnectedEvent {
@@ -51,7 +51,7 @@ export interface GQLConnectedEvent {
   payload?: {
     [key: string]: any;
   };
-  type: SERVER_EVENT_TYPES.GQL_CONNECTED;
+  type: SERVER_EVENT_TYPES.GQL_CONNECTION_ACK;
 }
 
 export interface GQLErrorEvent {
@@ -68,7 +68,7 @@ export interface GQLOperationResult {
    */
   id: string;
   payload: ExecutionResult;
-  type: SERVER_EVENT_TYPES.GQL_OP_RESULT;
+  type: SERVER_EVENT_TYPES.GQL_DATA;
 }
 
 export interface GQLSubscribed {

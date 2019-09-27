@@ -22,14 +22,14 @@ describe('Client integration test', () => {
   });
 
   describe('connect', () => {
-    it('connects to server, receives GQL_CONNECTED event', done => {
+    it('connects to server, receives GQL_CONNECTION_ACK event', done => {
       const client = new Client({
         uri: 'ws://localhost:3001',
         webSockImpl: WebSocket as any,
       });
 
       client.onMessage((event: GQLServerAllEvents) => {
-        if (event.type === SERVER_EVENT_TYPES.GQL_CONNECTED) {
+        if (event.type === SERVER_EVENT_TYPES.GQL_CONNECTION_ACK) {
           done();
         }
       });

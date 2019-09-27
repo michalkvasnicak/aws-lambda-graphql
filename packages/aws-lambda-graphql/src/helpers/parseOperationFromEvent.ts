@@ -33,14 +33,13 @@ export function parseOperationFromEvent(
   }
 
   if (
-    (operation as GQLClientAllEvents).type !== CLIENT_EVENT_TYPES.GQL_OP &&
-    (operation as GQLClientAllEvents).type !==
-      CLIENT_EVENT_TYPES.GQL_UNSUBSCRIBE &&
+    (operation as GQLClientAllEvents).type !== CLIENT_EVENT_TYPES.GQL_START &&
+    (operation as GQLClientAllEvents).type !== CLIENT_EVENT_TYPES.GQL_STOP &&
     (operation as GQLClientAllEvents).type !==
       CLIENT_EVENT_TYPES.GQL_CONNECTION_INIT
   ) {
     throw new InvalidOperationError(
-      'Only GQL_CONNECTION_INIT, GQL_OP or GQL_UNSUBSCRIBE operations are accepted',
+      'Only GQL_CONNECTION_INIT, GQL_START or GQL_STOP operations are accepted',
     );
   }
 
@@ -55,10 +54,7 @@ export function parseOperationFromEvent(
     throw new MalformedOperationError('Property id is missing');
   }
 
-  if (
-    (operation as GQLClientAllEvents).type ===
-    CLIENT_EVENT_TYPES.GQL_UNSUBSCRIBE
-  ) {
+  if ((operation as GQLClientAllEvents).type === CLIENT_EVENT_TYPES.GQL_STOP) {
     return operation as GQLUnsubscribe;
   }
 

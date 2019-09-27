@@ -153,13 +153,13 @@ class Client {
       const message: GQLServerAllEvents = JSON.parse(event.data);
 
       switch (message.type) {
-        case SERVER_EVENT_TYPES.GQL_OP_RESULT: {
+        case SERVER_EVENT_TYPES.GQL_DATA: {
           this.operationProcessor.processOperationResult(
             message as GQLOperationResult,
           );
           break;
         }
-        case SERVER_EVENT_TYPES.GQL_CONNECTED:
+        case SERVER_EVENT_TYPES.GQL_CONNECTION_ACK:
         case SERVER_EVENT_TYPES.GQL_ERROR:
         case SERVER_EVENT_TYPES.GQL_SUBSCRIBED: {
           // subcribed

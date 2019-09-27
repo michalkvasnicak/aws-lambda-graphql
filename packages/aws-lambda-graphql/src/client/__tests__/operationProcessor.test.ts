@@ -36,7 +36,7 @@ describe('OperationProcessor', () => {
     op.processOperationResult({
       id,
       payload: { data: { test: 'test' } },
-      type: SERVER_EVENT_TYPES.GQL_OP_RESULT,
+      type: SERVER_EVENT_TYPES.GQL_DATA,
     });
   });
 
@@ -95,7 +95,7 @@ describe('OperationProcessor', () => {
     op.processOperationResult({
       id,
       payload: { data: { test: 'test' } },
-      type: SERVER_EVENT_TYPES.GQL_OP_RESULT,
+      type: SERVER_EVENT_TYPES.GQL_DATA,
     });
   });
 });

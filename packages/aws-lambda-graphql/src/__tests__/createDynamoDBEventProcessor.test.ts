@@ -88,7 +88,7 @@ describe('createDynamoDBEventProcessor', () => {
       formatMessage({
         id: '1',
         payload: { data: { textFeed: 'test 1' } },
-        type: 'GQL_OP_RESULT',
+        type: 'data',
       }),
     );
     expect(connectionManager.sendToConnection).toHaveBeenCalledWith(
@@ -96,7 +96,7 @@ describe('createDynamoDBEventProcessor', () => {
       formatMessage({
         id: '1',
         payload: { data: { textFeed: 'test 1' } },
-        type: 'GQL_OP_RESULT',
+        type: 'data',
       }),
     );
     expect(connectionManager.sendToConnection).toHaveBeenCalledWith(
@@ -104,7 +104,7 @@ describe('createDynamoDBEventProcessor', () => {
       formatMessage({
         id: '1',
         payload: { data: { textFeed: 'test 1' } },
-        type: 'GQL_OP_RESULT',
+        type: 'data',
       }),
     );
     expect(connectionManager.sendToConnection).toHaveBeenCalledWith(
@@ -112,7 +112,7 @@ describe('createDynamoDBEventProcessor', () => {
       formatMessage({
         id: '1',
         payload: { data: { textFeed: 'test 2' } },
-        type: 'GQL_OP_RESULT',
+        type: 'data',
       }),
     );
     expect(connectionManager.sendToConnection).toHaveBeenCalledWith(
@@ -120,7 +120,7 @@ describe('createDynamoDBEventProcessor', () => {
       formatMessage({
         id: '1',
         payload: { data: { textFeed: 'test 2' } },
-        type: 'GQL_OP_RESULT',
+        type: 'data',
       }),
     );
   });

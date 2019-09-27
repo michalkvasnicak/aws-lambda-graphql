@@ -111,7 +111,7 @@ function createDynamoDBEventProcessor({
                 formatMessage({
                   id: subscriber.operationId,
                   payload: result.value,
-                  type: SERVER_EVENT_TYPES.GQL_OP_RESULT,
+                  type: SERVER_EVENT_TYPES.GQL_DATA,
                 }),
               );
             }

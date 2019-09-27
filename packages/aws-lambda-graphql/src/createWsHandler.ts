@@ -90,7 +90,7 @@ function createWsHandler({
           if (operation.type === CLIENT_EVENT_TYPES.GQL_CONNECTION_INIT) {
             // send GQL_CONNECTION_INIT message to client
             const response = formatMessage({
-              type: SERVER_EVENT_TYPES.GQL_CONNECTED,
+              type: SERVER_EVENT_TYPES.GQL_CONNECTION_ACK,
             });
 
             await connectionManager.sendToConnection(connection, response);
@@ -101,11 +101,11 @@ function createWsHandler({
             };
           }
 
-          if (operation.type === CLIENT_EVENT_TYPES.GQL_UNSUBSCRIBE) {
+          if (operation.type === CLIENT_EVENT_TYPES.GQL_STOP) {
             // unsubscribe client
             const response = formatMessage({
               id: operation.id,
-              type: SERVER_EVENT_TYPES.GQL_UNSUBSCRIBED,
+              type: SERVER_EVENT_TYPES.GQL_COMPLETE,
             });
 
             await subscriptionManager.unsubscribeOperation(
@@ -135,15 +135,11 @@ function createWsHandler({
 
           // if result is async iterator, then it means that subscriptions was registered
           const response = isAsyncIterable(result)
-            ? formatMessage({
-                id: (operation as IdentifiedOperationRequest).operationId,
-                payload: {},
-                type: SERVER_EVENT_TYPES.GQL_SUBSCRIBED,
-              })
+            ? ''
             : formatMessage({
                 id: (operation as IdentifiedOperationRequest).operationId,
                 payload: result as ExecutionResult,
-                type: SERVER_EVENT_TYPES.GQL_OP_RESULT,
+                type: SERVER_EVENT_TYPES.GQL_DATA,
               });
 
           // send response to client so it can finish operation in case of query or mutation

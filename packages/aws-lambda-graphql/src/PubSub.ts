@@ -24,7 +24,6 @@ class PubSub {
 
       // register subscriptions only if it set to do so
       // basically this means that client sent subscription operation over websocket
-      // and we wan't to respond with GQL_SUBSCRIBED message
       if (registerSubscriptions) {
         await subscriptionManager.subscribe(
           names,
