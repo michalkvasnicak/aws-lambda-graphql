@@ -3,6 +3,7 @@ import {
   CLIENT_EVENT_TYPES,
   GQLOperation,
   GQLUnsubscribe,
+  GQLConnectionInit,
 } from '../protocol';
 import { ExtendableError } from '../errors';
 import { APIGatewayWebSocketEvent, IdentifiedOperationRequest } from '../types';
@@ -20,7 +21,7 @@ export class InvalidOperationError extends ExtendableError {
 
 export function parseOperationFromEvent(
   event: APIGatewayWebSocketEvent,
-): GQLUnsubscribe | IdentifiedOperationRequest {
+): GQLConnectionInit | GQLUnsubscribe | IdentifiedOperationRequest {
   const operation: GQLClientAllEvents = JSON.parse(event.body);
 
   if (typeof operation !== 'object' && operation !== null) {
@@ -34,11 +35,20 @@ export function parseOperationFromEvent(
   if (
     (operation as GQLClientAllEvents).type !== CLIENT_EVENT_TYPES.GQL_OP &&
     (operation as GQLClientAllEvents).type !==
-      CLIENT_EVENT_TYPES.GQL_UNSUBSCRIBE
+      CLIENT_EVENT_TYPES.GQL_UNSUBSCRIBE &&
+    (operation as GQLClientAllEvents).type !==
+      CLIENT_EVENT_TYPES.GQL_CONNECTION_INIT
   ) {
     throw new InvalidOperationError(
-      'Only GQL_OP or GQL_UNSUBSCRIBE operations are accepted',
+      'Only GQL_CONNECTION_INIT, GQL_OP or GQL_UNSUBSCRIBE operations are accepted',
     );
+  }
+
+  if (
+    (operation as GQLClientAllEvents).type ===
+    CLIENT_EVENT_TYPES.GQL_CONNECTION_INIT
+  ) {
+    return operation as GQLConnectionInit;
   }
 
   if ((operation as GQLOperation).id == null) {

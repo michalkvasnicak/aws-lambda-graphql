@@ -7,7 +7,6 @@ import {
 } from 'graphql';
 import { PubSub } from 'graphql-subscriptions';
 import { isAsyncIterable } from 'iterall';
-import { ulid } from 'ulid';
 import { execute, ExecuteOptions } from './execute';
 import { formatMessage } from './formatMessage';
 import { extractEndpointFromEvent, parseOperationFromEvent } from './helpers';
@@ -58,15 +57,8 @@ function createWsHandler({
             connectionId: event.requestContext.connectionId,
           });
 
-          // return will send the body to the client so we don't need to do that using
-          // connectionManager.postToConnection()
-          // you must map integration response in AWS API Gateway V2 console for this route
           return {
-            body: formatMessage({
-              id: ulid(),
-              payload: {},
-              type: SERVER_EVENT_TYPES.GQL_CONNECTED,
-            }),
+            body: '',
             statusCode: 200,
           };
         }
@@ -94,6 +86,20 @@ function createWsHandler({
 
           // parse operation from body
           const operation = parseOperationFromEvent(event);
+
+          if (operation.type === CLIENT_EVENT_TYPES.GQL_CONNECTION_INIT) {
+            // send GQL_CONNECTION_INIT message to client
+            const response = formatMessage({
+              type: SERVER_EVENT_TYPES.GQL_CONNECTED,
+            });
+
+            await connectionManager.sendToConnection(connection, response);
+
+            return {
+              body: response,
+              statusCode: 200,
+            };
+          }
 
           if (operation.type === CLIENT_EVENT_TYPES.GQL_UNSUBSCRIBE) {
             // unsubscribe client

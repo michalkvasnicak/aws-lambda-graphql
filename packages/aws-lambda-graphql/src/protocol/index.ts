@@ -3,6 +3,7 @@ import { DocumentNode, ExecutionResult } from 'graphql';
 export enum CLIENT_EVENT_TYPES {
   GQL_OP = 'start',
   GQL_UNSUBSCRIBE = 'stop',
+  GQL_CONNECTION_INIT = 'connection_init',
 }
 
 export enum SERVER_EVENT_TYPES {
@@ -31,6 +32,14 @@ export interface GQLUnsubscribe {
   type: CLIENT_EVENT_TYPES.GQL_UNSUBSCRIBE;
 }
 
+export interface GQLConnectionInit {
+  id: string;
+  payload: {
+    [key: string]: any;
+  };
+  type: CLIENT_EVENT_TYPES.GQL_CONNECTION_INIT;
+}
+
 export interface GQLUnsubscribed {
   /** The ID of GQLOperation used to subscribe */
   id: string;
@@ -38,8 +47,8 @@ export interface GQLUnsubscribed {
 }
 
 export interface GQLConnectedEvent {
-  id: string;
-  payload: {
+  id?: string;
+  payload?: {
     [key: string]: any;
   };
   type: SERVER_EVENT_TYPES.GQL_CONNECTED;
@@ -71,7 +80,10 @@ export interface GQLSubscribed {
   type: SERVER_EVENT_TYPES.GQL_SUBSCRIBED;
 }
 
-export type GQLClientAllEvents = GQLOperation | GQLUnsubscribe;
+export type GQLClientAllEvents =
+  | GQLConnectionInit
+  | GQLOperation
+  | GQLUnsubscribe;
 
 export type GQLServerAllEvents =
   | GQLConnectedEvent
