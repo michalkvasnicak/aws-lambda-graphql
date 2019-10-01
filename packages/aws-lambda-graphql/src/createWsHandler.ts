@@ -16,7 +16,9 @@ import {
   ISubscriptionManager,
   IdentifiedOperationRequest,
 } from './types';
-import { SERVER_EVENT_TYPES, CLIENT_EVENT_TYPES } from './protocol';
+import { getProtocol } from './protocol/getProtocol';
+import { isLegacyOperation } from './helpers/isLegacyOperation';
+import { LEGACY_SERVER_EVENT_TYPES } from './protocol';
 
 export type APIGatewayV2Handler = (
   event: APIGatewayWebSocketEvent,
@@ -58,7 +60,10 @@ function createWsHandler({
           });
 
           return {
-            body: '',
+            body: formatMessage({
+              payload: {},
+              type: LEGACY_SERVER_EVENT_TYPES.GQL_CONNECTION_ACK,
+            }),
             statusCode: 200,
           };
         }
@@ -79,13 +84,19 @@ function createWsHandler({
           // here we are processing messages received from a client
           // if we respond here and the route has integration response assigned
           // it will send the body back to client, so it is easy to respond with operation results
-          // hydrate connection
+          // determine if client has sent legacy protocol message
+          const useLegacyProtocol = isLegacyOperation(event);
+          // hydrate connection and set this connection to legacy if received legacy request
           const connection = await connectionManager.hydrateConnection(
             event.requestContext.connectionId,
+            useLegacyProtocol,
           );
-
           // parse operation from body
-          const operation = parseOperationFromEvent(event);
+          const operation = parseOperationFromEvent(event, useLegacyProtocol);
+          // get appropriate protocol
+          const { CLIENT_EVENT_TYPES, SERVER_EVENT_TYPES } = getProtocol(
+            useLegacyProtocol,
+          );
 
           if (operation.type === CLIENT_EVENT_TYPES.GQL_CONNECTION_INIT) {
             // send GQL_CONNECTION_INIT message to client
@@ -107,6 +118,8 @@ function createWsHandler({
               id: operation.id,
               type: SERVER_EVENT_TYPES.GQL_COMPLETE,
             });
+
+            await connectionManager.sendToConnection(connection, response);
 
             await subscriptionManager.unsubscribeOperation(
               connection.id,
@@ -133,20 +146,33 @@ function createWsHandler({
             validationRules,
           });
 
-          // if result is async iterator, then it means that subscriptions was registered
-          const response = isAsyncIterable(result)
-            ? ''
-            : formatMessage({
-                id: (operation as IdentifiedOperationRequest).operationId,
-                payload: result as ExecutionResult,
-                type: SERVER_EVENT_TYPES.GQL_DATA,
-              });
-
-          // send response to client so it can finish operation in case of query or mutation
-          if (!isAsyncIterable(result)) {
+          if (isAsyncIterable(result) && useLegacyProtocol) {
+            // if result is async iterator, then it means that subscriptions was registered
+            // legacy protocol requires that GQL_SUBSCRIBED should be sent back
+            const response = formatMessage({
+              id: (operation as IdentifiedOperationRequest).operationId,
+              payload: {},
+              type: SERVER_EVENT_TYPES.GQL_SUBSCRIBED,
+            });
             await connectionManager.sendToConnection(connection, response);
+            return {
+              body: response,
+              statusCode: 200,
+            };
           }
-
+          if (!isAsyncIterable(result)) {
+            // send response to client so it can finish operation in case of query or mutation
+            const response = formatMessage({
+              id: (operation as IdentifiedOperationRequest).operationId,
+              payload: result as ExecutionResult,
+              type: SERVER_EVENT_TYPES.GQL_DATA,
+            });
+            await connectionManager.sendToConnection(connection, response);
+            return {
+              body: response,
+              statusCode: 200,
+            };
+          }
           // this is just to make sure
           // when you deploy this using serverless cli
           // then integration response is not assigned to $default route
@@ -154,7 +180,7 @@ function createWsHandler({
           // but the sendToConnection above will send the response to client
           // so client'll receive the response for his operation
           return {
-            body: response,
+            body: '',
             statusCode: 200,
           };
         }

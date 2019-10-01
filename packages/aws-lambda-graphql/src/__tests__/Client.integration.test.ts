@@ -1,6 +1,6 @@
 import gql from 'graphql-tag';
 import WebSocket from 'ws';
-import { GQLServerAllEvents, SERVER_EVENT_TYPES, Client } from '..';
+import { GQLServerAllEvents, LEGACY_SERVER_EVENT_TYPES, Client } from '..';
 import {
   execute,
   subscribe,
@@ -29,7 +29,7 @@ describe('Client integration test', () => {
       });
 
       client.onMessage((event: GQLServerAllEvents) => {
-        if (event.type === SERVER_EVENT_TYPES.GQL_CONNECTION_ACK) {
+        if (event.type === LEGACY_SERVER_EVENT_TYPES.GQL_CONNECTION_ACK) {
           done();
         }
       });

@@ -2,7 +2,10 @@ import { ExecutionResult, Observable } from 'apollo-link';
 import { getOperationAST, parse, print } from 'graphql';
 import { w3cwebsocket } from 'websocket';
 import { formatMessage } from '../formatMessage';
-import { CLIENT_EVENT_TYPES, GQLOperationResult } from '../protocol';
+import {
+  LEGACY_CLIENT_EVENT_TYPES as CLIENT_EVENT_TYPES,
+  GQLOperationResult,
+} from '../protocol';
 import { OperationRequest } from '../types';
 
 interface GQLOperationRequest {

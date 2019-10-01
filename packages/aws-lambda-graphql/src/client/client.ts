@@ -5,7 +5,7 @@ import { w3cwebsocket } from 'websocket';
 import {
   GQLServerAllEvents,
   GQLOperationResult,
-  SERVER_EVENT_TYPES,
+  LEGACY_SERVER_EVENT_TYPES as SERVER_EVENT_TYPES,
 } from '../protocol';
 import { OperationRequest } from '../types';
 import { clientMachine } from './machine';
@@ -161,7 +161,8 @@ class Client {
         }
         case SERVER_EVENT_TYPES.GQL_CONNECTION_ACK:
         case SERVER_EVENT_TYPES.GQL_ERROR:
-        case SERVER_EVENT_TYPES.GQL_SUBSCRIBED: {
+        case SERVER_EVENT_TYPES.GQL_SUBSCRIBED:
+        case SERVER_EVENT_TYPES.GQL_COMPLETE: {
           // subcribed
           break;
         }

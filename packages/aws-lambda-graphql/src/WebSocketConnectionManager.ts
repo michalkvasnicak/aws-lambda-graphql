@@ -19,7 +19,10 @@ class WebSocketConnectionManager implements IConnectionManager {
     this.connections = new Map();
   }
 
-  hydrateConnection = async (connectionId: string): Promise<IConnection> => {
+  hydrateConnection = async (
+    connectionId: string,
+    useLegacyProtocol?: boolean,
+  ): Promise<IConnection> => {
     // if connection is not found, throw so we can terminate connection
     const connection = this.connections.get(connectionId);
 
@@ -27,7 +30,23 @@ class WebSocketConnectionManager implements IConnectionManager {
       throw new ConnectionNotFoundError(`Connection ${connectionId} not found`);
     }
 
+    if (useLegacyProtocol && !connection.data.useLegacyProtocol) {
+      await this.setLegacyProtocol(connection);
+      connection.data.useLegacyProtocol = true;
+    }
+
     return connection;
+  };
+
+  setLegacyProtocol = async (connection: WSConnection): Promise<void> => {
+    this.connections.set(connection.id, {
+      socket: connection.socket,
+      id: connection.id,
+      data: {
+        ...connection.data,
+        useLegacyProtocol: true,
+      },
+    });
   };
 
   registerConnection = async ({

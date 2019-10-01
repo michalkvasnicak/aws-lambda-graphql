@@ -1,12 +1,12 @@
 import {
   GQLClientAllEvents,
-  CLIENT_EVENT_TYPES,
   GQLOperation,
   GQLUnsubscribe,
   GQLConnectionInit,
 } from '../protocol';
 import { ExtendableError } from '../errors';
 import { APIGatewayWebSocketEvent, IdentifiedOperationRequest } from '../types';
+import { getProtocol } from '../protocol/getProtocol';
 
 export class MalformedOperationError extends ExtendableError {
   constructor(reason?: string) {
@@ -21,6 +21,7 @@ export class InvalidOperationError extends ExtendableError {
 
 export function parseOperationFromEvent(
   event: APIGatewayWebSocketEvent,
+  useLegacyProtocol: boolean,
 ): GQLConnectionInit | GQLUnsubscribe | IdentifiedOperationRequest {
   const operation: GQLClientAllEvents = JSON.parse(event.body);
 
@@ -31,6 +32,8 @@ export function parseOperationFromEvent(
   if (operation.type == null) {
     throw new MalformedOperationError('Type is missing');
   }
+
+  const { CLIENT_EVENT_TYPES } = getProtocol(useLegacyProtocol);
 
   if (
     (operation as GQLClientAllEvents).type !== CLIENT_EVENT_TYPES.GQL_START &&

@@ -10,8 +10,22 @@ export enum SERVER_EVENT_TYPES {
   GQL_CONNECTION_ACK = 'connection_ack',
   GQL_ERROR = 'error',
   GQL_DATA = 'data',
-  GQL_SUBSCRIBED = 'data', // is not used in apollo-client
   GQL_COMPLETE = 'complete',
+}
+
+export enum LEGACY_CLIENT_EVENT_TYPES {
+  GQL_START = 'GQL_OP',
+  GQL_STOP = 'GQL_UNSUBSCRIBE',
+  GQL_CONNECTION_INIT = 'connection_init',
+}
+
+export enum LEGACY_SERVER_EVENT_TYPES {
+  GQL_CONNECTION_ACK = 'GQL_CONNECTED',
+  GQL_ERROR = 'GQL_ERROR',
+  GQL_DATA = 'GQL_OP_RESULT',
+  GQL_COMPLETE = 'GQL_UNSUNBSCRIBED',
+
+  GQL_SUBSCRIBED = 'GQL_SUBSCRIBED',
 }
 
 export interface GQLOperation {
@@ -23,13 +37,13 @@ export interface GQLOperation {
     query: string | DocumentNode;
     variables?: { [key: string]: any };
   };
-  type: CLIENT_EVENT_TYPES.GQL_START;
+  type: CLIENT_EVENT_TYPES.GQL_START | LEGACY_CLIENT_EVENT_TYPES.GQL_START;
 }
 
 export interface GQLUnsubscribe {
   /** The ID of GQLOperation used to subscribe */
   id: string;
-  type: CLIENT_EVENT_TYPES.GQL_STOP;
+  type: CLIENT_EVENT_TYPES.GQL_STOP | LEGACY_CLIENT_EVENT_TYPES.GQL_STOP;
 }
 
 export interface GQLConnectionInit {
@@ -43,7 +57,9 @@ export interface GQLConnectionInit {
 export interface GQLUnsubscribed {
   /** The ID of GQLOperation used to subscribe */
   id: string;
-  type: SERVER_EVENT_TYPES.GQL_COMPLETE;
+  type:
+    | SERVER_EVENT_TYPES.GQL_COMPLETE
+    | LEGACY_SERVER_EVENT_TYPES.GQL_COMPLETE;
 }
 
 export interface GQLConnectedEvent {
@@ -51,7 +67,9 @@ export interface GQLConnectedEvent {
   payload?: {
     [key: string]: any;
   };
-  type: SERVER_EVENT_TYPES.GQL_CONNECTION_ACK;
+  type:
+    | SERVER_EVENT_TYPES.GQL_CONNECTION_ACK
+    | LEGACY_SERVER_EVENT_TYPES.GQL_CONNECTION_ACK;
 }
 
 export interface GQLErrorEvent {
@@ -59,7 +77,7 @@ export interface GQLErrorEvent {
   payload: {
     message: string;
   };
-  type: SERVER_EVENT_TYPES.GQL_ERROR;
+  type: SERVER_EVENT_TYPES.GQL_ERROR | LEGACY_SERVER_EVENT_TYPES.GQL_ERROR;
 }
 
 export interface GQLOperationResult {
@@ -68,7 +86,7 @@ export interface GQLOperationResult {
    */
   id: string;
   payload: ExecutionResult;
-  type: SERVER_EVENT_TYPES.GQL_DATA;
+  type: SERVER_EVENT_TYPES.GQL_DATA | LEGACY_SERVER_EVENT_TYPES.GQL_DATA;
 }
 
 export interface GQLSubscribed {
@@ -77,7 +95,7 @@ export interface GQLSubscribed {
    */
   id: string;
   payload: { [key: string]: any };
-  type: SERVER_EVENT_TYPES.GQL_SUBSCRIBED;
+  type: LEGACY_SERVER_EVENT_TYPES.GQL_SUBSCRIBED;
 }
 
 export type GQLClientAllEvents =

@@ -17,7 +17,11 @@ export interface IConnectEvent {
 }
 
 export interface IConnectionManager {
-  hydrateConnection(connectionId: string): Promise<IConnection>;
+  hydrateConnection(
+    connectionId: string,
+    useLegacyProtocol?: boolean,
+  ): Promise<IConnection>;
+  setLegacyProtocol(connection: IConnection): Promise<void>;
   registerConnection(event: IConnectEvent): Promise<IConnection>;
   sendToConnection(
     connection: IConnection,

@@ -13,7 +13,7 @@ import {
   ISubscriptionEvent,
   ISubscriptionManager,
 } from './types';
-import { SERVER_EVENT_TYPES } from './protocol';
+import { getProtocol } from './protocol/getProtocol';
 
 type Options = {
   connectionManager: IConnectionManager;
@@ -106,6 +106,8 @@ function createDynamoDBEventProcessor({
             > = await iterator.next();
 
             if (result.value != null) {
+              const { useLegacyProtocol = false } = subscriber.connection.data;
+              const { SERVER_EVENT_TYPES } = getProtocol(useLegacyProtocol);
               return connectionManager.sendToConnection(
                 subscriber.connection,
                 formatMessage({

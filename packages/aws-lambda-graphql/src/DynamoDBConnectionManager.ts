@@ -27,7 +27,10 @@ class DynamoDBConnectionManager implements IConnectionManager {
     this.subscriptions = subscriptions;
   }
 
-  hydrateConnection = async (connectionId: string): Promise<IConnection> => {
+  hydrateConnection = async (
+    connectionId: string,
+    useLegacyProtocol?: boolean,
+  ): Promise<IConnection> => {
     // if connection is not found, throw so we can terminate connection
     const result = await this.db
       .get({
@@ -42,7 +45,30 @@ class DynamoDBConnectionManager implements IConnectionManager {
       throw new ConnectionNotFoundError(`Connection ${connectionId} not found`);
     }
 
+    if (useLegacyProtocol && !result.Item.data.useLegacyProtocol) {
+      await this.setLegacyProtocol(result.Item as IConnection);
+      result.Item.data.useLegacyProtocol = true;
+    }
+
     return result.Item as IConnection;
+  };
+
+  setLegacyProtocol = async (connection: IConnection): Promise<void> => {
+    await this.db
+      .update({
+        TableName: this.connectionsTable,
+        Key: {
+          id: connection.id,
+        },
+        UpdateExpression: 'set #m.useLegacyProtocol = :b',
+        ExpressionAttributeValues: {
+          ':b': true,
+        },
+        ExpressionAttributeNames: {
+          '#m': 'data',
+        },
+      })
+      .promise();
   };
 
   registerConnection = async ({
