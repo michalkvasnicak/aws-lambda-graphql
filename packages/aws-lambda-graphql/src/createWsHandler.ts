@@ -18,7 +18,6 @@ import {
 } from './types';
 import { getProtocol } from './protocol/getProtocol';
 import { isLegacyOperation } from './helpers/isLegacyOperation';
-import { LEGACY_SERVER_EVENT_TYPES } from './protocol';
 
 export type APIGatewayV2Handler = (
   event: APIGatewayWebSocketEvent,
@@ -60,10 +59,7 @@ function createWsHandler({
           });
 
           return {
-            body: formatMessage({
-              payload: {},
-              type: LEGACY_SERVER_EVENT_TYPES.GQL_CONNECTION_ACK,
-            }),
+            body: '',
             statusCode: 200,
           };
         }

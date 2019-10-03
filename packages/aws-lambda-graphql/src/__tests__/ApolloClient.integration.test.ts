@@ -1,6 +1,6 @@
 import gql from 'graphql-tag';
 import WebSocket from 'ws';
-import { Client } from '..';
+import { SubscriptionClient } from 'subscriptions-transport-ws';
 import {
   execute,
   subscribe,
@@ -8,11 +8,11 @@ import {
 } from '../fixtures/helpers';
 import { TestLambdaServer } from '../fixtures/server';
 
-describe('Client integration test', () => {
+describe('apollo client integration test', () => {
   let server: TestLambdaServer;
 
   beforeEach(async () => {
-    server = new TestLambdaServer({ port: 3001 });
+    server = new TestLambdaServer({ port: 3002 });
 
     await server.start();
   });
@@ -22,11 +22,12 @@ describe('Client integration test', () => {
   });
 
   describe('connect', () => {
-    it('connects to server, receives GQL_CONNECTION_ACK event', done => {
-      const client = new Client({
-        uri: 'ws://localhost:3001',
-        webSockImpl: WebSocket as any,
-      });
+    it('connects to server', done => {
+      const client = new SubscriptionClient(
+        'ws://localhost:3002',
+        {},
+        WebSocket as any,
+      );
 
       client.onConnected(() => {
         done();
@@ -36,21 +37,16 @@ describe('Client integration test', () => {
 
   describe('subscriptions', () => {
     it('streams results from a subscription', async () => {
-      const client1 = new Client({
-        options: {
-          operationTimeout: 1000,
-        },
-        uri: 'ws://localhost:3001',
-        webSockImpl: WebSocket as any,
-      });
-
-      const client2 = new Client({
-        options: {
-          operationTimeout: 1000,
-        },
-        uri: 'ws://localhost:3001',
-        webSockImpl: WebSocket as any,
-      });
+      const client1 = new SubscriptionClient(
+        'ws://localhost:3002',
+        { timeout: 1000 },
+        WebSocket as any,
+      );
+      const client2 = new SubscriptionClient(
+        'ws://localhost:3002',
+        { timeout: 1000 },
+        WebSocket as any,
+      );
 
       const w1 = waitForClientToConnect(client1);
       const w2 = waitForClientToConnect(client2);
@@ -136,10 +132,11 @@ describe('Client integration test', () => {
 
   describe('operation', () => {
     it('sends an operation and receives a result (success)', async () => {
-      const client = new Client({
-        uri: 'ws://localhost:3001',
-        webSockImpl: WebSocket as any,
-      });
+      const client = new SubscriptionClient(
+        'ws://localhost:3002',
+        {},
+        WebSocket as any,
+      );
 
       await waitForClientToConnect(client);
 
@@ -156,10 +153,11 @@ describe('Client integration test', () => {
     });
 
     it('sends an operation and receives a result (failure)', async () => {
-      const client = new Client({
-        uri: 'ws://localhost:3001',
-        webSockImpl: WebSocket as any,
-      });
+      const client = new SubscriptionClient(
+        'ws://localhost:3002',
+        {},
+        WebSocket as any,
+      );
 
       await waitForClientToConnect(client);
 
@@ -173,29 +171,6 @@ describe('Client integration test', () => {
       });
 
       expect(result.errors).toBeDefined();
-    });
-
-    it('sends an operation and fails on timeout', async () => {
-      const client = new Client({
-        options: {
-          operationTimeout: 50,
-        },
-        uri: 'ws://localhost:3001',
-        webSockImpl: WebSocket as any,
-      });
-
-      await waitForClientToConnect(client);
-
-      const result = execute({
-        client,
-        query: gql`
-          {
-            delayed
-          }
-        `,
-      });
-
-      await expect(result).rejects.toThrow('Timed out');
     });
   });
 });

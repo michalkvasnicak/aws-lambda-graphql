@@ -89,10 +89,7 @@ describe('createWsHandler', () => {
         ),
       ).resolves.toEqual(
         expect.objectContaining({
-          body: formatMessage({
-            payload: {},
-            type: LEGACY_SERVER_EVENT_TYPES.GQL_CONNECTION_ACK,
-          }),
+          body: '',
           statusCode: 200,
         }),
       );

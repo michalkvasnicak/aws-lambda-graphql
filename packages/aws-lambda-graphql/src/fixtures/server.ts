@@ -116,7 +116,7 @@ class TestLambdaServer {
             {} as any,
           );
 
-          if (defaultResult) {
+          if (defaultResult && defaultResult.body) {
             ws.send(defaultResult.body);
           }
         });
@@ -135,7 +135,9 @@ class TestLambdaServer {
             conn.socket = ws as any;
           }
 
-          ws.send(result.body);
+          if (result && result.body) {
+            ws.send(result.body);
+          }
         }
       });
 
