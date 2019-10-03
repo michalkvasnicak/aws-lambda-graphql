@@ -1,0 +1,60 @@
+{
+  "projectName": "aws-lambda-graphql",
+  "projectOwner": "michalkvasnicak",
+  "repoType": "github",
+  "repoHost": "https://github.com",
+  "files": [
+    "README.md"
+  ],
+  "imageSize": 100,
+  "commit": false,
+  "contributors": [
+    {
+      "login": "michalkvasnicak",
+      "name": "Michal Kvasničák",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/174716?v=4",
+      "profile": "https://github.com/michalkvasnicak",
+      "contributions": [
+        "question",
+        "code",
+        "design",
+        "doc",
+        "example",
+        "ideas",
+        "review",
+        "test"
+      ]
+    },
+    {
+      "login": "AlpacaGoesCrazy",
+      "name": "AlpacaGoesCrazy",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/17003704?v=4",
+      "profile": "https://github.com/AlpacaGoesCrazy",
+      "contributions": [
+        "code",
+        "bug"
+      ]
+    },
+    {
+      "login": "guerrerocarlos",
+      "name": "Carlos Guerrero",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/82532?v=4",
+      "profile": "https://carlosguerrero.com/",
+      "contributions": [
+        "code",
+        "bug"
+      ]
+    },
+    {
+      "login": "sammarks",
+      "name": "Samuel Marks",
+      "avatar_url": "https://avatars1.githubusercontent.com/u/424093?v=4",
+      "profile": "http://sammarks.me/",
+      "contributions": [
+        "code",
+        "bug"
+      ]
+    }
+  ],
+  "commitConvention": "none"
+}
