@@ -3,7 +3,7 @@
 ![CircleCI](https://img.shields.io/circleci/project/github/michalkvasnicak/aws-lambda-graphql/master.svg?style=flat-square)
 ![Version](https://img.shields.io/npm/v/aws-lambda-graphql.svg?style=flat-square)
 
-_This library is not ready for production and is not really as robust as [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws)_
+_As of version 0.8.0 you can use [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws) client._
 
 _This library uses typescript so for now use types as documentation_
 
@@ -19,7 +19,8 @@ This library is created because I wanted to try if it's possible to implement Gr
 
 - [Infrastructure](#Infrastructure)
 - [Usage (server)](#usage-server)
-- [Usage (client)](#usage-client)
+- [Usage (Apollo client + subscriptions-transport-ws)](#usage-client-apollo)
+- [Usage (Apollo client + aws-lambda-ws-link)](#usage-client)
 - [Examples](#examples)
 
 ## Infrastructure
@@ -115,7 +116,40 @@ module.exports.consumeWsEvent = wsHandler;
 module.exports.consumeDynamoDBStream = eventProcessor;
 ```
 
-## Usage (client)
+## Usage (Apollo client + subscriptions-transport-ws)
+
+This library can be used with apollo client without any problems thanks to [AlpacaGoesCrazy's](https://github.com/AlpacaGoesCrazy) [pull request #27](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/27).
+
+```console
+yarn add apollo-client subscriptions-transport-ws
+# or
+npm install apollo-client subscriptions-transport-ws
+```
+
+### Implement your simple client
+
+```js
+import { WebSocketLink } from 'apollo-link-ws';
+import { InMemoryCache } from 'apollo-cache-inmemory';
+import { ApolloClient } from 'apollo-client';
+import { SubscriptionClient } from 'subscriptions-transport-ws';
+
+const wsClient = new SubscriptionClient(
+  'ws://localhost:8000',
+  { lazy: true, reconnect: true },
+  null,
+  [],
+);
+const link = new WebSocketLink(client);
+const client = new ApolloClient({
+  cache: new InMemoryCache(),
+  link,
+});
+
+// ...
+```
+
+## Usage (Apollo client + aws-lambda-ws-link)
 
 ```console
 yarn add aws-lambda-ws-link graphql
