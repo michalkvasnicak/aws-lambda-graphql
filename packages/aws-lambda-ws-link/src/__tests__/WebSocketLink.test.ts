@@ -10,7 +10,7 @@ describe('WebSocketLink', () => {
   let server: TestLambdaServer;
 
   beforeEach(async () => {
-    server = new TestLambdaServer({ port: 3002 });
+    server = new TestLambdaServer({ port: 3003 });
 
     await server.start();
   });
@@ -21,7 +21,7 @@ describe('WebSocketLink', () => {
 
   it('works correctly', async () => {
     const wsClient = new Client({
-      uri: 'ws://localhost:3002',
+      uri: 'ws://localhost:3003',
       webSockImpl: WebSocket as any,
     });
 

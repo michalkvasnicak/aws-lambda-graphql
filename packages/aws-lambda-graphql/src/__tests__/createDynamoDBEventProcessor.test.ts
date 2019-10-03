@@ -24,25 +24,28 @@ describe('createDynamoDBEventProcessor', () => {
           createAsyncIterator([
             [
               {
-                connection: { id: '1' } as any,
+                connection: { id: '1', data: {} } as any,
                 event: 'test',
                 operationId: '1',
                 operation: { query, variables: { authorId: '1' } },
               },
               {
-                connection: { id: '2' } as any,
+                connection: { id: '2', data: {} } as any,
                 event: 'test',
                 operationId: '1',
                 operation: { query, variables: { authorId: '2' } },
               },
               {
-                connection: { id: '3' } as any,
+                connection: { id: '3', data: {} } as any,
                 event: 'test',
                 operationId: '1',
                 operation: { query, variables: { authorId: '2' } },
               },
               {
-                connection: { id: '4' } as any,
+                connection: {
+                  id: '4',
+                  data: { useLegacyProtocol: true },
+                } as any,
                 event: 'test',
                 operationId: '1',
                 operation: { query, variables: { authorId: '1' } },
@@ -84,7 +87,15 @@ describe('createDynamoDBEventProcessor', () => {
 
     expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(4);
     expect(connectionManager.sendToConnection).toHaveBeenCalledWith(
-      { id: '1' },
+      { id: '1', data: {} },
+      formatMessage({
+        id: '1',
+        payload: { data: { textFeed: 'test 1' } },
+        type: 'data',
+      }),
+    );
+    expect(connectionManager.sendToConnection).toHaveBeenCalledWith(
+      { id: '4', data: { useLegacyProtocol: true } },
       formatMessage({
         id: '1',
         payload: { data: { textFeed: 'test 1' } },
@@ -92,35 +103,27 @@ describe('createDynamoDBEventProcessor', () => {
       }),
     );
     expect(connectionManager.sendToConnection).toHaveBeenCalledWith(
-      { id: '4' },
+      { id: '1', data: {} },
       formatMessage({
         id: '1',
         payload: { data: { textFeed: 'test 1' } },
-        type: 'GQL_OP_RESULT',
+        type: 'data',
       }),
     );
     expect(connectionManager.sendToConnection).toHaveBeenCalledWith(
-      { id: '1' },
-      formatMessage({
-        id: '1',
-        payload: { data: { textFeed: 'test 1' } },
-        type: 'GQL_OP_RESULT',
-      }),
-    );
-    expect(connectionManager.sendToConnection).toHaveBeenCalledWith(
-      { id: '2' },
+      { id: '2', data: {} },
       formatMessage({
         id: '1',
         payload: { data: { textFeed: 'test 2' } },
-        type: 'GQL_OP_RESULT',
+        type: 'data',
       }),
     );
     expect(connectionManager.sendToConnection).toHaveBeenCalledWith(
-      { id: '3' },
+      { id: '3', data: {} },
       formatMessage({
         id: '1',
         payload: { data: { textFeed: 'test 2' } },
-        type: 'GQL_OP_RESULT',
+        type: 'data',
       }),
     );
   });

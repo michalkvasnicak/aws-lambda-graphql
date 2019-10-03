@@ -21,6 +21,8 @@ export function execute({
       const subscriber = {
         next(val) {
           value = val;
+          // Apollo client does not call complete() on query/mutation operations
+          resolve(value);
         },
         complete() {
           resolve(value);

@@ -1,12 +1,6 @@
 import gql from 'graphql-tag';
-import React, {
-  Fragment,
-  useEffect,
-  useCallback,
-  useRef,
-  useState,
-} from 'react';
-import { OnSubscriptionDataOptions, Subscription } from 'react-apollo';
+import React, { useEffect, useCallback, useRef, useState } from 'react';
+import { OnSubscriptionDataOptions, useSubscription } from 'react-apollo';
 import { Box } from './Box';
 import { Message } from './Message';
 
@@ -41,6 +35,8 @@ function Messages() {
   );
   const listRef = useRef<HTMLDivElement>(null);
 
+  useSubscription(messageFeedSubscription, { onSubscriptionData });
+
   useEffect(() => {
     // scroll down
     if (listRef.current != null) {
@@ -50,18 +46,9 @@ function Messages() {
 
   return (
     <Box height="100%" mb={2} overflow="scroll" ref={listRef}>
-      <Subscription
-        subscription={messageFeedSubscription}
-        onSubscriptionData={onSubscriptionData}
-      >
-        {() => (
-          <Fragment>
-            {messages.map((message, i) => (
-              <Message key={message.id} odd={i % 2 === 0} text={message.text} />
-            ))}
-          </Fragment>
-        )}
-      </Subscription>
+      {messages.map((message, i) => (
+        <Message key={message.id} odd={i % 2 === 0} text={message.text} />
+      ))}
     </Box>
   );
 }

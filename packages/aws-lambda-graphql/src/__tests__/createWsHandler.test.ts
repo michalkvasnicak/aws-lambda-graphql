@@ -2,7 +2,12 @@ import { ulid } from 'ulid';
 import { formatMessage } from '../formatMessage';
 import { createWsHandler } from '../createWsHandler';
 import { createSchema } from '../fixtures/schema';
-import { SERVER_EVENT_TYPES, CLIENT_EVENT_TYPES } from '../protocol';
+import {
+  LEGACY_SERVER_EVENT_TYPES,
+  LEGACY_CLIENT_EVENT_TYPES,
+  SERVER_EVENT_TYPES,
+  CLIENT_EVENT_TYPES,
+} from '../protocol';
 
 describe('createWsHandler', () => {
   it('returns http 500 on invalid routeKey in event', async () => {
@@ -84,9 +89,7 @@ describe('createWsHandler', () => {
         ),
       ).resolves.toEqual(
         expect.objectContaining({
-          body: expect.stringMatching(
-            /^\{"id":"[A-Z0-9]{26}","payload":\{\},"type":"GQL_CONNECTED"\}$/,
-          ),
+          body: '',
           statusCode: 200,
         }),
       );
@@ -171,6 +174,10 @@ describe('createWsHandler', () => {
       await expect(
         handler(
           {
+            body: formatMessage({
+              payload: {},
+              type: CLIENT_EVENT_TYPES.GQL_CONNECTION_INIT,
+            }),
             requestContext: {
               connectionId: '1',
               domainName: 'domain',
@@ -186,10 +193,55 @@ describe('createWsHandler', () => {
       });
 
       expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
-      expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1');
+      expect(connectionManager.hydrateConnection).toHaveBeenCalledWith(
+        '1',
+        false,
+      );
     });
 
-    it('returns http 200 with GQL_OP_RESULT on query operation', async () => {
+    it('returns http 200 with GQL_CONNECTION_ACK on connection_init operation', async () => {
+      const handler = createWsHandler({
+        connectionManager,
+        subscriptionManager,
+        schema: createSchema(),
+      } as any);
+
+      connectionManager.hydrateConnection.mockResolvedValueOnce({});
+
+      await expect(
+        handler(
+          {
+            body: formatMessage({
+              payload: {},
+              type: CLIENT_EVENT_TYPES.GQL_CONNECTION_INIT,
+            }),
+            requestContext: {
+              connectionId: '1',
+              domainName: 'domain',
+              routeKey: '$default',
+              stage: 'stage',
+            } as any,
+          } as any,
+          {} as any,
+        ),
+      ).resolves.toEqual(
+        expect.objectContaining({
+          body: formatMessage({
+            type: SERVER_EVENT_TYPES.GQL_CONNECTION_ACK,
+          }),
+          statusCode: 200,
+        }),
+      );
+
+      expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
+      expect(connectionManager.hydrateConnection).toHaveBeenCalledWith(
+        '1',
+        false,
+      );
+      expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
+    });
+
+    it('returns http 200 with GQL_DATA on query operation', async () => {
       const handler = createWsHandler({
         connectionManager,
         subscriptionManager,
@@ -211,7 +263,7 @@ describe('createWsHandler', () => {
                   }
                 `,
               },
-              type: CLIENT_EVENT_TYPES.GQL_OP,
+              type: CLIENT_EVENT_TYPES.GQL_START,
             }),
             requestContext: {
               connectionId: '1',
@@ -227,18 +279,21 @@ describe('createWsHandler', () => {
           body: formatMessage({
             id,
             payload: { data: { testQuery: 'test' } },
-            type: SERVER_EVENT_TYPES.GQL_OP_RESULT,
+            type: SERVER_EVENT_TYPES.GQL_DATA,
           }),
           statusCode: 200,
         }),
       );
 
       expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
-      expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1');
+      expect(connectionManager.hydrateConnection).toHaveBeenCalledWith(
+        '1',
+        false,
+      );
       expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
     });
 
-    it('returns http 200 with GQL_OP_RESULT on mutation operation', async () => {
+    it('returns http 200 with GQL_DATA on mutation operation', async () => {
       const handler = createWsHandler({
         connectionManager,
         subscriptionManager,
@@ -263,7 +318,7 @@ describe('createWsHandler', () => {
                   text: 'Test this',
                 },
               },
-              type: CLIENT_EVENT_TYPES.GQL_OP,
+              type: CLIENT_EVENT_TYPES.GQL_START,
             }),
             requestContext: {
               connectionId: '1',
@@ -279,18 +334,21 @@ describe('createWsHandler', () => {
           body: formatMessage({
             id,
             payload: { data: { testMutation: 'Test this' } },
-            type: SERVER_EVENT_TYPES.GQL_OP_RESULT,
+            type: SERVER_EVENT_TYPES.GQL_DATA,
           }),
           statusCode: 200,
         }),
       );
 
       expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
-      expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1');
+      expect(connectionManager.hydrateConnection).toHaveBeenCalledWith(
+        '1',
+        false,
+      );
       expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
     });
 
-    it('returns http 200 with GQL_SUBSCRIBED on subscription operation', async () => {
+    it('returns http 200 with GQL_SUBSCRIBED on legacy subscription operation', async () => {
       const handler = createWsHandler({
         connectionManager,
         subscriptionManager,
@@ -315,7 +373,7 @@ describe('createWsHandler', () => {
                   authorId: 1,
                 },
               },
-              type: CLIENT_EVENT_TYPES.GQL_OP,
+              type: LEGACY_CLIENT_EVENT_TYPES.GQL_START,
             }),
             requestContext: {
               connectionId: '1',
@@ -331,19 +389,21 @@ describe('createWsHandler', () => {
           body: formatMessage({
             id,
             payload: {},
-            type: SERVER_EVENT_TYPES.GQL_SUBSCRIBED,
+            type: LEGACY_SERVER_EVENT_TYPES.GQL_SUBSCRIBED,
           }),
           statusCode: 200,
         }),
       );
 
       expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
-      expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1');
+      expect(connectionManager.hydrateConnection).toHaveBeenCalledWith(
+        '1',
+        true,
+      );
       expect(subscriptionManager.subscribe).toHaveBeenCalledTimes(1);
-      expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
     });
 
-    it('returns http 200 with GQL_UNSUBSCRIBED on unsubscibe', async () => {
+    it('returns http 200 with GQL_COMPLETE on unsubscibe', async () => {
       const handler = createWsHandler({
         connectionManager,
         subscriptionManager,
@@ -358,7 +418,7 @@ describe('createWsHandler', () => {
           {
             body: formatMessage({
               id,
-              type: CLIENT_EVENT_TYPES.GQL_UNSUBSCRIBE,
+              type: CLIENT_EVENT_TYPES.GQL_STOP,
             }),
             requestContext: {
               connectionId: '1',
@@ -373,19 +433,22 @@ describe('createWsHandler', () => {
         expect.objectContaining({
           body: formatMessage({
             id,
-            type: SERVER_EVENT_TYPES.GQL_UNSUBSCRIBED,
+            type: SERVER_EVENT_TYPES.GQL_COMPLETE,
           }),
           statusCode: 200,
         }),
       );
 
       expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
-      expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1');
+      expect(connectionManager.hydrateConnection).toHaveBeenCalledWith(
+        '1',
+        false,
+      );
       expect(subscriptionManager.unsubscribeOperation).toHaveBeenCalledTimes(1);
-      expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(0);
+      expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
     });
 
-    it('returns http 200 with GQL_OP_RESULT on invalid operation', async () => {
+    it('returns http 200 with GQL_DATA on invalid operation', async () => {
       const handler = createWsHandler({
         connectionManager,
         subscriptionManager,
@@ -410,7 +473,7 @@ describe('createWsHandler', () => {
                   authorId: 1,
                 },
               },
-              type: CLIENT_EVENT_TYPES.GQL_OP,
+              type: CLIENT_EVENT_TYPES.GQL_START,
             }),
             requestContext: {
               connectionId: '1',
@@ -424,14 +487,17 @@ describe('createWsHandler', () => {
       ).resolves.toEqual(
         expect.objectContaining({
           body: expect.stringMatching(
-            /^\{"id":"[A-Z0-9]{26}","payload":\{.+Cannot query field.+\},"type":"GQL_OP_RESULT"\}$/,
+            /^\{"id":"[A-Z0-9]{26}","payload":\{.+Cannot query field.+\},"type":"data"\}$/,
           ),
           statusCode: 200,
         }),
       );
 
       expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
-      expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1');
+      expect(connectionManager.hydrateConnection).toHaveBeenCalledWith(
+        '1',
+        false,
+      );
       expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
     });
   });

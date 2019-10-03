@@ -2,7 +2,10 @@ import { ExecutionResult, Observable } from 'apollo-link';
 import { getOperationAST, parse, print } from 'graphql';
 import { w3cwebsocket } from 'websocket';
 import { formatMessage } from '../formatMessage';
-import { CLIENT_EVENT_TYPES, GQLOperationResult } from '../protocol';
+import {
+  LEGACY_CLIENT_EVENT_TYPES as CLIENT_EVENT_TYPES,
+  GQLOperationResult,
+} from '../protocol';
 import { OperationRequest } from '../types';
 
 interface GQLOperationRequest {
@@ -12,7 +15,7 @@ interface GQLOperationRequest {
   operation: OperationRequest;
   clearTimeout: () => void;
   startTimeout: () => void;
-  type: CLIENT_EVENT_TYPES.GQL_OP;
+  type: CLIENT_EVENT_TYPES.GQL_START;
 }
 
 interface GQLUnsubscribeRequest {
@@ -20,7 +23,7 @@ interface GQLUnsubscribeRequest {
    * Same as ID of operation used to start the subscription
    */
   id: string;
-  type: CLIENT_EVENT_TYPES.GQL_UNSUBSCRIBE;
+  type: CLIENT_EVENT_TYPES.GQL_STOP;
 }
 
 type ExecutedOperation = GQLOperationRequest | GQLUnsubscribeRequest;
@@ -91,7 +94,7 @@ class OperationProcessor {
               }, this.operationTimeout);
             }
           },
-          type: CLIENT_EVENT_TYPES.GQL_OP,
+          type: CLIENT_EVENT_TYPES.GQL_START,
         };
 
         this.executedOperations[op.id] = op;
@@ -165,7 +168,7 @@ class OperationProcessor {
         // send STOP event
         this.send({
           id,
-          type: CLIENT_EVENT_TYPES.GQL_UNSUBSCRIBE,
+          type: CLIENT_EVENT_TYPES.GQL_STOP,
         });
       }
 
@@ -192,16 +195,16 @@ class OperationProcessor {
   };
 
   private sendRaw = (operation: ExecutedOperation) => {
-    if (operation.type === CLIENT_EVENT_TYPES.GQL_OP) {
+    if (operation.type === CLIENT_EVENT_TYPES.GQL_START) {
       operation.startTimeout();
     }
 
     if (this.socket) {
       this.socket.send(
         formatMessage(
-          operation.type === CLIENT_EVENT_TYPES.GQL_OP
+          operation.type === CLIENT_EVENT_TYPES.GQL_START
             ? {
-                type: CLIENT_EVENT_TYPES.GQL_OP,
+                type: CLIENT_EVENT_TYPES.GQL_START,
                 id: operation.id,
                 payload: {
                   ...operation.operation,
@@ -211,7 +214,7 @@ class OperationProcessor {
                       : operation.operation.query,
                 },
               }
-            : { type: CLIENT_EVENT_TYPES.GQL_UNSUBSCRIBE, id: operation.id },
+            : { type: CLIENT_EVENT_TYPES.GQL_STOP, id: operation.id },
         ),
       );
     }

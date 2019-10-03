@@ -15,6 +15,7 @@ provider:
         - dynamodb:DeleteItem
         - dynamodb:GetItem
         - dynamodb:PutItem
+        - dynamodb:UpdateItem
       Resource: !GetAtt ConnectionsDynamoDBTable.Arn
     - Effect: Allow
       Action:
