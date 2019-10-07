@@ -44,6 +44,7 @@
   "scripts": {
     "prebuild": "rimraf dist && rimraf tsconfig.tsbuildinfo",
     "build": "tsc -p .",
+    "prepublishOnly": "rimraf dist && rimraf tsconfig.tsbuildinfo && tsc -p .",
     "lint": "eslint --ext .js,.jsx,.ts,.tsx",
     "test": "jest",
     "test:ci": "jest --ci",
