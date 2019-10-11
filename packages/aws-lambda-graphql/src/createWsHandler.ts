@@ -124,6 +124,10 @@ function createWsHandler({
                   errorResponse,
                 );
                 await connectionManager.closeConnection(connection);
+                return {
+                  body: errorResponse,
+                  statusCode: 401,
+                };
               }
             }
 
