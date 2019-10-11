@@ -12,9 +12,17 @@ import {
   // @ts-ignore
   postToConnectionPromiseMock,
   // @ts-ignore
+  deleteConnectionMock,
+  // @ts-ignore
+  deleteConnectionPromiseMock,
+  // @ts-ignore
   putMock,
   // @ts-ignore
   putPromiseMock,
+  // @ts-ignore
+  updateMock,
+  // @ts-ignore
+  updatePromiseMock,
 } from 'aws-sdk';
 import {
   DynamoDBConnectionManager,
@@ -30,12 +38,15 @@ describe('DynamoDBConnectionManager', () => {
     deleteMock.mockClear();
     getMock.mockClear();
     postToConnectionMock.mockClear();
+    deleteConnectionMock.mockClear();
     putMock.mockClear();
     deletePromiseMock.mockReset();
     getPromiseMock.mockReset();
     postToConnectionPromiseMock.mockReset();
+    deleteConnectionPromiseMock.mockReset();
     putPromiseMock.mockReset();
     subscriptionManager.unsubscribeAllByConnectionId.mockReset();
+    updatePromiseMock.mockReset();
   });
 
   describe('registerConnection', () => {
@@ -50,6 +61,7 @@ describe('DynamoDBConnectionManager', () => {
         id: 'id',
         data: {
           endpoint: '',
+          context: {},
         },
       });
 
@@ -85,6 +97,19 @@ describe('DynamoDBConnectionManager', () => {
       });
 
       expect(getMock as jest.Mock).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('setConnectionContext', () => {
+    const manager = new DynamoDBConnectionManager({
+      subscriptions: subscriptionManager,
+    });
+
+    it('updates connection context', async () => {
+      await expect(
+        manager.setConnectionContext({}, { id: 'id', data: {} }),
+      ).resolves.toBeUndefined();
+      expect(updateMock as jest.Mock).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -162,6 +187,18 @@ describe('DynamoDBConnectionManager', () => {
       ).resolves.toBeUndefined();
 
       expect(deletePromiseMock as jest.Mock).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('closeConnection', () => {
+    const manager = new DynamoDBConnectionManager({
+      subscriptions: subscriptionManager,
+    });
+    it('closes connection', async () => {
+      await expect(
+        manager.closeConnection({ id: 'id', data: {} }),
+      ).resolves.toBeUndefined();
+      expect(deleteConnectionPromiseMock).toHaveBeenCalledTimes(1);
     });
   });
 });

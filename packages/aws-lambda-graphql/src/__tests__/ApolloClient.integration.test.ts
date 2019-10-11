@@ -12,7 +12,15 @@ describe('apollo client integration test', () => {
   let server: TestLambdaServer;
 
   beforeEach(async () => {
-    server = new TestLambdaServer({ port: 3002 });
+    server = new TestLambdaServer({
+      port: 3002,
+      onConnect: messagePayload => {
+        if (messagePayload.isUnauthorized) {
+          return false;
+        }
+        return messagePayload;
+      },
+    });
 
     await server.start();
   });
@@ -33,18 +41,40 @@ describe('apollo client integration test', () => {
         done();
       });
     });
+
+    it('disconnects unauthorized client', done => {
+      const client = new SubscriptionClient(
+        'ws://localhost:3002',
+        {
+          connectionParams: { isUnauthorized: true },
+        },
+        WebSocket as any,
+      );
+
+      client.onDisconnected(() => {
+        done();
+      });
+    });
   });
 
   describe('subscriptions', () => {
     it('streams results from a subscription', async () => {
       const client1 = new SubscriptionClient(
         'ws://localhost:3002',
-        { timeout: 1000 },
+        {
+          timeout: 1000,
+          // pass `authorId` to the subscription resolver context to filter subscription
+          connectionParams: { authorId: '1' },
+        },
         WebSocket as any,
       );
       const client2 = new SubscriptionClient(
         'ws://localhost:3002',
-        { timeout: 1000 },
+        {
+          timeout: 1000,
+          // pass `authorId` to the subscription resolver context to filter subscription
+          connectionParams: { authorId: '2' },
+        },
         WebSocket as any,
       );
 
@@ -55,29 +85,19 @@ describe('apollo client integration test', () => {
 
       const operation1Iterator = subscribe({
         client: client1,
-        // we need to use variables because otherwise we won't be able to use withFilter to filter
-        // events that should be sent back to client
         query: gql`
-          subscription test($authorId: ID!) {
-            textFeed(authorId: $authorId)
+          subscription test {
+            textFeed
           }
         `,
-        variables: {
-          authorId: '1',
-        },
       });
       const operation2Iterator = subscribe({
         client: client2,
-        // we need to use variables because otherwise we won't be able to use withFilter to filter
-        // events that should be sent back to client
         query: gql`
-          subscription test($authorId: ID!) {
-            textFeed(authorId: $authorId)
+          subscription test {
+            textFeed
           }
         `,
-        variables: {
-          authorId: '2',
-        },
       });
 
       // now publish all messages
@@ -171,6 +191,29 @@ describe('apollo client integration test', () => {
       });
 
       expect(result.errors).toBeDefined();
+    });
+
+    it('passes context to operation and gets context property back', async () => {
+      const client = new SubscriptionClient(
+        'ws://localhost:3002',
+        {
+          connectionParams: { foo: 'bar' },
+        },
+        WebSocket as any,
+      );
+
+      await waitForClientToConnect(client);
+
+      const result = await execute({
+        client,
+        query: gql`
+          {
+            getFooPropertyFromContext
+          }
+        `,
+      });
+
+      expect(result).toEqual({ data: { getFooPropertyFromContext: 'bar' } });
     });
   });
 });

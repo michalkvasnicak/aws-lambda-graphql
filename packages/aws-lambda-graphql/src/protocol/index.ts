@@ -43,6 +43,9 @@ export interface GQLOperation {
 export interface GQLUnsubscribe {
   /** The ID of GQLOperation used to subscribe */
   id: string;
+  payload?: {
+    [key: string]: any;
+  };
   type: CLIENT_EVENT_TYPES.GQL_STOP | LEGACY_CLIENT_EVENT_TYPES.GQL_STOP;
 }
 

@@ -147,6 +147,7 @@ describe('createWsHandler', () => {
     const connectionManager = {
       hydrateConnection: jest.fn(),
       sendToConnection: jest.fn(),
+      setConnectionContext: jest.fn(),
     };
     const subscriptionManager = {
       subscribe: jest.fn(),
@@ -156,6 +157,7 @@ describe('createWsHandler', () => {
     beforeEach(() => {
       connectionManager.hydrateConnection.mockReset();
       connectionManager.sendToConnection.mockReset();
+      connectionManager.setConnectionContext.mockReset();
       subscriptionManager.subscribe.mockReset();
       subscriptionManager.unsubscribeOperation.mockReset();
     });
@@ -199,7 +201,7 @@ describe('createWsHandler', () => {
       );
     });
 
-    it('returns http 200 with GQL_CONNECTION_ACK on connection_init operation', async () => {
+    it('returns http 200 with GQL_CONNECTION_ACK on connection_init operation and sets context', async () => {
       const handler = createWsHandler({
         connectionManager,
         subscriptionManager,
@@ -212,7 +214,9 @@ describe('createWsHandler', () => {
         handler(
           {
             body: formatMessage({
-              payload: {},
+              payload: {
+                contextAttribute: 'contextAttributeValue',
+              },
               type: CLIENT_EVENT_TYPES.GQL_CONNECTION_INIT,
             }),
             requestContext: {
@@ -239,6 +243,11 @@ describe('createWsHandler', () => {
         false,
       );
       expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
+      expect(connectionManager.setConnectionContext).toHaveBeenCalledTimes(1);
+      expect(connectionManager.setConnectionContext).toHaveBeenCalledWith(
+        { contextAttribute: 'contextAttributeValue' },
+        {},
+      );
     });
 
     it('returns http 200 with GQL_DATA on query operation', async () => {

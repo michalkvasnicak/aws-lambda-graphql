@@ -15,6 +15,7 @@ import {
   IConnectionManager,
   ISubscriptionManager,
   IdentifiedOperationRequest,
+  IConnection,
 } from './types';
 import { getProtocol } from './protocol/getProtocol';
 import { isLegacyOperation } from './helpers/isLegacyOperation';
@@ -29,6 +30,13 @@ interface WSHandlerOptions {
   context?: ExecuteOptions['context'];
   schema: GraphQLSchema;
   subscriptionManager: ISubscriptionManager;
+  onConnect?: (
+    messagePayload: { [key: string]: any },
+    connection: IConnection,
+  ) =>
+    | Promise<boolean | { [key: string]: any }>
+    | boolean
+    | { [key: string]: any };
   /**
    * An optional array of validation rules that will be applied on the document
    * in additional to those defined by the GraphQL spec.
@@ -41,6 +49,7 @@ function createWsHandler({
   context,
   schema,
   subscriptionManager,
+  onConnect,
   validationRules,
 }: WSHandlerOptions): APIGatewayV2Handler {
   return async function serveWebSocket(event, lambdaContext) {
@@ -95,6 +104,35 @@ function createWsHandler({
           );
 
           if (operation.type === CLIENT_EVENT_TYPES.GQL_CONNECTION_INIT) {
+            let newConnectionContext = operation.payload;
+
+            if (onConnect) {
+              try {
+                const result = await onConnect(operation.payload, connection);
+                if (result === false) {
+                  throw new Error('Prohibited connection!');
+                } else if (result !== null && typeof result === 'object') {
+                  newConnectionContext = result;
+                }
+              } catch (err) {
+                const errorResponse = formatMessage({
+                  type: SERVER_EVENT_TYPES.GQL_ERROR,
+                  payload: { message: err.message },
+                });
+                await connectionManager.sendToConnection(
+                  connection,
+                  errorResponse,
+                );
+                await connectionManager.closeConnection(connection);
+              }
+            }
+
+            // set connection context which will be available during graphql execution
+            await connectionManager.setConnectionContext(
+              newConnectionContext,
+              connection,
+            );
+
             // send GQL_CONNECTION_INIT message to client
             const response = formatMessage({
               type: SERVER_EVENT_TYPES.GQL_CONNECTION_ACK,
@@ -128,10 +166,17 @@ function createWsHandler({
             };
           }
 
+          const executeContext =
+            connection.data && connection.data.context
+              ? {
+                  ...connection.data.context,
+                  context,
+                }
+              : context;
           const result = await execute({
             connection,
             connectionManager,
-            context,
+            context: executeContext,
             event,
             lambdaContext,
             operation: operation as IdentifiedOperationRequest,

@@ -88,6 +88,7 @@ function createDynamoDBEventProcessor({
               schema,
               event: {} as any, // we don't have an API GW event here
               lambdaContext,
+              context: subscriber.connection.data.context,
               connection: subscriber.connection,
               operation: subscriber.operation,
               pubSub: pubSub as any,

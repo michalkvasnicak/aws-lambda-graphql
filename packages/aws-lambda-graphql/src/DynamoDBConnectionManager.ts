@@ -53,6 +53,27 @@ class DynamoDBConnectionManager implements IConnectionManager {
     return result.Item as IConnection;
   };
 
+  setConnectionContext = async (
+    context: Object,
+    connection: IConnection,
+  ): Promise<void> => {
+    await this.db
+      .update({
+        TableName: this.connectionsTable,
+        Key: {
+          id: connection.id,
+        },
+        UpdateExpression: 'set #data.context = :context',
+        ExpressionAttributeValues: {
+          ':context': context,
+        },
+        ExpressionAttributeNames: {
+          '#data': 'data',
+        },
+      })
+      .promise();
+  };
+
   setLegacyProtocol = async (connection: IConnection): Promise<void> => {
     await this.db
       .update({
@@ -60,12 +81,12 @@ class DynamoDBConnectionManager implements IConnectionManager {
         Key: {
           id: connection.id,
         },
-        UpdateExpression: 'set #m.useLegacyProtocol = :b',
+        UpdateExpression: 'set #data.useLegacyProtocol = :useLegacyProtocol',
         ExpressionAttributeValues: {
-          ':b': true,
+          ':useLegacyProtocol': true,
         },
         ExpressionAttributeNames: {
-          '#m': 'data',
+          '#data': 'data',
         },
       })
       .promise();
@@ -75,7 +96,10 @@ class DynamoDBConnectionManager implements IConnectionManager {
     connectionId,
     endpoint,
   }: IConnectEvent): Promise<IConnection> => {
-    const connection: IConnection = { id: connectionId, data: { endpoint } };
+    const connection: IConnection = {
+      id: connectionId,
+      data: { endpoint, context: {} },
+    };
 
     await this.db
       .put({
@@ -131,6 +155,18 @@ class DynamoDBConnectionManager implements IConnectionManager {
         .promise(),
       this.subscriptions.unsubscribeAllByConnectionId(connection.id),
     ]);
+  };
+
+  closeConnection = async (connection: IConnection): Promise<void> => {
+    const {
+      data: { endpoint },
+      id,
+    } = connection;
+    const managementApi = new ApiGatewayManagementApi({
+      endpoint,
+      apiVersion: '2018-11-29',
+    });
+    await managementApi.deleteConnection({ ConnectionId: id }).promise();
   };
 }
 

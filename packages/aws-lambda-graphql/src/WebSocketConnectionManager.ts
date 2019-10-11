@@ -38,6 +38,20 @@ class WebSocketConnectionManager implements IConnectionManager {
     return connection;
   };
 
+  setConnectionContext = async (
+    context: Object,
+    connection: WSConnection,
+  ): Promise<void> => {
+    this.connections.set(connection.id, {
+      socket: connection.socket,
+      id: connection.id,
+      data: {
+        ...connection.data,
+        context,
+      },
+    });
+  };
+
   setLegacyProtocol = async (connection: WSConnection): Promise<void> => {
     this.connections.set(connection.id, {
       socket: connection.socket,
@@ -57,7 +71,7 @@ class WebSocketConnectionManager implements IConnectionManager {
     const connection: WSConnection = {
       socket,
       id: connectionId,
-      data: { endpoint },
+      data: { endpoint, context: {} },
     };
 
     this.connections.set(connectionId, connection);
@@ -80,6 +94,13 @@ class WebSocketConnectionManager implements IConnectionManager {
 
   unregisterConnection = async (connection: IConnection): Promise<void> => {
     this.connections.delete(connection.id);
+  };
+
+  closeConnection = async (connection: WSConnection): Promise<void> => {
+    setTimeout(() => {
+      // wait so we can send error message first
+      connection.socket.close(1011);
+    }, 10);
   };
 }
 

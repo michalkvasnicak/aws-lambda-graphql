@@ -27,7 +27,10 @@ class TestLambdaServer {
 
   wsServer: WSServer | undefined;
 
-  constructor({ port = 3001 }: { port?: number } = {}) {
+  constructor({
+    port = 3001,
+    onConnect,
+  }: { port?: number; onConnect?: Function } = {}) {
     this.eventStore = new MemoryEventStore();
     this.port = port;
 
@@ -41,6 +44,7 @@ class TestLambdaServer {
       schema,
       connectionManager: this.connectionManager,
       subscriptionManager: this.subscriptionManager,
+      onConnect,
     });
     this.eventProcessor = createMemoryEventProcessor({
       schema,
