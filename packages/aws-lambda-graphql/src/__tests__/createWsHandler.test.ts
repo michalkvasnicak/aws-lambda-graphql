@@ -141,6 +141,34 @@ describe('createWsHandler', () => {
       expect(connectionManager.unregisterConnection).toHaveBeenCalledTimes(1);
       expect(connectionManager.unregisterConnection).toHaveBeenCalledWith({});
     });
+
+    it('calls onDisconnect', async () => {
+      const onDisconnect = jest.fn();
+      const handler = createWsHandler({
+        connectionManager,
+        schema: createSchema(),
+        onDisconnect,
+      } as any);
+
+      connectionManager.hydrateConnection.mockResolvedValueOnce({});
+
+      await expect(
+        handler(
+          {
+            requestContext: {
+              connectionId: '1',
+              domainName: 'domain',
+              routeKey: '$disconnect',
+              stage: 'stage',
+            } as any,
+          } as any,
+          {} as any,
+        ),
+      ).resolves.toBeUndefined();
+
+      expect(onDisconnect).toHaveBeenCalledTimes(1);
+      expect(onDisconnect).toHaveBeenCalledWith({});
+    });
   });
 
   describe('message phase', () => {

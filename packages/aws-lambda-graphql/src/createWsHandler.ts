@@ -37,6 +37,7 @@ interface WSHandlerOptions {
     | Promise<boolean | { [key: string]: any }>
     | boolean
     | { [key: string]: any };
+  onDisconnect?: (connection: IConnection) => void;
   /**
    * An optional array of validation rules that will be applied on the document
    * in additional to those defined by the GraphQL spec.
@@ -50,6 +51,7 @@ function createWsHandler({
   schema,
   subscriptionManager,
   onConnect,
+  onDisconnect,
   validationRules,
 }: WSHandlerOptions): APIGatewayV2Handler {
   return async function serveWebSocket(event, lambdaContext) {
@@ -80,6 +82,11 @@ function createWsHandler({
           const connection = await connectionManager.hydrateConnection(
             event.requestContext.connectionId,
           );
+
+          if (onDisconnect) {
+            onDisconnect(connection);
+          }
+
           await connectionManager.unregisterConnection(connection);
 
           // eslint-disable-next-line consistent-return
