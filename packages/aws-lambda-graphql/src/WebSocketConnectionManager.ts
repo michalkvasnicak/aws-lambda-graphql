@@ -1,6 +1,11 @@
 import * as WebSocket from 'ws';
 import { ExtendableError } from './errors';
-import { IConnection, IConnectEvent, IConnectionManager } from './types';
+import {
+  IConnection,
+  IConnectEvent,
+  IConnectionManager,
+  IConnectionData,
+} from './types';
 
 export class ConnectionNotFoundError extends ExtendableError {}
 
@@ -38,17 +43,14 @@ class WebSocketConnectionManager implements IConnectionManager {
     return connection;
   };
 
-  setConnectionContext = async (
-    context: Object,
+  setConnectionData = async (
+    data: IConnectionData,
     connection: WSConnection,
   ): Promise<void> => {
     this.connections.set(connection.id, {
       socket: connection.socket,
       id: connection.id,
-      data: {
-        ...connection.data,
-        context,
-      },
+      data,
     });
   };
 
@@ -71,7 +73,7 @@ class WebSocketConnectionManager implements IConnectionManager {
     const connection: WSConnection = {
       socket,
       id: connectionId,
-      data: { endpoint, context: {} },
+      data: { endpoint, context: {}, isInitialized: false },
     };
 
     this.connections.set(connectionId, connection);

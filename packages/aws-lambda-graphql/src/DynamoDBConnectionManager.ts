@@ -5,6 +5,7 @@ import {
   IConnectEvent,
   IConnectionManager,
   ISubscriptionManager,
+  IConnectionData,
 } from './types';
 
 export class ConnectionNotFoundError extends ExtendableError {}
@@ -53,8 +54,8 @@ class DynamoDBConnectionManager implements IConnectionManager {
     return result.Item as IConnection;
   };
 
-  setConnectionContext = async (
-    context: Object,
+  setConnectionData = async (
+    data: IConnectionData,
     connection: IConnection,
   ): Promise<void> => {
     await this.db
@@ -63,9 +64,9 @@ class DynamoDBConnectionManager implements IConnectionManager {
         Key: {
           id: connection.id,
         },
-        UpdateExpression: 'set #data.context = :context',
+        UpdateExpression: 'set #data = :data',
         ExpressionAttributeValues: {
-          ':context': context,
+          ':data': data,
         },
         ExpressionAttributeNames: {
           '#data': 'data',
@@ -98,7 +99,7 @@ class DynamoDBConnectionManager implements IConnectionManager {
   }: IConnectEvent): Promise<IConnection> => {
     const connection: IConnection = {
       id: connectionId,
-      data: { endpoint, context: {} },
+      data: { endpoint, context: {}, isInitialized: false },
     };
 
     await this.db

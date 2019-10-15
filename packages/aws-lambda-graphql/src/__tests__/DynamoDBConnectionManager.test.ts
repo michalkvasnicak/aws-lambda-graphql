@@ -62,6 +62,7 @@ describe('DynamoDBConnectionManager', () => {
         data: {
           endpoint: '',
           context: {},
+          isInitialized: false,
         },
       });
 
@@ -100,14 +101,14 @@ describe('DynamoDBConnectionManager', () => {
     });
   });
 
-  describe('setConnectionContext', () => {
+  describe('setConnectionData', () => {
     const manager = new DynamoDBConnectionManager({
       subscriptions: subscriptionManager,
     });
 
-    it('updates connection context', async () => {
+    it('updates connection data', async () => {
       await expect(
-        manager.setConnectionContext({}, { id: 'id', data: {} }),
+        manager.setConnectionData({}, { id: 'id', data: {} }),
       ).resolves.toBeUndefined();
       expect(updateMock as jest.Mock).toHaveBeenCalledTimes(1);
     });

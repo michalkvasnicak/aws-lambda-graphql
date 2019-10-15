@@ -139,8 +139,13 @@ function createWsHandler({
             }
 
             // set connection context which will be available during graphql execution
-            await connectionManager.setConnectionContext(
-              newConnectionContext,
+            const connectionData = {
+              ...connection.data,
+              context: newConnectionContext,
+              isInitialized: true,
+            };
+            await connectionManager.setConnectionData(
+              connectionData,
               connection,
             );
 
@@ -154,6 +159,20 @@ function createWsHandler({
             return {
               body: response,
               statusCode: 200,
+            };
+          }
+
+          if (!useLegacyProtocol && !connection.data.isInitialized) {
+            // refuse connection which did not send GQL_CONNECTION_INIT operation
+            const errorResponse = formatMessage({
+              type: SERVER_EVENT_TYPES.GQL_ERROR,
+              payload: { message: 'Prohibited connection!' },
+            });
+            await connectionManager.sendToConnection(connection, errorResponse);
+            await connectionManager.closeConnection(connection);
+            return {
+              body: errorResponse,
+              statusCode: 401,
             };
           }
 

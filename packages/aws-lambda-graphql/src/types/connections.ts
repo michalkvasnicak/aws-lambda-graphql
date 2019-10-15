@@ -8,16 +8,23 @@ export interface IConnection {
    * Extra connection data, this data is stored only upon registration
    * All values should be JSON serializable
    */
-  readonly data: {
-    [key: string]: any;
+  readonly data: IConnectionData;
+}
 
-    /**
-     * Connection context data provided from GQL_CONNECTION_INIT message or from onConnect method
-     * This data is passed to graphql resolvers' context
-     * All values should be JSON serializable
-     */
-    context: Object;
-  };
+export interface IConnectionData {
+  [key: string]: any;
+
+  /**
+   * Connection context data provided from GQL_CONNECTION_INIT message or from onConnect method
+   * This data is passed to graphql resolvers' context
+   * All values should be JSON serializable
+   */
+  context: Object;
+
+  /**
+   * Indicates whether connection sent GQL_CONNECTION_INIT message or
+   */
+  readonly isInitialized: boolean;
 }
 
 export interface IConnectEvent {
@@ -30,7 +37,7 @@ export interface IConnectionManager {
     connectionId: string,
     useLegacyProtocol?: boolean,
   ): Promise<IConnection>;
-  setConnectionContext(context: Object, connection: IConnection): Promise<void>;
+  setConnectionData(data: Object, connection: IConnection): Promise<void>;
   setLegacyProtocol(connection: IConnection): Promise<void>;
   registerConnection(event: IConnectEvent): Promise<IConnection>;
   sendToConnection(
