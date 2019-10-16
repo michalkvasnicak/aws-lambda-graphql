@@ -175,9 +175,10 @@ function createWsHandler({
             // refuse connection which did not send GQL_CONNECTION_INIT operation
             const errorResponse = formatMessage({
               type: SERVER_EVENT_TYPES.GQL_ERROR,
-              payload: { message: 'Connection is not initialized!' },
+              payload: { message: 'Prohibited connection!' },
             });
             await connectionManager.sendToConnection(connection, errorResponse);
+            await connectionManager.closeConnection(connection);
             return {
               body: errorResponse,
               statusCode: 401,
