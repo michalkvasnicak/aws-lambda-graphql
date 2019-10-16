@@ -433,11 +433,13 @@ describe('createWsHandler', () => {
       expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
     });
 
-    it('returns http 200 with GQL_DATA on query operation', async () => {
+    it('returns http 200 with GQL_DATA on query operation and calls onOperationComplete', async () => {
+      const onOperationComplete = jest.fn();
       const handler = createWsHandler({
         connectionManager,
         subscriptionManager,
         schema: createSchema(),
+        onOperationComplete,
       } as any);
       const id = ulid();
 
@@ -485,6 +487,11 @@ describe('createWsHandler', () => {
         false,
       );
       expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
+      expect(onOperationComplete).toHaveBeenCalledTimes(1);
+      expect(onOperationComplete).toHaveBeenCalledWith(
+        { data: { isInitialized: true } },
+        id,
+      );
     });
 
     it('returns http 200 with GQL_DATA on mutation operation', async () => {
@@ -599,11 +606,13 @@ describe('createWsHandler', () => {
       expect(subscriptionManager.subscribe).toHaveBeenCalledTimes(1);
     });
 
-    it('returns http 200 with GQL_COMPLETE on unsubscibe', async () => {
+    it('returns http 200 with GQL_COMPLETE on unsubscibe and calls onOperationComplete', async () => {
+      const onOperationComplete = jest.fn();
       const handler = createWsHandler({
         connectionManager,
         subscriptionManager,
         schema: createSchema(),
+        onOperationComplete,
       } as any);
       const id = ulid();
 
@@ -644,6 +653,11 @@ describe('createWsHandler', () => {
       );
       expect(subscriptionManager.unsubscribeOperation).toHaveBeenCalledTimes(1);
       expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
+      expect(onOperationComplete).toHaveBeenCalledTimes(1);
+      expect(onOperationComplete).toHaveBeenCalledWith(
+        { data: { isInitialized: true } },
+        id,
+      );
     });
 
     it('returns http 200 with GQL_DATA on invalid operation', async () => {

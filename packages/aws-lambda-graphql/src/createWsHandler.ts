@@ -30,6 +30,7 @@ interface WSHandlerOptions {
   context?: ExecuteOptions['context'];
   schema: GraphQLSchema;
   subscriptionManager: ISubscriptionManager;
+  onOperationComplete?: (connection: IConnection, opId: string) => void;
   onConnect?: (
     messagePayload: { [key: string]: any },
     connection: IConnection,
@@ -50,6 +51,7 @@ function createWsHandler({
   context,
   schema,
   subscriptionManager,
+  onOperationComplete,
   onConnect,
   onDisconnect,
   validationRules,
@@ -178,6 +180,9 @@ function createWsHandler({
 
           if (operation.type === CLIENT_EVENT_TYPES.GQL_STOP) {
             // unsubscribe client
+            if (onOperationComplete) {
+              onOperationComplete(connection, operation.id);
+            }
             const response = formatMessage({
               id: operation.id,
               type: SERVER_EVENT_TYPES.GQL_COMPLETE,
@@ -195,7 +200,6 @@ function createWsHandler({
               statusCode: 200,
             };
           }
-
           const executeContext =
             connection.data && connection.data.context
               ? {
@@ -233,6 +237,12 @@ function createWsHandler({
           }
           if (!isAsyncIterable(result)) {
             // send response to client so it can finish operation in case of query or mutation
+            if (onOperationComplete) {
+              onOperationComplete(
+                connection,
+                (operation as IdentifiedOperationRequest).operationId,
+              );
+            }
             const response = formatMessage({
               id: (operation as IdentifiedOperationRequest).operationId,
               payload: result as ExecutionResult,
