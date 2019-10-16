@@ -419,7 +419,7 @@ describe('createWsHandler', () => {
         expect.objectContaining({
           body: formatMessage({
             type: SERVER_EVENT_TYPES.GQL_ERROR,
-            payload: { message: 'Prohibited connection!' },
+            payload: { message: 'Connection is not initialized!' },
           }),
           statusCode: 401,
         }),
