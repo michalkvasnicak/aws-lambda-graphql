@@ -418,6 +418,7 @@ describe('createWsHandler', () => {
       ).resolves.toEqual(
         expect.objectContaining({
           body: formatMessage({
+            id,
             type: SERVER_EVENT_TYPES.GQL_ERROR,
             payload: { message: 'Prohibited connection!' },
           }),
