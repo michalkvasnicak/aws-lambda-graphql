@@ -551,6 +551,65 @@ describe('createWsHandler', () => {
       expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
     });
 
+    it('calls onOperation and changes execute parameters on mutation operation', async () => {
+      const onOperation = jest.fn((message, params) => ({
+        ...params,
+        variables: {
+          text: 'variable from server',
+        },
+      }));
+      const handler = createWsHandler({
+        connectionManager,
+        subscriptionManager,
+        schema: createSchema(),
+        onOperation,
+      } as any);
+      const id = ulid();
+
+      connectionManager.hydrateConnection.mockResolvedValueOnce({
+        data: { isInitialized: true },
+      });
+
+      await expect(
+        handler(
+          {
+            body: formatMessage({
+              id,
+              payload: {
+                query: /* GraphQL */ `
+                  mutation Test($text: String!) {
+                    testMutation(text: $text)
+                  }
+                `,
+                variables: {
+                  text: 'variable from client',
+                },
+              },
+              type: CLIENT_EVENT_TYPES.GQL_START,
+            }),
+            requestContext: {
+              connectionId: '1',
+              domainName: 'domain',
+              routeKey: '$default',
+              stage: 'stage',
+            } as any,
+          } as any,
+          {} as any,
+        ),
+      ).resolves.toEqual(
+        expect.objectContaining({
+          body: formatMessage({
+            id,
+            payload: { data: { testMutation: 'variable from server' } },
+            type: SERVER_EVENT_TYPES.GQL_DATA,
+          }),
+          statusCode: 200,
+        }),
+      );
+
+      expect(onOperation).toHaveBeenCalledTimes(1);
+    });
+
     it('returns http 200 with GQL_SUBSCRIBED on legacy subscription operation', async () => {
       const handler = createWsHandler({
         connectionManager,

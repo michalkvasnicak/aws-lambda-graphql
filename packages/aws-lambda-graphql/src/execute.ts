@@ -54,6 +54,10 @@ export interface ExecuteOptions {
    * in additional to those defined by the GraphQL spec.
    */
   validationRules?: ((context: ValidationContext) => ASTVisitor)[];
+  /**
+   * Optional function to modify execute options for specific operations
+   */
+  onOperation?: Function;
 }
 
 /**
@@ -78,24 +82,13 @@ async function execute({
   registerSubscriptions = true,
   useSubscriptions = false,
   validationRules = [],
+  onOperation,
 }: ExecuteOptions): Promise<ExecutionResult | AsyncIterator<ExecutionResult>> {
   // extract query from operation (parse if is string);
   const document: DocumentNode =
     typeof operation.query !== 'string'
       ? operation.query
       : parse(operation.query);
-
-  // validate document
-  const validationErrors = validate(schema, document, [
-    ...specifiedRules,
-    ...validationRules,
-  ]);
-
-  if (validationErrors.length > 0) {
-    return {
-      errors: validationErrors,
-    };
-  }
 
   // this is internal context that should not be used by a user in resolvers
   // this is only added to provide access for PubSub to get connection managers and other
@@ -120,18 +113,55 @@ async function execute({
   // detect operation type
   const operationAST = getOperationAST(document, operation.operationName || '');
 
+  const baseParams = {
+    query: document,
+    variables: operation.variables,
+    operationName: operation.operationName,
+    context: contextValue,
+    schema,
+  };
+  let promisedParams = Promise.resolve(baseParams);
+
+  if (onOperation) {
+    promisedParams = Promise.resolve(
+      onOperation(operation, baseParams, connection),
+    );
+  }
+
+  const params = await promisedParams;
+  if (!params || typeof params !== 'object') {
+    throw new Error(
+      'Invalid params returned from onOperation! return values must be an object!',
+    );
+  }
+  if (!params.schema) {
+    throw new Error('Missing schema parameter!');
+  }
+
+  // validate document
+  const validationErrors = validate(schema, document, [
+    ...specifiedRules,
+    ...validationRules,
+  ]);
+
+  if (validationErrors.length > 0) {
+    return {
+      errors: validationErrors,
+    };
+  }
+
   if (useSubscriptions) {
     if (operationAST!.operation === 'subscription') {
       return gqlSubscribe({
         document,
         rootValue,
-        schema,
+        schema: params.schema,
         contextValue: {
           ...internalContext,
-          ...contextValue,
+          ...params.context,
         },
-        operationName: operation.operationName,
-        variableValues: operation.variables,
+        operationName: params.operationName,
+        variableValues: params.variables,
       });
     }
   } else if (!useSubscriptions && operationAST!.operation === 'subscription') {
@@ -141,13 +171,13 @@ async function execute({
   return gqlExecute({
     document,
     rootValue,
-    schema,
+    schema: params.schema,
     contextValue: {
       ...internalContext,
-      ...contextValue,
+      ...params.context,
     },
-    operationName: operation.operationName,
-    variableValues: operation.variables,
+    operationName: params.operationName,
+    variableValues: params.variables,
   });
 }
 

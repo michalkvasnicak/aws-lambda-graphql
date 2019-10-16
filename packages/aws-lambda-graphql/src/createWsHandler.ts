@@ -16,6 +16,7 @@ import {
   ISubscriptionManager,
   IdentifiedOperationRequest,
   IConnection,
+  OperationRequest,
 } from './types';
 import { getProtocol } from './protocol/getProtocol';
 import { isLegacyOperation } from './helpers/isLegacyOperation';
@@ -30,6 +31,11 @@ interface WSHandlerOptions {
   context?: ExecuteOptions['context'];
   schema: GraphQLSchema;
   subscriptionManager: ISubscriptionManager;
+  onOperation?: (
+    message: OperationRequest,
+    params: Object,
+    connection: IConnection,
+  ) => Promise<Object> | Object;
   onOperationComplete?: (connection: IConnection, opId: string) => void;
   onConnect?: (
     messagePayload: { [key: string]: any },
@@ -51,6 +57,7 @@ function createWsHandler({
   context,
   schema,
   subscriptionManager,
+  onOperation,
   onOperationComplete,
   onConnect,
   onDisconnect,
@@ -218,6 +225,7 @@ function createWsHandler({
             pubSub: new PubSub(),
             useSubscriptions: true,
             validationRules,
+            onOperation,
           });
 
           if (isAsyncIterable(result) && useLegacyProtocol) {
