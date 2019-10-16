@@ -174,7 +174,6 @@ function createWsHandler({
           if (!useLegacyProtocol && !connection.data.isInitialized) {
             // refuse connection which did not send GQL_CONNECTION_INIT operation
             const errorResponse = formatMessage({
-              id: (operation as IdentifiedOperationRequest).operationId,
               type: SERVER_EVENT_TYPES.GQL_ERROR,
               payload: { message: 'Prohibited connection!' },
             });
