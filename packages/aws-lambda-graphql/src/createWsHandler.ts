@@ -207,17 +207,10 @@ function createWsHandler({
               statusCode: 200,
             };
           }
-          const executeContext =
-            connection.data && connection.data.context
-              ? {
-                  ...connection.data.context,
-                  context,
-                }
-              : context;
           const result = await execute({
             connection,
             connectionManager,
-            context: executeContext,
+            context,
             event,
             lambdaContext,
             operation: operation as IdentifiedOperationRequest,

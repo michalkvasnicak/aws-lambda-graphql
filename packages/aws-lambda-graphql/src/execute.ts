@@ -113,11 +113,16 @@ async function execute({
   // detect operation type
   const operationAST = getOperationAST(document, operation.operationName || '');
 
+  const connectionContext = connection.data ? connection.data.context : {};
+
   const baseParams = {
     query: document,
     variables: operation.variables,
     operationName: operation.operationName,
-    context: contextValue,
+    context: {
+      ...connectionContext,
+      ...contextValue,
+    },
     schema,
   };
   let promisedParams = Promise.resolve(baseParams);
