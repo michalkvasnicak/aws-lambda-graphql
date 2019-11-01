@@ -15,6 +15,8 @@ import {
   IConnectionManager,
   ISubscriptionManager,
   IdentifiedOperationRequest,
+  IConnection,
+  OperationRequest,
 } from './types';
 import { getProtocol } from './protocol/getProtocol';
 import { isLegacyOperation } from './helpers/isLegacyOperation';
@@ -29,6 +31,20 @@ interface WSHandlerOptions {
   context?: ExecuteOptions['context'];
   schema: GraphQLSchema;
   subscriptionManager: ISubscriptionManager;
+  onOperation?: (
+    message: OperationRequest,
+    params: Object,
+    connection: IConnection,
+  ) => Promise<Object> | Object;
+  onOperationComplete?: (connection: IConnection, opId: string) => void;
+  onConnect?: (
+    messagePayload: { [key: string]: any },
+    connection: IConnection,
+  ) =>
+    | Promise<boolean | { [key: string]: any }>
+    | boolean
+    | { [key: string]: any };
+  onDisconnect?: (connection: IConnection) => void;
   /**
    * An optional array of validation rules that will be applied on the document
    * in additional to those defined by the GraphQL spec.
@@ -41,6 +57,10 @@ function createWsHandler({
   context,
   schema,
   subscriptionManager,
+  onOperation,
+  onOperationComplete,
+  onConnect,
+  onDisconnect,
   validationRules,
 }: WSHandlerOptions): APIGatewayV2Handler {
   return async function serveWebSocket(event, lambdaContext) {
@@ -71,6 +91,11 @@ function createWsHandler({
           const connection = await connectionManager.hydrateConnection(
             event.requestContext.connectionId,
           );
+
+          if (onDisconnect) {
+            onDisconnect(connection);
+          }
+
           await connectionManager.unregisterConnection(connection);
 
           // eslint-disable-next-line consistent-return
@@ -95,6 +120,44 @@ function createWsHandler({
           );
 
           if (operation.type === CLIENT_EVENT_TYPES.GQL_CONNECTION_INIT) {
+            let newConnectionContext = operation.payload;
+
+            if (onConnect) {
+              try {
+                const result = await onConnect(operation.payload, connection);
+                if (result === false) {
+                  throw new Error('Prohibited connection!');
+                } else if (result !== null && typeof result === 'object') {
+                  newConnectionContext = result;
+                }
+              } catch (err) {
+                const errorResponse = formatMessage({
+                  type: SERVER_EVENT_TYPES.GQL_ERROR,
+                  payload: { message: err.message },
+                });
+                await connectionManager.sendToConnection(
+                  connection,
+                  errorResponse,
+                );
+                await connectionManager.closeConnection(connection);
+                return {
+                  body: errorResponse,
+                  statusCode: 401,
+                };
+              }
+            }
+
+            // set connection context which will be available during graphql execution
+            const connectionData = {
+              ...connection.data,
+              context: newConnectionContext,
+              isInitialized: true,
+            };
+            await connectionManager.setConnectionData(
+              connectionData,
+              connection,
+            );
+
             // send GQL_CONNECTION_INIT message to client
             const response = formatMessage({
               type: SERVER_EVENT_TYPES.GQL_CONNECTION_ACK,
@@ -108,8 +171,25 @@ function createWsHandler({
             };
           }
 
+          if (!useLegacyProtocol && !connection.data.isInitialized) {
+            // refuse connection which did not send GQL_CONNECTION_INIT operation
+            const errorResponse = formatMessage({
+              type: SERVER_EVENT_TYPES.GQL_ERROR,
+              payload: { message: 'Prohibited connection!' },
+            });
+            await connectionManager.sendToConnection(connection, errorResponse);
+            await connectionManager.closeConnection(connection);
+            return {
+              body: errorResponse,
+              statusCode: 401,
+            };
+          }
+
           if (operation.type === CLIENT_EVENT_TYPES.GQL_STOP) {
             // unsubscribe client
+            if (onOperationComplete) {
+              onOperationComplete(connection, operation.id);
+            }
             const response = formatMessage({
               id: operation.id,
               type: SERVER_EVENT_TYPES.GQL_COMPLETE,
@@ -127,7 +207,6 @@ function createWsHandler({
               statusCode: 200,
             };
           }
-
           const result = await execute({
             connection,
             connectionManager,
@@ -140,6 +219,7 @@ function createWsHandler({
             pubSub: new PubSub(),
             useSubscriptions: true,
             validationRules,
+            onOperation,
           });
 
           if (isAsyncIterable(result) && useLegacyProtocol) {
@@ -158,6 +238,12 @@ function createWsHandler({
           }
           if (!isAsyncIterable(result)) {
             // send response to client so it can finish operation in case of query or mutation
+            if (onOperationComplete) {
+              onOperationComplete(
+                connection,
+                (operation as IdentifiedOperationRequest).operationId,
+              );
+            }
             const response = formatMessage({
               id: (operation as IdentifiedOperationRequest).operationId,
               payload: result as ExecutionResult,

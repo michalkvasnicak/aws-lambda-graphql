@@ -78,6 +78,7 @@ function createMemoryEventProcessor({
               schema,
               event: {} as any, // we don't have api gateway event here
               lambdaContext: lambdaContext as any, // we don't have a lambda's context here
+              context: subscriber.connection.data.context,
               connection: subscriber.connection,
               operation: subscriber.operation,
               pubSub: pubSub as any,

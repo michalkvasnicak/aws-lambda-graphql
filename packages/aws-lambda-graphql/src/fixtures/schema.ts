@@ -12,10 +12,11 @@ const typeDefs = /* GraphQL */ `
   type Query {
     delayed: Boolean!
     testQuery: String!
+    getFooPropertyFromContext: String
   }
 
   type Subscription {
-    textFeed(authorId: ID!): String!
+    textFeed(authorId: ID): String!
   }
 `;
 
@@ -60,6 +61,9 @@ function createSchema({
 
           return 'test';
         },
+        getFooPropertyFromContext(parent: any, args: any, ctx: IContext) {
+          return ctx.foo;
+        },
       },
       Subscription: {
         textFeed: {
@@ -76,7 +80,12 @@ function createSchema({
           },
           subscribe: withFilter(
             pubSub.subscribe('test'),
-            (payload, args) => payload.authorId === args.authorId,
+            (payload, args, ctx) => {
+              const subscriberAuthorId = ctx.authorId
+                ? ctx.authorId
+                : args.authorId;
+              return payload.authorId === subscriberAuthorId;
+            },
           ),
         },
       },

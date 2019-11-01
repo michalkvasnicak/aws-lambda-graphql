@@ -40,6 +40,8 @@ export interface IContext {
     registerSubscriptions?: boolean;
     subscriptionManager: ISubscriptionManager;
   };
+
+  [key: string]: any;
 }
 
 export interface OperationRequest {

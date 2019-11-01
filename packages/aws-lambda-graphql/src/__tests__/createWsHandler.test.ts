@@ -141,12 +141,42 @@ describe('createWsHandler', () => {
       expect(connectionManager.unregisterConnection).toHaveBeenCalledTimes(1);
       expect(connectionManager.unregisterConnection).toHaveBeenCalledWith({});
     });
+
+    it('calls onDisconnect', async () => {
+      const onDisconnect = jest.fn();
+      const handler = createWsHandler({
+        connectionManager,
+        schema: createSchema(),
+        onDisconnect,
+      } as any);
+
+      connectionManager.hydrateConnection.mockResolvedValueOnce({});
+
+      await expect(
+        handler(
+          {
+            requestContext: {
+              connectionId: '1',
+              domainName: 'domain',
+              routeKey: '$disconnect',
+              stage: 'stage',
+            } as any,
+          } as any,
+          {} as any,
+        ),
+      ).resolves.toBeUndefined();
+
+      expect(onDisconnect).toHaveBeenCalledTimes(1);
+      expect(onDisconnect).toHaveBeenCalledWith({});
+    });
   });
 
   describe('message phase', () => {
     const connectionManager = {
       hydrateConnection: jest.fn(),
       sendToConnection: jest.fn(),
+      setConnectionData: jest.fn(),
+      closeConnection: jest.fn(),
     };
     const subscriptionManager = {
       subscribe: jest.fn(),
@@ -156,6 +186,8 @@ describe('createWsHandler', () => {
     beforeEach(() => {
       connectionManager.hydrateConnection.mockReset();
       connectionManager.sendToConnection.mockReset();
+      connectionManager.setConnectionData.mockReset();
+      connectionManager.closeConnection.mockReset();
       subscriptionManager.subscribe.mockReset();
       subscriptionManager.unsubscribeOperation.mockReset();
     });
@@ -199,7 +231,7 @@ describe('createWsHandler', () => {
       );
     });
 
-    it('returns http 200 with GQL_CONNECTION_ACK on connection_init operation', async () => {
+    it('returns http 200 with GQL_CONNECTION_ACK on connection_init operation and sets context', async () => {
       const handler = createWsHandler({
         connectionManager,
         subscriptionManager,
@@ -212,7 +244,9 @@ describe('createWsHandler', () => {
         handler(
           {
             body: formatMessage({
-              payload: {},
+              payload: {
+                contextAttribute: 'contextAttributeValue',
+              },
               type: CLIENT_EVENT_TYPES.GQL_CONNECTION_INIT,
             }),
             requestContext: {
@@ -239,9 +273,114 @@ describe('createWsHandler', () => {
         false,
       );
       expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
+      expect(connectionManager.setConnectionData).toHaveBeenCalledTimes(1);
+      expect(connectionManager.setConnectionData).toHaveBeenCalledWith(
+        {
+          context: { contextAttribute: 'contextAttributeValue' },
+          isInitialized: true,
+        },
+        {},
+      );
     });
 
-    it('returns http 200 with GQL_DATA on query operation', async () => {
+    it('calls onConnect and sets return object as context', async () => {
+      const onConnect = jest.fn();
+      onConnect.mockResolvedValueOnce({ key: 'value1' });
+
+      const handler = createWsHandler({
+        connectionManager,
+        schema: createSchema(),
+        onConnect,
+      } as any);
+
+      connectionManager.hydrateConnection.mockResolvedValueOnce({});
+
+      await handler(
+        {
+          body: formatMessage({
+            payload: { key: 'value2' },
+            type: CLIENT_EVENT_TYPES.GQL_CONNECTION_INIT,
+          }),
+          requestContext: {
+            connectionId: '1',
+            domainName: 'domain',
+            routeKey: '$default',
+            stage: 'stage',
+          } as any,
+        } as any,
+        {} as any,
+      );
+
+      expect(onConnect).toHaveBeenCalledTimes(1);
+      expect(onConnect).toHaveBeenCalledWith({ key: 'value2' }, {});
+
+      expect(connectionManager.setConnectionData).toHaveBeenCalledTimes(1);
+      expect(connectionManager.setConnectionData).toHaveBeenCalledWith(
+        {
+          context: { key: 'value1' },
+          isInitialized: true,
+        },
+        {},
+      );
+    });
+
+    it('refuses connection when onConnect returns false', async () => {
+      const onConnect = jest.fn();
+      onConnect.mockResolvedValueOnce(false);
+
+      const handler = createWsHandler({
+        connectionManager,
+        schema: createSchema(),
+        onConnect,
+      } as any);
+
+      connectionManager.hydrateConnection.mockResolvedValueOnce({});
+
+      await expect(
+        handler(
+          {
+            body: formatMessage({
+              payload: {},
+              type: CLIENT_EVENT_TYPES.GQL_CONNECTION_INIT,
+            }),
+            requestContext: {
+              connectionId: '1',
+              domainName: 'domain',
+              routeKey: '$default',
+              stage: 'stage',
+            } as any,
+          } as any,
+          {} as any,
+        ),
+      ).resolves.toEqual(
+        expect.objectContaining({
+          body: formatMessage({
+            type: SERVER_EVENT_TYPES.GQL_ERROR,
+            payload: { message: 'Prohibited connection!' },
+          }),
+          statusCode: 401,
+        }),
+      );
+
+      expect(onConnect).toHaveBeenCalledTimes(1);
+      expect(onConnect).toHaveBeenCalledWith({}, {});
+
+      expect(connectionManager.setConnectionData).toHaveBeenCalledTimes(0);
+
+      expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
+      expect(connectionManager.sendToConnection).toHaveBeenCalledWith(
+        {},
+        formatMessage({
+          type: SERVER_EVENT_TYPES.GQL_ERROR,
+          payload: { message: 'Prohibited connection!' },
+        }),
+      );
+
+      expect(connectionManager.closeConnection).toHaveBeenCalledTimes(1);
+      expect(connectionManager.closeConnection).toHaveBeenCalledWith({});
+    });
+
+    it('returns http 401 on not initialized connection operation', async () => {
       const handler = createWsHandler({
         connectionManager,
         subscriptionManager,
@@ -249,7 +388,64 @@ describe('createWsHandler', () => {
       } as any);
       const id = ulid();
 
-      connectionManager.hydrateConnection.mockResolvedValueOnce({});
+      connectionManager.hydrateConnection.mockResolvedValueOnce({
+        data: { isInitialized: false },
+      });
+
+      await expect(
+        handler(
+          {
+            body: formatMessage({
+              id,
+              payload: {
+                query: /* GraphQL */ `
+                  query Test {
+                    testQuery
+                  }
+                `,
+              },
+              type: CLIENT_EVENT_TYPES.GQL_START,
+            }),
+            requestContext: {
+              connectionId: '1',
+              domainName: 'domain',
+              routeKey: '$default',
+              stage: 'stage',
+            } as any,
+          } as any,
+          {} as any,
+        ),
+      ).resolves.toEqual(
+        expect.objectContaining({
+          body: formatMessage({
+            type: SERVER_EVENT_TYPES.GQL_ERROR,
+            payload: { message: 'Prohibited connection!' },
+          }),
+          statusCode: 401,
+        }),
+      );
+
+      expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
+      expect(connectionManager.hydrateConnection).toHaveBeenCalledWith(
+        '1',
+        false,
+      );
+      expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
+    });
+
+    it('returns http 200 with GQL_DATA on query operation and calls onOperationComplete', async () => {
+      const onOperationComplete = jest.fn();
+      const handler = createWsHandler({
+        connectionManager,
+        subscriptionManager,
+        schema: createSchema(),
+        onOperationComplete,
+      } as any);
+      const id = ulid();
+
+      connectionManager.hydrateConnection.mockResolvedValueOnce({
+        data: { isInitialized: true },
+      });
 
       await expect(
         handler(
@@ -291,6 +487,11 @@ describe('createWsHandler', () => {
         false,
       );
       expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
+      expect(onOperationComplete).toHaveBeenCalledTimes(1);
+      expect(onOperationComplete).toHaveBeenCalledWith(
+        { data: { isInitialized: true } },
+        id,
+      );
     });
 
     it('returns http 200 with GQL_DATA on mutation operation', async () => {
@@ -301,7 +502,9 @@ describe('createWsHandler', () => {
       } as any);
       const id = ulid();
 
-      connectionManager.hydrateConnection.mockResolvedValueOnce({});
+      connectionManager.hydrateConnection.mockResolvedValueOnce({
+        data: { isInitialized: true },
+      });
 
       await expect(
         handler(
@@ -346,6 +549,65 @@ describe('createWsHandler', () => {
         false,
       );
       expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
+    });
+
+    it('calls onOperation and changes execute parameters on mutation operation', async () => {
+      const onOperation = jest.fn((message, params) => ({
+        ...params,
+        variables: {
+          text: 'variable from server',
+        },
+      }));
+      const handler = createWsHandler({
+        connectionManager,
+        subscriptionManager,
+        schema: createSchema(),
+        onOperation,
+      } as any);
+      const id = ulid();
+
+      connectionManager.hydrateConnection.mockResolvedValueOnce({
+        data: { isInitialized: true },
+      });
+
+      await expect(
+        handler(
+          {
+            body: formatMessage({
+              id,
+              payload: {
+                query: /* GraphQL */ `
+                  mutation Test($text: String!) {
+                    testMutation(text: $text)
+                  }
+                `,
+                variables: {
+                  text: 'variable from client',
+                },
+              },
+              type: CLIENT_EVENT_TYPES.GQL_START,
+            }),
+            requestContext: {
+              connectionId: '1',
+              domainName: 'domain',
+              routeKey: '$default',
+              stage: 'stage',
+            } as any,
+          } as any,
+          {} as any,
+        ),
+      ).resolves.toEqual(
+        expect.objectContaining({
+          body: formatMessage({
+            id,
+            payload: { data: { testMutation: 'variable from server' } },
+            type: SERVER_EVENT_TYPES.GQL_DATA,
+          }),
+          statusCode: 200,
+        }),
+      );
+
+      expect(onOperation).toHaveBeenCalledTimes(1);
     });
 
     it('returns http 200 with GQL_SUBSCRIBED on legacy subscription operation', async () => {
@@ -403,15 +665,19 @@ describe('createWsHandler', () => {
       expect(subscriptionManager.subscribe).toHaveBeenCalledTimes(1);
     });
 
-    it('returns http 200 with GQL_COMPLETE on unsubscibe', async () => {
+    it('returns http 200 with GQL_COMPLETE on unsubscibe and calls onOperationComplete', async () => {
+      const onOperationComplete = jest.fn();
       const handler = createWsHandler({
         connectionManager,
         subscriptionManager,
         schema: createSchema(),
+        onOperationComplete,
       } as any);
       const id = ulid();
 
-      connectionManager.hydrateConnection.mockResolvedValueOnce({});
+      connectionManager.hydrateConnection.mockResolvedValueOnce({
+        data: { isInitialized: true },
+      });
 
       await expect(
         handler(
@@ -446,6 +712,11 @@ describe('createWsHandler', () => {
       );
       expect(subscriptionManager.unsubscribeOperation).toHaveBeenCalledTimes(1);
       expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
+      expect(onOperationComplete).toHaveBeenCalledTimes(1);
+      expect(onOperationComplete).toHaveBeenCalledWith(
+        { data: { isInitialized: true } },
+        id,
+      );
     });
 
     it('returns http 200 with GQL_DATA on invalid operation', async () => {
@@ -456,7 +727,9 @@ describe('createWsHandler', () => {
       } as any);
       const id = ulid();
 
-      connectionManager.hydrateConnection.mockResolvedValueOnce({});
+      connectionManager.hydrateConnection.mockResolvedValueOnce({
+        data: { isInitialized: true },
+      });
 
       await expect(
         handler(

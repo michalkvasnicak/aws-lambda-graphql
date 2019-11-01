@@ -1,6 +1,11 @@
 import * as WebSocket from 'ws';
 import { ExtendableError } from './errors';
-import { IConnection, IConnectEvent, IConnectionManager } from './types';
+import {
+  IConnection,
+  IConnectEvent,
+  IConnectionManager,
+  IConnectionData,
+} from './types';
 
 export class ConnectionNotFoundError extends ExtendableError {}
 
@@ -38,6 +43,17 @@ class WebSocketConnectionManager implements IConnectionManager {
     return connection;
   };
 
+  setConnectionData = async (
+    data: IConnectionData,
+    connection: WSConnection,
+  ): Promise<void> => {
+    this.connections.set(connection.id, {
+      socket: connection.socket,
+      id: connection.id,
+      data,
+    });
+  };
+
   setLegacyProtocol = async (connection: WSConnection): Promise<void> => {
     this.connections.set(connection.id, {
       socket: connection.socket,
@@ -57,7 +73,7 @@ class WebSocketConnectionManager implements IConnectionManager {
     const connection: WSConnection = {
       socket,
       id: connectionId,
-      data: { endpoint },
+      data: { endpoint, context: {}, isInitialized: false },
     };
 
     this.connections.set(connectionId, connection);
@@ -80,6 +96,13 @@ class WebSocketConnectionManager implements IConnectionManager {
 
   unregisterConnection = async (connection: IConnection): Promise<void> => {
     this.connections.delete(connection.id);
+  };
+
+  closeConnection = async (connection: WSConnection): Promise<void> => {
+    setTimeout(() => {
+      // wait so we can send error message first
+      connection.socket.close(1011);
+    }, 10);
   };
 }
 
