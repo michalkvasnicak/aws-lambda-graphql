@@ -27,6 +27,7 @@
   "dependencies": {
     "@types/aws-lambda": "8.10.31",
     "@types/backo2": "1.0.0",
+    "@types/websocket": "^0.0.40",
     "backo2": "1.0.2",
     "content-type": "^1.0.4",
     "eventemitter3": "^3.1.2",
@@ -49,7 +50,6 @@
     "@types/content-type": "^1.1.2",
     "@types/graphql": "14.2.0",
     "@types/node": "8.10.39",
-    "@types/websocket": "^0.0.40",
     "apollo-link": "1.2.11",
     "aws-sdk": "2.521.0",
     "graphql": "14.3.1",
