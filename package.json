@@ -40,7 +40,7 @@
   },
   "scripts": {
     "build": "tsc -b .",
-    "lint": "eslint \"packages/*/src/**/*.{ts,tsx}\"",
+    "lint": "eslint --ext ts,tsx packages",
     "lint-staged": "lint-staged",
     "test": "jest",
     "test:ci": "jest --ci --runInBand",
