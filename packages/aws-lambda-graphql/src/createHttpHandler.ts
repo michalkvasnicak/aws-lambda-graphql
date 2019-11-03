@@ -15,6 +15,13 @@ class HTTPError extends ExtendableError {
   }
 }
 
+function normalizeHeaders(event: APIGatewayProxyEvent) {
+  Object.keys(event.headers).forEach(header => {
+    // eslint-disable-next-line no-param-reassign
+    event.headers[header.toLowerCase()] = event.headers[header];
+  });
+}
+
 function parseGraphQLParams(event: APIGatewayProxyEvent): OperationRequest {
   switch (event.httpMethod) {
     case 'GET': {
@@ -22,7 +29,7 @@ function parseGraphQLParams(event: APIGatewayProxyEvent): OperationRequest {
       throw new HTTPError(405, 'Method not allowed');
     }
     case 'POST': {
-      const parsedType = contentType.parse(event.headers['Content-Type']);
+      const parsedType = contentType.parse(event.headers['content-type']);
 
       switch (parsedType.type) {
         case 'application/json': {
@@ -63,6 +70,9 @@ function createHttpHandler({
 }: HttpHandlerOptions): APIGatewayProxyHandler {
   return async function serveHttp(event, lambdaContext) {
     try {
+      // normalize headers to lower case
+      normalizeHeaders(event);
+
       const operation = parseGraphQLParams(event);
       const result = await execute({
         connectionManager,
