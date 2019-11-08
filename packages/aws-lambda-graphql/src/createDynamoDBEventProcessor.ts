@@ -7,7 +7,7 @@ import {
   isAsyncIterable,
 } from 'iterall';
 import { formatMessage } from './formatMessage';
-import { execute } from './execute';
+import { execute, ExecuteOptions } from './execute';
 import {
   IConnectionManager,
   ISubscriptionEvent,
@@ -15,11 +15,12 @@ import {
 } from './types';
 import { getProtocol } from './protocol/getProtocol';
 
-type Options = {
+interface DynamoDBEventProcessorOptions {
   connectionManager: IConnectionManager;
+  context?: ExecuteOptions['context'];
   schema: GraphQLSchema;
   subscriptionManager: ISubscriptionManager;
-};
+}
 
 class PubSub {
   private events: ISubscriptionEvent[];
@@ -46,9 +47,10 @@ if (Symbol.asyncIterator === undefined) {
 
 function createDynamoDBEventProcessor({
   connectionManager,
+  context,
   schema,
   subscriptionManager,
-}: Options): DynamoDBStreamHandler {
+}: DynamoDBEventProcessorOptions): DynamoDBStreamHandler {
   return async function processDynamoDBStreamEvents(
     { Records },
     lambdaContext,
@@ -88,7 +90,7 @@ function createDynamoDBEventProcessor({
               schema,
               event: {} as any, // we don't have an API GW event here
               lambdaContext,
-              context: subscriber.connection.data.context,
+              context,
               connection: subscriber.connection,
               operation: subscriber.operation,
               pubSub: pubSub as any,

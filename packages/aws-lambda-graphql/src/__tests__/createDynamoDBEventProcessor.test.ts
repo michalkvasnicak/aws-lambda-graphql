@@ -8,7 +8,7 @@ import { createSchema } from '../fixtures/schema';
 import { ISubscriber } from '../types';
 
 const query = parse(/* GraphQL */ `
-  subscription Test($authorId: ID!) {
+  subscription Test($authorId: ID) {
     textFeed(authorId: $authorId)
   }
 `);
@@ -50,6 +50,15 @@ describe('createDynamoDBEventProcessor', () => {
                 operationId: '1',
                 operation: { query, variables: { authorId: '1' } },
               },
+              {
+                connection: {
+                  id: '5',
+                  data: { context: { authorId: '2' } },
+                } as any,
+                event: 'test',
+                operationId: '1',
+                operation: { query, variables: {} },
+              },
             ] as ISubscriber[],
           ]),
       })),
@@ -85,7 +94,7 @@ describe('createDynamoDBEventProcessor', () => {
     // now process events
     await eventProcessor({ Records }, {} as any, {} as any);
 
-    expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(4);
+    expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(5);
     expect(connectionManager.sendToConnection).toHaveBeenCalledWith(
       { id: '1', data: {} },
       formatMessage({
@@ -103,14 +112,6 @@ describe('createDynamoDBEventProcessor', () => {
       }),
     );
     expect(connectionManager.sendToConnection).toHaveBeenCalledWith(
-      { id: '1', data: {} },
-      formatMessage({
-        id: '1',
-        payload: { data: { textFeed: 'test 1' } },
-        type: 'data',
-      }),
-    );
-    expect(connectionManager.sendToConnection).toHaveBeenCalledWith(
       { id: '2', data: {} },
       formatMessage({
         id: '1',
@@ -120,6 +121,14 @@ describe('createDynamoDBEventProcessor', () => {
     );
     expect(connectionManager.sendToConnection).toHaveBeenCalledWith(
       { id: '3', data: {} },
+      formatMessage({
+        id: '1',
+        payload: { data: { textFeed: 'test 2' } },
+        type: 'data',
+      }),
+    );
+    expect(connectionManager.sendToConnection).toHaveBeenCalledWith(
+      { id: '5', data: { context: { authorId: '2' } } },
       formatMessage({
         id: '1',
         payload: { data: { textFeed: 'test 2' } },
