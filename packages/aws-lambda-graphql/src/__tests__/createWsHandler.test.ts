@@ -610,6 +610,63 @@ describe('createWsHandler', () => {
       expect(onOperation).toHaveBeenCalledTimes(1);
     });
 
+    it('registers the subscription on non legacy protocol', async () => {
+      const handler = createWsHandler({
+        connectionManager,
+        subscriptionManager,
+        schema: createSchema(),
+      } as any);
+      const id = ulid();
+
+      connectionManager.hydrateConnection.mockResolvedValueOnce({
+        data: {
+          isInitialized: true,
+        },
+      });
+
+      expect(subscriptionManager.subscribe).not.toHaveBeenCalled();
+
+      await expect(
+        handler(
+          {
+            body: formatMessage({
+              id,
+              payload: {
+                query: /* GraphQL */ `
+                  subscription Test($authorId: ID!) {
+                    textFeed(authorId: $authorId)
+                  }
+                `,
+                variables: {
+                  authorId: 1,
+                },
+              },
+              type: CLIENT_EVENT_TYPES.GQL_START,
+            }),
+            requestContext: {
+              connectionId: '1',
+              domainName: 'domain',
+              routeKey: '$default',
+              stage: 'stage',
+            } as any,
+          } as any,
+          {} as any,
+        ),
+      ).resolves.toEqual(
+        expect.objectContaining({
+          body: '',
+          statusCode: 200,
+        }),
+      );
+
+      expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
+      expect(connectionManager.hydrateConnection).toHaveBeenCalledWith(
+        '1',
+        false,
+      );
+      expect(subscriptionManager.subscribe).toHaveBeenCalledTimes(1);
+    });
+
     it('returns http 200 with GQL_SUBSCRIBED on legacy subscription operation', async () => {
       const handler = createWsHandler({
         connectionManager,
