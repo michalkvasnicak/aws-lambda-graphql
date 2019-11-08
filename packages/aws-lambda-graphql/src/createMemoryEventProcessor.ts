@@ -5,7 +5,7 @@ import {
   isAsyncIterable,
 } from 'iterall';
 import { formatMessage } from './formatMessage';
-import { execute } from './execute';
+import { execute, ExecuteOptions } from './execute';
 import {
   IConnectionManager,
   ISubscriptionEvent,
@@ -18,11 +18,12 @@ if (Symbol.asyncIterator === undefined) {
   (Symbol as any).asyncIterator = Symbol.for('asyncIterator');
 }
 
-type Options = {
+interface MemoryEventProcessorOptions {
   connectionManager: IConnectionManager;
+  context?: ExecuteOptions['context'];
   schema: GraphQLSchema;
   subscriptionManager: ISubscriptionManager;
-};
+}
 
 class PubSub {
   private events: ISubscriptionEvent[];
@@ -49,9 +50,10 @@ export type EventProcessorFn = (
 
 function createMemoryEventProcessor({
   connectionManager,
+  context,
   schema,
   subscriptionManager,
-}: Options): EventProcessorFn {
+}: MemoryEventProcessorOptions): EventProcessorFn {
   return async function processEvents(events, lambdaContext = {}) {
     for (const event of events) {
       // iterate over subscribers that listen to this event
@@ -78,7 +80,7 @@ function createMemoryEventProcessor({
               schema,
               event: {} as any, // we don't have api gateway event here
               lambdaContext: lambdaContext as any, // we don't have a lambda's context here
-              context: subscriber.connection.data.context,
+              context,
               connection: subscriber.connection,
               operation: subscriber.operation,
               pubSub: pubSub as any,
