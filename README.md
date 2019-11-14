@@ -118,7 +118,7 @@ module.exports.consumeDynamoDBStream = eventProcessor;
 
 ## Usage (Apollo client + subscriptions-transport-ws)
 
-This library can be used with apollo client without any problems thanks to [AlpacaGoesCrazy's](https://github.com/AlpacaGoesCrazy) [pull request #27](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/27).
+This library can be used with Apollo client without any problems thanks to [AlpacaGoesCrazy's](https://github.com/AlpacaGoesCrazy) [pull request #27](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/27).
 
 ```console
 yarn add apollo-client subscriptions-transport-ws
@@ -140,7 +140,7 @@ const wsClient = new SubscriptionClient(
   null,
   [],
 );
-const link = new WebSocketLink(client);
+const link = new WebSocketLink(wsClient);
 const client = new ApolloClient({
   cache: new InMemoryCache(),
   link,
@@ -150,6 +150,8 @@ const client = new ApolloClient({
 ```
 
 ## Usage (Apollo client + aws-lambda-ws-link)
+
+This library also have it's own client which is using a little bit different protocol than Apollo's.
 
 ```console
 yarn add aws-lambda-ws-link graphql
@@ -167,7 +169,7 @@ import { ApolloClient } from 'apollo-client';
 const wsClient = new Client({
   uri: 'ws://localhost:8000',
 });
-const link = new WebSocketLink(client);
+const link = new WebSocketLink(wsClient);
 const client = new ApolloClient({
   cache: new InMemoryCache(),
   link,
