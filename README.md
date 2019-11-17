@@ -108,6 +108,8 @@ const wsHandler = createWsHandler({
   schema,
   subscriptionManager,
   // validationRules
+  // waitForInitialization (available from 0.11.0)
+  // waitForInitialization: { retryCount?: number, timeout?: number },
 });
 
 // use these handlers from your lambda and map them to
