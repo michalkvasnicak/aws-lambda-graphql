@@ -1,6 +1,6 @@
 {
   "name": "aws-lambda-ws-link",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "sideEffects": false,
   "bugs": {
     "url": "https://github.com/michalkvasnicak/aws-lambda-graphql/issues"
@@ -19,7 +19,7 @@
   ],
   "dependencies": {
     "apollo-link": "^1.2.11",
-    "aws-lambda-graphql": "^0.10.0",
+    "aws-lambda-graphql": "^0.11.0",
     "zen-observable-ts": "^0.8.18"
   },
   "files": [
