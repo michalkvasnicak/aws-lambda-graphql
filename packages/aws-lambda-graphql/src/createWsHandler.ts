@@ -50,6 +50,25 @@ interface WSHandlerOptions {
    * in additional to those defined by the GraphQL spec.
    */
   validationRules?: ((context: ValidationContext) => ASTVisitor)[];
+  /**
+   * If connection is not initialized on GraphQL operation, wait for connection to be initialized
+   * Or throw prohibited connection error
+   *
+   */
+  waitForInitialization?: {
+    /**
+     * How many times should we try to determine connection state?
+     *
+     * Default is 10
+     */
+    retryCount?: number;
+    /**
+     * How long should we wait until we try determine connection state again?
+     *
+     * Default is 50ms
+     */
+    timeout?: number;
+  };
 }
 
 function createWsHandler({
@@ -62,7 +81,13 @@ function createWsHandler({
   onConnect,
   onDisconnect,
   validationRules,
+  waitForInitialization = {},
 }: WSHandlerOptions): APIGatewayV2Handler {
+  const {
+    retryCount: waitRetryCount = 10,
+    timeout: waitTimeout = 50,
+  } = waitForInitialization;
+
   return async function serveWebSocket(event, lambdaContext) {
     try {
       // based on routeKey, do actions
@@ -107,9 +132,10 @@ function createWsHandler({
           // it will send the body back to client, so it is easy to respond with operation results
           // determine if client has sent legacy protocol message
           const useLegacyProtocol = isLegacyOperation(event);
+          const { connectionId } = event.requestContext;
           // hydrate connection and set this connection to legacy if received legacy request
-          const connection = await connectionManager.hydrateConnection(
-            event.requestContext.connectionId,
+          let connection = await connectionManager.hydrateConnection(
+            connectionId,
             useLegacyProtocol,
           );
           // parse operation from body
@@ -171,18 +197,48 @@ function createWsHandler({
             };
           }
 
-          if (!useLegacyProtocol && !connection.data.isInitialized) {
-            // refuse connection which did not send GQL_CONNECTION_INIT operation
-            const errorResponse = formatMessage({
-              type: SERVER_EVENT_TYPES.GQL_ERROR,
-              payload: { message: 'Prohibited connection!' },
-            });
-            await connectionManager.sendToConnection(connection, errorResponse);
-            await connectionManager.closeConnection(connection);
-            return {
-              body: errorResponse,
-              statusCode: 401,
-            };
+          if (!useLegacyProtocol) {
+            // wait for connection to be initialized
+            connection = await (async () => {
+              let freshConnection: IConnection = connection;
+
+              if (freshConnection.data.isInitialized) {
+                return freshConnection;
+              }
+
+              for (let i = 0; i < waitRetryCount; i++) {
+                freshConnection = await connectionManager.hydrateConnection(
+                  connectionId,
+                  false,
+                );
+
+                if (freshConnection.data.isInitialized) {
+                  return freshConnection;
+                }
+
+                // wait for another round
+                await new Promise(r => setTimeout(r, waitTimeout));
+              }
+
+              return freshConnection;
+            })();
+
+            if (!connection.data.isInitialized) {
+              // refuse connection which did not send GQL_CONNECTION_INIT operation
+              const errorResponse = formatMessage({
+                type: SERVER_EVENT_TYPES.GQL_ERROR,
+                payload: { message: 'Prohibited connection!' },
+              });
+              await connectionManager.sendToConnection(
+                connection,
+                errorResponse,
+              );
+              await connectionManager.closeConnection(connection);
+              return {
+                body: errorResponse,
+                statusCode: 401,
+              };
+            }
           }
 
           if (operation.type === CLIENT_EVENT_TYPES.GQL_STOP) {
