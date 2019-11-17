@@ -385,10 +385,15 @@ describe('createWsHandler', () => {
         connectionManager,
         subscriptionManager,
         schema: createSchema(),
+        waitForInitialization: {
+          timeout: 4,
+          retryCount: 2,
+        },
       } as any);
       const id = ulid();
 
-      connectionManager.hydrateConnection.mockResolvedValueOnce({
+      // because of retry count of 2
+      connectionManager.hydrateConnection.mockResolvedValue({
         data: { isInitialized: false },
       });
 
@@ -425,7 +430,7 @@ describe('createWsHandler', () => {
         }),
       );
 
-      expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
+      expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(3);
       expect(connectionManager.hydrateConnection).toHaveBeenCalledWith(
         '1',
         false,
