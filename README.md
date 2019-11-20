@@ -108,6 +108,24 @@ const wsHandler = createWsHandler({
   schema,
   subscriptionManager,
   // validationRules
+
+  /* Lifecycle methods available from 0.9.0 */
+  /* allows to provide custom parameters for operation execution */
+  // onOperation?: (message: OperationRequest, params: { query, variables, operationName, context, schema }, connection: IConnection) => Promise<Object> | Object,
+
+  /* executes on subscription stop operations, receives connection object and operation ID as arguments */
+  // onOperationComplete?: (connection: IConnection, opId: string) => void,
+
+  /* 
+    executes on GQL_CONNECTION_INIT message, receives payload of said message and allows to reject connection when onConnect thorws error or returns false,
+    write method return value to connection context which will be available during graphql resolver execution.
+    If onConnect is not defined or returns true, we put everything in GQL_CONNECTION_INIT messagePayload to connection context.
+  */
+  // onConnect?: (messagePayload: { [key: string]: any }, connection: IConnection) => Promise<boolean | { [key: string]: any }> | boolean | { [key: string]: any },
+
+  /* executes on $disconnect, receives connection object as argument */
+  // onDisconnect?: (connection: IConnection) => void,
+
   // waitForInitialization (available from 0.11.0)
   // waitForInitialization: { retryCount?: number, timeout?: number },
 });
