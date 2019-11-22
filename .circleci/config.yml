@@ -8,9 +8,6 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Upgrade yarn to 1.16.0
-          command: sudo npm install -g yarn@1.16.0
-      - run:
           name: Installing javascript dependencies
           command: yarn install
       - run:
