@@ -106,14 +106,20 @@ async function execute({
     },
   };
 
+  // context stored in connection state
+  const connectionContext = connection.data ? connection.data.context : {};
+
   // instantiate context
   const contextValue: { [key: string]: any } =
-    typeof context === 'function' ? await context(internalContext) : context;
+    typeof context === 'function'
+      ? await context({
+          ...internalContext,
+          ...connectionContext,
+        })
+      : context;
 
   // detect operation type
   const operationAST = getOperationAST(document, operation.operationName || '');
-
-  const connectionContext = connection.data ? connection.data.context : {};
 
   const baseParams = {
     query: document,
