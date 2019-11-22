@@ -32,7 +32,9 @@
       "profile": "https://github.com/AlpacaGoesCrazy",
       "contributions": [
         "code",
-        "bug"
+        "bug",
+        "doc",
+        "test"
       ]
     },
     {
