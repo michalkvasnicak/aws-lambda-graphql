@@ -94,9 +94,7 @@ function createMemoryEventProcessor({
             }
 
             const iterator = getAsyncIterator(iterable);
-            const result: IteratorResult<
-              ExecutionResult
-            > = await iterator.next();
+            const result: IteratorResult<ExecutionResult> = await iterator.next();
 
             if (result.value != null) {
               const { useLegacyProtocol = false } = subscriber.connection.data;

@@ -1,7 +1,7 @@
 import Backoff from 'backo2';
 import * as EventEmitter from 'eventemitter3';
 import { interpret, Interpreter } from 'xstate/lib/interpreter';
-import { w3cwebsocket } from 'websocket';
+import { w3cwebsocket, IMessageEvent } from 'websocket';
 import {
   GQLServerAllEvents,
   GQLOperationResult,
@@ -148,9 +148,13 @@ class Client {
   public onReconnected = (listener: EventEmitter.ListenerFn): Function =>
     this.on('reconnected', listener);
 
-  private handleMessage = (event: { data: string }) => {
+  private handleMessage = (event: IMessageEvent) => {
     try {
-      const message: GQLServerAllEvents = JSON.parse(event.data);
+      const message: GQLServerAllEvents = JSON.parse(
+        typeof event.data === 'string'
+          ? event.data
+          : event.data.toString('utf8'),
+      );
 
       switch (message.type) {
         case SERVER_EVENT_TYPES.GQL_DATA: {

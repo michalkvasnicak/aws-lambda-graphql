@@ -1,5 +1,5 @@
 import Backoff from 'backo2';
-import { w3cwebsocket } from 'websocket';
+import { w3cwebsocket, IMessageEvent } from 'websocket';
 import { StateSchema } from 'xstate';
 import { OperationProcessor } from './operationProcessor';
 
@@ -8,7 +8,7 @@ export interface ClientContext {
   /**
    * Function to parse messages from server (this will be assigned to socket)
    */
-  handleMessage: (event: { data: string }) => any;
+  handleMessage: (event: IMessageEvent) => any;
   operationProcessor: OperationProcessor;
   reconnect: boolean;
   reconnectAttempts: number;
