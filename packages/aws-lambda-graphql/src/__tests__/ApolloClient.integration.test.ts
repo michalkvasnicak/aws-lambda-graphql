@@ -102,20 +102,24 @@ describe('apollo client integration test', () => {
 
       // now publish all messages
       await Promise.all(
-        [['1', 'Test1'], ['2', 'Test2'], ['1', 'Test3'], ['2', 'Test4']].map(
-          ([authorId, text]) =>
-            execute({
-              client: client1,
-              query: gql`
-                mutation publish($authorId: ID!, $text: String!) {
-                  testPublish(authorId: $authorId, text: $text)
-                }
-              `,
-              variables: {
-                authorId,
-                text,
-              },
-            }),
+        [
+          ['1', 'Test1'],
+          ['2', 'Test2'],
+          ['1', 'Test3'],
+          ['2', 'Test4'],
+        ].map(([authorId, text]) =>
+          execute({
+            client: client1,
+            query: gql`
+              mutation publish($authorId: ID!, $text: String!) {
+                testPublish(authorId: $authorId, text: $text)
+              }
+            `,
+            variables: {
+              authorId,
+              text,
+            },
+          }),
         ),
       );
 
