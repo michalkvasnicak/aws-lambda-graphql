@@ -324,6 +324,54 @@ describe('createWsHandler', () => {
       );
     });
 
+    it('calls context constructor function with event, lambdaContext, internal context and connection state context', async () => {
+      const contextBuilder = jest.fn();
+      const handler = createWsHandler({
+        connectionManager,
+        schema: createSchema(),
+        context: contextBuilder,
+      } as any);
+      const id = ulid();
+
+      connectionManager.hydrateConnection.mockResolvedValueOnce({
+        data: {
+          context: { foo: 'connectionContextValue' },
+          isInitialized: true,
+        },
+      });
+
+      const lambdaContext = {} as any;
+      const event = {
+        body: formatMessage({
+          id,
+          payload: {
+            query: /* GraphQL */ `
+              query Test {
+                testQuery
+              }
+            `,
+          },
+          type: CLIENT_EVENT_TYPES.GQL_START,
+        }),
+        requestContext: {
+          connectionId: '1',
+          domainName: 'domain',
+          routeKey: '$default',
+          stage: 'stage',
+        } as any,
+      } as any;
+
+      await handler(event, lambdaContext);
+
+      expect(contextBuilder).toHaveBeenCalledTimes(1);
+      expect(contextBuilder).toHaveBeenCalledWith({
+        foo: 'connectionContextValue',
+        event,
+        lambdaContext,
+        $$internal: expect.any(Object),
+      });
+    });
+
     it('refuses connection when onConnect returns false', async () => {
       const onConnect = jest.fn();
       onConnect.mockResolvedValueOnce(false);
