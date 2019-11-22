@@ -25,9 +25,9 @@
   ],
   "description": "GraphQL server and client implementation for AWS Lambda with WebSocket support (API Gateway v1 + v2)",
   "dependencies": {
-    "@types/aws-lambda": "8.10.31",
-    "@types/backo2": "1.0.0",
-    "@types/websocket": "^0.0.40",
+    "@types/aws-lambda": "^8.10.36",
+    "@types/backo2": "^1.0.1",
+    "@types/websocket": "^1.0.0",
     "backo2": "1.0.2",
     "content-type": "^1.0.4",
     "eventemitter3": "^3.1.2",
@@ -46,31 +46,17 @@
   },
   "engineStrict": true,
   "devDependencies": {
-    "@types/aws-sdk": "2.7.0",
     "@types/content-type": "^1.1.2",
-    "@types/graphql": "14.2.0",
-    "@types/node": "8.10.39",
     "apollo-link": "1.2.11",
-    "aws-sdk": "2.521.0",
-    "graphql": "14.3.1",
-    "graphql-subscriptions": "1.1.0",
-    "graphql-tag": "^2.10.0",
-    "graphql-tools": "^4.0.3",
-    "jest": "24.8.0",
+    "graphql-tag": "^2.10.1",
+    "graphql-tools": "^4.0.6",
     "mock-socket": "^8.0.5",
-    "rimraf": "2.6.2",
     "subscriptions-transport-ws": "^0.9.16",
-    "typescript": "3.4.5",
     "wait-for-expect": "1.1.0"
   },
   "scripts": {
     "prebuild": "rimraf dist && rimraf tsconfig.tsbuildinfo",
     "build": "tsc -p .",
-    "prepublishOnly": "rimraf dist && rimraf tsconfig.tsbuildinfo && tsc -p .",
-    "lint": "eslint --ext .js,.jsx,.ts,.tsx",
-    "test": "jest",
-    "test:ci": "jest --ci",
-    "test:coverage": "jest --coverage",
-    "test:watch": "jest --watch"
+    "prepublishOnly": "rimraf dist && rimraf tsconfig.tsbuildinfo && tsc -p ."
   }
 }
