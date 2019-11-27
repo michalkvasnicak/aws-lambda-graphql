@@ -71,7 +71,7 @@ describe('PubSub', () => {
       await expect(ps.publish('test', {})).resolves.toBeUndefined();
 
       expect(eventStore.publish).toBeCalledTimes(1);
-      expect(eventStore.publish).toBeCalledWith({ event: 'test', payload: {} });
+      expect(eventStore.publish).toBeCalledWith({ event: 'test', payload: JSON.stringify({}) });
     });
   });
 });

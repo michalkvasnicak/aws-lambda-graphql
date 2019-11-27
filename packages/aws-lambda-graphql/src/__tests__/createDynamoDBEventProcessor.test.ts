@@ -75,7 +75,7 @@ describe('createDynamoDBEventProcessor', () => {
         dynamodb: {
           NewImage: DynamoDB.Converter.marshall({
             event: 'test',
-            payload: { authorId: '1', text: 'test 1' },
+            payload: JSON.stringify({ authorId: '1', text: 'test 1' }),
           }) as any,
         },
         eventName: 'INSERT',
@@ -84,7 +84,7 @@ describe('createDynamoDBEventProcessor', () => {
         dynamodb: {
           NewImage: DynamoDB.Converter.marshall({
             event: 'test',
-            payload: { authorId: '2', text: 'test 2' },
+            payload: JSON.stringify({ authorId: '2', text: 'test 2' }),
           }) as any,
         },
         eventName: 'INSERT',
