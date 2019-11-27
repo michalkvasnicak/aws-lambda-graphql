@@ -4,7 +4,7 @@ import { OperationRequest, IdentifiedOperationRequest } from './graphql';
 
 export interface ISubscriptionEvent {
   event: string;
-  payload: string;
+  payload: any;
 }
 
 export interface ISubscriber {
