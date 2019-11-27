@@ -35,7 +35,11 @@ class PubSub {
     return createAsyncIterator(
       this.events
         .filter(event => names.includes(event.event))
-        .map(event => event.payload),
+        .map(event =>
+          typeof event.payload === 'string' ?
+            JSON.parse(event.payload) :
+            event.payload
+        ),
     );
   }
 }

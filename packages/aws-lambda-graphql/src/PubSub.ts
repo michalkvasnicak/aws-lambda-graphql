@@ -44,7 +44,7 @@ class PubSub {
    */
   publish = async (eventName: string, payload: any) => {
     await this.eventStore.publish({
-      payload,
+      payload: JSON.stringify(payload),
       event: eventName,
     });
   };
