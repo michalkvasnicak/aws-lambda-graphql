@@ -168,7 +168,8 @@ describe('createWsHandler', () => {
         expect.objectContaining({
           body: '',
           statusCode: 200,
-      })
+        }),
+      );
 
       expect(onDisconnect).toHaveBeenCalledTimes(1);
       expect(onDisconnect).toHaveBeenCalledWith({});
