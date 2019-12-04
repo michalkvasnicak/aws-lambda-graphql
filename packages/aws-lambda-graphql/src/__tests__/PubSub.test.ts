@@ -65,6 +65,20 @@ describe('PubSub', () => {
   });
 
   describe('publish', () => {
+    it('does not allow to publish event with empty name', async () => {
+      const ps = new PubSub({ eventStore: eventStore as any });
+
+      await expect(ps.publish(undefined, {})).rejects.toThrowError(
+        'Event name cannot be empty',
+      );
+      await expect(ps.publish(null, {})).rejects.toThrowError(
+        'Event name cannot be empty',
+      );
+      await expect(ps.publish('', {})).rejects.toThrowError(
+        'Event name cannot be empty',
+      );
+    });
+
     it('works correctly', async () => {
       const ps = new PubSub({ eventStore: eventStore as any });
 
