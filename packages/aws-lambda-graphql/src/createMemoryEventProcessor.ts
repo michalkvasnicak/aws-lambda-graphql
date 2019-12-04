@@ -39,9 +39,9 @@ class PubSub {
       this.events
         .filter(event => names.includes(event.event))
         .map(event =>
-          typeof event.payload === 'string' ?
-            JSON.parse(event.payload) :
-            event.payload
+          typeof event.payload === 'string'
+            ? JSON.parse(event.payload)
+            : event.payload,
         ),
     );
   }

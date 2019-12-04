@@ -11,6 +11,9 @@ jobs:
           name: Installing javascript dependencies
           command: yarn install
       - run:
+          name: Lint
+          command: yarn lint
+      - run:
           name: Build packages (typecheck)
           command: |
             yarn build

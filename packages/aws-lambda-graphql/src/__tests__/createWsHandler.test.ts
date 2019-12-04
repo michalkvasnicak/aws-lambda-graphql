@@ -134,7 +134,10 @@ describe('createWsHandler', () => {
           } as any,
           {} as any,
         ),
-      ).resolves.toBeUndefined();
+      ).resolves.toEqual({
+        statusCode: 200,
+        body: '',
+      });
 
       expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
       expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1');
@@ -164,7 +167,10 @@ describe('createWsHandler', () => {
           } as any,
           {} as any,
         ),
-      ).resolves.toBeUndefined();
+      ).resolves.toEqual({
+        statusCode: 200,
+        body: '',
+      });
 
       expect(onDisconnect).toHaveBeenCalledTimes(1);
       expect(onDisconnect).toHaveBeenCalledWith({});
