@@ -1,3 +1,4 @@
+import * as assert from 'assert';
 import { IEventStore, OperationRequest, SubcribeResolveFn } from './types';
 
 type Options = {
@@ -43,6 +44,11 @@ class PubSub {
    * So you should not expect to fire in same process
    */
   publish = async (eventName: string, payload: any) => {
+    assert.ok(
+      typeof eventName === 'string' && eventName !== '',
+      'Event name cannot be empty',
+    );
+
     await this.eventStore.publish({
       payload: JSON.stringify(payload),
       event: eventName,
