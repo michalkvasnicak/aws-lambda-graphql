@@ -123,8 +123,10 @@ function createWsHandler({
 
           await connectionManager.unregisterConnection(connection);
 
-          // eslint-disable-next-line consistent-return
-          return;
+          return {
+            body: '',
+            statusCode: 200,
+          };
         }
         case '$default': {
           // here we are processing messages received from a client
