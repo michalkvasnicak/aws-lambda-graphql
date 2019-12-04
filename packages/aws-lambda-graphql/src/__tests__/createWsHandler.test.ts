@@ -164,7 +164,11 @@ describe('createWsHandler', () => {
           } as any,
           {} as any,
         ),
-      ).resolves.toBeUndefined();
+      ).resolves.toEqual(
+        expect.objectContaining({
+          body: '',
+          statusCode: 200,
+      }),
 
       expect(onDisconnect).toHaveBeenCalledTimes(1);
       expect(onDisconnect).toHaveBeenCalledWith({});
