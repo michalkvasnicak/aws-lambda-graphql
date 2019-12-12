@@ -1,9 +1,10 @@
 // @ts-ignore
-import { putPromiseMock } from 'aws-sdk';
+import { putMock, putPromiseMock } from 'aws-sdk';
 import { DynamoDBEventStore } from '../DynamoDBEventStore';
 
 describe('DynamoDBEventStore', () => {
   beforeEach(() => {
+    putMock.mockClear();
     putPromiseMock.mockReset();
   });
 
@@ -20,5 +21,18 @@ describe('DynamoDBEventStore', () => {
     ).resolves.toBeUndefined();
 
     expect(putPromiseMock).toHaveBeenCalledTimes(1);
+    expect(putMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        TableName: 'Events',
+        Item: expect.objectContaining({
+          id: expect.stringMatching(/^[A-Z0-9]{26}$/),
+          event: 'test',
+          payload: {
+            custom: true,
+          },
+          ttl: expect.any(Number),
+        }),
+      }),
+    );
   });
 });
