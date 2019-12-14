@@ -1,10 +1,22 @@
 # aws-lambda-ws-link [DEPRECATED]
 
+[![CircleCI](https://img.shields.io/circleci/project/github/michalkvasnicak/aws-lambda-graphql/master.svg?style=flat-square)](https://circleci.com/gh/michalkvasnicak/aws-lambda-graphql)
+[![aws-lambda-ws-link package version](https://img.shields.io/npm/v/aws-lambda-ws-link?color=green&label=aws-lambda-ws-link&style=flat-square)](https://www.npmjs.com/package/aws-lambda-ws-link)
+
 **⚠️ This package is deprecated, please use Apollo's [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws) client.**
 
 Apollo WebSocket link supporting AWS Lambda for GraphQL subscriptions (utilizing AWS API Gateway v2) for `aws-lambda-graphql` package. The difference between this package and [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws) is that this package uses different protocol to communicate with the server. Also it support waiting for connection acknowledgment.
 
 **⚠️ This client is not compatible with Apollo's [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws)**
+
+## Table of contents
+
+- [Installation](#installation)
+- [Usage](#usage)
+- [API](#api)
+  - [Client](#client)
+  - [WebSocketLink](#websocketlink)
+- [Examples](#examples)
 
 ## Installation
 
