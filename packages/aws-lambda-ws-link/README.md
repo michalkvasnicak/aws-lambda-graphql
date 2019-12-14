@@ -1,6 +1,8 @@
 # Apollo WebSocket link for AWS Lambda subscriptions
 
-Apollo WebSocket link supporting AWS Lambda subscriptions (utilizing AWS API Gateway v2) for `aws-lambda-graphql` package.
+Apollo WebSocket link supporting AWS Lambda for GraphQL subscriptions (utilizing AWS API Gateway v2) for `aws-lambda-graphql` package.
+
+**⚠️ This client is not compatible with [subscription-transport-ws](https://github.com/apollographql/subscriptions-transport-ws)**
 
 ## Installation
 
