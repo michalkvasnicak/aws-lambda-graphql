@@ -27,6 +27,12 @@ Use AWS Lambda + AWS API Gateway v2 for GraphQL subscriptions over WebSocket and
 - [Packages](#packages)
   - [aws-lambda-graphql package](./packages/aws-lambda-graphql)
   - [aws-lambda-ws-link package](./packages/aws-lambda-ws-link)
+    - [Installation](./packages/aws-lambda-ws-link#installation)
+    - [Usage](./packages/aws-lambda-ws-link#usage)
+    - [API](./packages/aws-lambda-ws-link#api)
+      - [Client](./packages/aws-lambda-ws-link#client)
+      - [WebSocketLink](./packages/aws-lambda-ws-link#websocketlink)
+    - [Examples](./packages/aws-lambda-ws-link#examples)
 - [Infrastructure](#Infrastructure)
 - [Examples](#examples)
 
