@@ -1,98 +1,148 @@
-# AWS Lambda GraphQL Server and Client with subscriptions support
+# aws-lambda-graphql
 
-GraphQL server and client implementation for AWS Lambda with WebSocket support (API Gateway v2).
+[![CircleCI](https://img.shields.io/circleci/project/github/michalkvasnicak/aws-lambda-graphql/master.svg?style=flat-square)](https://circleci.com/gh/michalkvasnicak/aws-lambda-graphql)
+[![aws-lambda-graphql package version](https://img.shields.io/npm/v/aws-lambda-graphql?color=green&label=aws-lambda-graphql&style=flat-square)](https://www.npmjs.com/package/aws-lambda-graphql)
+
+GraphQL server and client implementation for AWS Lambda with WebSocket (AWS API Gateway v2) and HTTP support (AWS API Gateway v1).
+
+The server is fully compatible with Apollo's [`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws).
+
+## Table of contents
+
+- [Installation](#installation)
+- [Usage](#usage)
+- [API](#api)
+- [Examples](#examples)
 
 ## Installation
 
 ```console
-npm install aws-lamda-graphql apollo-link graphql graphql-subscriptions
-# or
 yarn add aws-lambda-graphql apollo-link graphql graphql-subscriptions
+# or
+npm install aws-lamda-graphql apollo-link graphql graphql-subscriptions
 ```
 
 ## Usage
 
-### Implement your simple server using DynamoDB stream as PubSub backend
+To implement WebSocket event handler and event stream handler please see the [example](https://github.com/michalkvasnicak/aws-lambda-graphql#1-websocket-server-handler).
 
-```js
-const {
-  createDynamoDBEventProcessor,
-  createWsHandler,
-  DynamoDBConnectionManager,
-  DynamoDBEventStore,
-  DynamoDBSubscriptionManager,
-  PubSub,
-} = require('aws-lambda-graphql');
-import { makeExecutableSchema } from 'graphql-tools';
+To implement HTTP event handler please see the [example](https://github.com/michalkvasnicak/aws-lambda-graphql#11-http-server-handler).
 
-// this only processes AWS Api Gateway v2 events
-// if you want to process HTTP too, use createHttpHandler
-// or you can use both, see chat-example-server
+## API
 
-// instantiate event store
-// by default uses Events table (can be changed)
-const eventStore = new DynamoDBEventStore();
-const pubSub = new PubSub({ eventStore });
-const subscriptionManager = new DynamoDBSubscriptionManager();
-const connectionManager = new DynamoDBConnectionManager({
-  subscriptions: subscriptionManager,
-});
+### `createDynamoDBEventProcessor(options: Options): event handler function`
 
-const schema = makeExecutableSchema({
-  typeDefs: /* GraphQL */ `
-    type Mutation {
-      publish(message: String!): String!
-    }
+Creates an AWS DynamoDB Stream handler.
 
-    type Query {
-      dummy: String!
-    }
+#### Options
 
-    type Subscription {
-      messageFeed: String!
-    }
-  `,
-  resolvers: {
-    Query: {
-      dummy: () => 'dummy',
-    },
-    Mutation: {
-      publish: async (rootValue, { message }) => {
-        await pubSub.publish('NEW_MESSAGE)', { message });
+- **connectionManager** (`IConnectionManager`, `required`)
+- **context** (`object` or [`Context creator function`](#context-creator-function), `optional`)
+- **schema** (`GraphQLSchema`, `required`)
+- **subscriptionManager** (`ISubscriptionManager`, `required`)
 
-        return message;
-      },
-    },
-    Subscription: {
-      messageFeed: {
-        // rootValue is same as object published using pubSub.publish
-        resolve: rootValue => rootValue.message,
-        subscribe: pubSub.subscribe('NEW_MESSAGE'),
-      },
-    },
-  },
-});
+### `createHttpHandler(options: Options): API Gateway v1 HTTP event handler function`
 
-const eventProcessor = createDynamoDBEventProcessor({
-  connectionManager,
-  schema,
-  subscriptionManager,
-});
-const wsHandler = createWsHandler({
-  context: ({ event }) => ({
-    event, // current processed event (see IContext)
-  }),
-  connectionManager,
-  schema,
-  subscriptionManager,
-  // validationRules
-});
+Creates an AWS API Gateway v1 event handler.
 
-// use these handlers from your lambda and map them to
-// api gateway v2 and DynamoDB events table
-module.exports.consumeWsEvent = wsHandler;
-module.exports.consumeDynamoDBStream = eventProcessor;
-```
+#### Options
+
+- **connectionManager** (`IConnectionManager`, `required`)
+- **context** (`object` or [`Context creator function`](#context-creator-function), `optional`)
+- **schema** (`GraphQLSchema`, `required`)
+- **formatResponse** (`(body: any) => string`, `optional`) - formats response for `body` property of an AWS ApiGateway v1 response. Default is `JSON.stringify`
+- **validationRules** (`array of GraphQL validation rules`, `optional`)
+
+### `createWsHandler(options: Options): API Gateway v2 WebSocket event handler function`
+
+Creates an AWS API Gateway v1 event handler.
+
+#### Options
+
+- **connectionManager** (`IConnectionManager`, `required`)
+- **context** (`object` or [`Context creator function`](#context-creator-function), `optional`)
+- **schema** (`GraphQLSchema`, `required`)
+- **subscriptionManager** (`ISubscriptionManager`, `required`)
+- **`onConnect(messagePayload: object, connection: IConnection): Promise<boolean|object> | object | boolean`**
+- **`onOperation(message: OperationRequest, params: object, connection: IConnection): Promise<object>|object`** (`optional`)
+- **`onOperationComplete(connection: IConnection, operationId: string): void`** (`optional`)
+- **`onDisconnect(connection: IConnection): void`** (`optional`)
+- **validationRules** (`array of GraphQL validation rules`, `optional`)
+- **waitForInitialization** (`optional`) - if connection is not initialised on GraphQL operation, wait for connection to be initialised or throw prohibited connection error. If `onConnect` is specified then we wait for initialisation otherwise we don't wait. (this is usefull if you're performing authentication in `onConnect`).
+  - **retryCount** (`number`, `optional`, `default 10`) - how many times should we try to check the connection state?
+  - **timeout** (`number`, `optional`, `default 50ms`) - how long should we wait (in milliseconds) until we try to check the connection state again?
+
+### `DynamoDBConnectionManager: IConnectionManager`
+
+`IConnectionManager` implementation that stores information about connections to DynamoDB table, performs communication with them, etc.
+
+Each connection is stored as [`IConnection` object](#iconnection).
+
+#### Options
+
+- **connectionsTable** (`string`, `optional`, `default: 'Connections'`) - name of DynamoDB table used to store connections
+- **subscriptions** (`ISubscriptionManager`, `required`) - subscription manager used to register subscriptions for connections.
+
+### `DynamoDBEventStore: IEventStore`
+
+`IEventStore` implemenation that used AWS DynamoDB as storage for published events.
+
+#### Options
+
+- **eventsTable** (`string`, `optional`, `default: 'Events'`) - events DynamoDB table name
+- **ttl** (`number`, `optional`, `default: 2 hours`)
+  - optional TTL for events set in seconds
+  - the value is stored as `ttl` field on the row (you are responsible for enabling TTL on given field)
+
+### `DynamoDBSubscriptionManager: ISubscriptionManager`
+
+`ISubscriptionManager` implementation that used AWS DynamoDB as storage for subscriptions.
+
+Stores subscriptions to a subscriptions table as `event: string` and `subscriptionId: string`.Make sure to set up the key schema as `event: HASH` and `subscriptionId: RANGE`.
+
+Stores subscription operations to a subscription operations table as `subscriptionId: string`. Make sure to set up the key schema as `subscriptionId: HASH`.
+
+#### Options
+
+- **subscriptionsTableName** (`string`, `optional`, `default: 'Subscriptions'`)
+- **subscriptionOperationsTableName** - (`string`, `optional`, `default: 'SubscriptionOperations'`)
+
+### `IConnection`
+
+- **id: string** - connection id
+- **connectionData** [`IConnectionData`](#iconnectiondata)
+
+### `IConnectionData`
+
+- **context** (`object`) - connection context data provided from `GQL_CONNECTION_INIT` or `onConnect`. This data is passed to graphql resolvers' context. All values should be JSON seriablizable.
+- **isInitialized** (`boolean`) - is connection initialised? Basically if you use `onConnect` then this value is `false` until the `onConnect` successfully resolves with non `false` value.
+
+### Context creator function
+
+Context creator function accepts [`IContext`](#icontext) and returns an `object` or `Promise` that resolves to an `object`.
+
+### `IContext`
+
+Internal context passed to the [`Context creator function`](#context-creator-function).
+
+**Structure:**
+
+- **event** - AWS Lambda event that invoked the handler
+- **lambdaContext** - AWS Lambda handler context
+- **\$\$internal** - internal object passed by this library
+  - **connection** (`IConnection`) - current connection that invoked the execution or is associated with an operation
+  - **connectionManager** (`IConnectionManager`)
+  - **operation** (`OperationRequest`) - operation associated with current invokation
+  - **pubSub** (`PubSub`) - PubSub instance used by event store
+  - **subscriptionManager** (`ISubscriptionManager`)
+
+### `PubSub`
+
+PubSub implementation that publishes events / subscribes to events using underlying event store.
+
+#### Options
+
+- **eventStore: IEventStore** - event store used to publish events / subscribe to events
 
 ## Examples
 
