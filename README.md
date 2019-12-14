@@ -1,4 +1,4 @@
-# AWS Lambda GraphQL with subscriptions
+# AWS Lambda with GraphQL subscriptions
 
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable -->
@@ -10,70 +10,89 @@
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
 
-_As of version 0.8.0 you can use [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws) client._
+Use AWS Lambda + AWS API Gateway v2 for GraphQL subscriptions over WebSocket and AWS API Gateway v1 for HTTP.
 
-_This library uses typescript so for now use types as documentation_
-
-_This library uses yarn and yarn workspaces so only `yarn.lock` is commited._
+**`aws-lambda-graphql` is fully compatible with Apollo's [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws) client.**
+**`aws-lambda-graphql` also supports GraphQL operations over HTTP events using AWS API Gateway v1**
 
 ![](./docs/awsgql.gif)
 
-## Motivation
-
-This library is created because I wanted to try if it's possible to implement GraphQL server with subscriptions in AWS Lambda. And yes it is possible with AWS API Gateway v2.
-
 ## Table of contents
 
+- [Quick start](#quick-start)
+  - [1. WebSocket server handler](#1-websocket-server-handler)
+  - [1.1. HTTP server handler](#11-http-server-handler)
+  - [2a Connect to the server using Apollo Client and `subscriptions-transport-ts`](#2a-connect-to-the-server-using-apollo-client-and-subscriptions-transport-ts)
+  - [2b Connect to the server using Apollo Client and `aws-lambda-ws-link`](#2b-connect-to-the-server-using-apollo-client-and-aws-lambda-ws-link)
+- [Packages](#packages)
+  - [aws-lambda-graphql package](./packages/aws-lambda-graphql)
+  - [aws-lambda-ws-link package](./packages/aws-lambda-ws-link)
 - [Infrastructure](#Infrastructure)
-- [Usage (server)](#usage-server)
-- [Usage (Apollo client + subscriptions-transport-ws)](#usage-client-apollo)
-- [Usage (Apollo client + aws-lambda-ws-link)](#usage-client)
 - [Examples](#examples)
 
-## Infrastructure
+## Quick start
 
-Current infrastructure is implemented using [AWS Lambda](https://aws.amazon.com/lambda/) + AWS API Gateway v2 + [AWS DynamoDB](https://aws.amazon.com/dynamodb/) (with [DynamoDB streams](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html)). But it can be implemented using various solutions (Kinesis, etc) because it's written to be modular.
+In this quick example we're going to use AWS DynamoDB as an event source for our PubSub.
 
-![](./docs/How%20it%20works.svg)
+### 1. WebSocket Server Handler
 
-## Usage (server)
+Install dependencies:
 
 ```console
-npm install aws-lamda-graphql apollo-link graphql graphql-subscriptions
+yarn add aws-lambda-graphql apollo-link graphql graphql-subscriptions aws-sdk graphql-tools
 # or
-yarn add aws-lambda-graphql apollo-link graphql graphql-subscriptions
+npm install aws-lambda-graphql apollo-link graphql graphql-subscriptions aws-sdk graphql-tools
 ```
 
-### Implement your simple server
+Implement simple broadcasting server that broadcasts messages received using `broadcastMessage` mutation to all subscribed connections.
+
+**⚠️ This server supports only AWS ApiGateway v2 events (WebSocket), if you want to support HTTP events too, see [example for adding HTTP support](#11-http-server-handler)**
 
 ```js
-const {
+import {
   createDynamoDBEventProcessor,
   createWsHandler,
   DynamoDBConnectionManager,
-  DynamoDBEventStore,
+  DynamoDDBEventStore,
   DynamoDBSubscriptionManager,
   PubSub,
-} = require('aws-lambda-graphql');
+} from 'aws-lambda-graphql';
 import { makeExecutableSchema } from 'graphql-tools';
+```
 
-// this only processes AWS Api Gateway v2 events
-// if you want to process HTTP too, use createHttpHandler
-// or you can use both, see chat-example-server
+Next step is to instantiate an event store. Event store is responsible for publishing events to underlying event store. Event stores could be anything that supports invoking AWS Lambda (for example AWS DynamoDB or AWS Kinesis, etc).
 
-// instantiate event store
-// by default uses Events table (can be changed)
+```js
 const eventStore = new DynamoDBEventStore();
-const pubSub = new PubSub({ eventStore });
-const subscriptionManager = new DynamoDBSubscriptionManager();
-const connectionManager = new DynamoDBConnectionManager({
-  subscriptions: subscriptionManager,
-});
+```
 
+In order to publish events to all subscribed connection and register connections to different events we need to instantiate PubSub with event store passed in. PubSub is used later in your schema to publish events. PubSub is fully compatible with [`graphql-subscriptions`](https://github.com/apollographql/graphql-subscriptions).
+
+```js
+const pubSub = new PubSub({ eventStore });
+```
+
+Now we have event store and PubSub instantiated. But we don't have a way to register subscriptions to some datastore so the information about subscriptions are shared amongst different instances of our lambda function. To fix that we'll instantiate a subscription manager (DynamoDB subscription manager for the sake of this example).
+
+```js
+const subscriptionManager = new DynamoDBSubscriptionManager();
+```
+
+The same problem as with subscriptions needs to be fixed for connections as well. For the sake of this example we're going to use DynamoDB Connection manager. Connection manager stores information about all connections and their respective subscriptions.
+
+```js
+const connectionManager = new DynamoDBConnectionManager({
+  subscriptionManager,
+});
+```
+
+Now define our simple broadcasting schema.
+
+```js
 const schema = makeExecutableSchema({
   typeDefs: /* GraphQL */ `
     type Mutation {
-      publish(message: String!): String!
+      broadcastMessage(message: String!): String!
     }
 
     type Query {
@@ -81,79 +100,100 @@ const schema = makeExecutableSchema({
     }
 
     type Subscription {
-      messageFeed: String!
+      messageBroadcast: String!
     }
   `,
   resolvers: {
-    Query: {
-      dummy: () => 'dummy',
-    },
     Mutation: {
-      publish: async (rootValue, { message }) => {
-        await pubSub.publish('NEW_MESSAGE)', { message });
+      broadcastMessage: async (
+        root,
+        { message },
+        // $$internal is provided automatically
+        // please see the documentation to `aws-lambda-graphql` package
+        { $$internal: { pubSub } },
+      ) => {
+        await pubSub.publish('NEW_MESSAGE', { message });
 
         return message;
       },
     },
+    Query: {
+      dummy: () => 'dummy',
+    },
     Subscription: {
-      messageFeed: {
-        // rootValue is same as object published using pubSub.publish
+      messageBroadcast: {
+        // rootValue is same as the event published above ({ message: string })
+        // but our subscription should return just a string, so we're going to use resolve
+        // to extract message from an event
         resolve: rootValue => rootValue.message,
         subscribe: pubSub.subscribe('NEW_MESSAGE'),
       },
     },
   },
 });
+```
 
+Our schema is finished. There are 2 things missing. We need to provide a way to communicate with the schema and we need a way to process events so we can broadcast messages to all connections that subscribed to `messageBroadcast` subscription.
+
+In order to support GraphQL operations sent to our schema we need to instantiate WebSocket handler for AWS ApiGateway v2 events. WebSocket handler needs a way to remember all connections, subscriptions and a GraphQL schema so it know what to do.
+
+```js
+const wsHandler = createWsHandler({
+  connectionManager,
+  schema,
+  subscriptionManager,
+});
+
+module.exports.consumeWsEvent = wsHandler;
+```
+
+Now we are able to respond to mutations, queries and subscribe to subscriptions but when we send some message using `broadcastMessage` mutation subscribed connections won't receive anything because the event processor handler is missing. So now we will fix that with DynamoDB event processor.
+
+```js
 const eventProcessor = createDynamoDBEventProcessor({
   connectionManager,
   schema,
   subscriptionManager,
 });
-const wsHandler = createWsHandler({
-  connectionManager,
-  schema,
-  subscriptionManager,
-  // validationRules
 
-  /* Lifecycle methods available from 0.9.0 */
-  /* allows to provide custom parameters for operation execution */
-  // onOperation?: (message: OperationRequest, params: { query, variables, operationName, context, schema }, connection: IConnection) => Promise<Object> | Object,
-
-  /* executes on subscription stop operations, receives connection object and operation ID as arguments */
-  // onOperationComplete?: (connection: IConnection, opId: string) => void,
-
-  /* 
-    executes on GQL_CONNECTION_INIT message, receives payload of said message and allows to reject connection when onConnect thorws error or returns false,
-    write method return value to connection context which will be available during graphql resolver execution.
-    If onConnect is not defined or returns true, we put everything in GQL_CONNECTION_INIT messagePayload to connection context.
-  */
-  // onConnect?: (messagePayload: { [key: string]: any }, connection: IConnection) => Promise<boolean | { [key: string]: any }> | boolean | { [key: string]: any },
-
-  /* executes on $disconnect, receives connection object as argument */
-  // onDisconnect?: (connection: IConnection) => void,
-
-  // waitForInitialization (available from 0.11.0)
-  // waitForInitialization: { retryCount?: number, timeout?: number },
-});
-
-// use these handlers from your lambda and map them to
-// api gateway v2 and DynamoDB events table
-module.exports.consumeWsEvent = wsHandler;
 module.exports.consumeDynamoDBStream = eventProcessor;
 ```
 
-## Usage (Apollo client + subscriptions-transport-ws)
+Now our server is finished. You just need to map the ApiGateway v2 events to `consumeWsEvent` handler and DynamoDB stream from events table to `consumeDynamoDBStream`.
 
-This library can be used with Apollo client without any problems thanks to [AlpacaGoesCrazy's](https://github.com/AlpacaGoesCrazy) [pull request #27](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/27).
+In order to do that you can use [Serverless framework](https://serverless.com), see [`serverless.yml` file](./docs/serverless.yml).
 
-```console
-yarn add apollo-client subscriptions-transport-ws
-# or
-npm install apollo-client subscriptions-transport-ws
+To connect to this server you can use:
+
+- [`aws-lambda-ws-link`](./packages/aws-lambda-ws-link) - see example
+- [`Apollo Client + subscriptions-transport-ts`](https://github.com/apollographql/subscriptions-transport-ws) - see example
+
+### 1.1. HTTP Server Handler
+
+Our server supports only AWS API Gateway v2 events. But we can make it compatible with AWS API Gateway v1 events (without subscriptions support).
+
+```js
+import { createHttpHandler } from 'aws-lambda-graphql';
+
+const httpHandler = createHttpHandler({
+  connectionManager,
+  schema,
+});
+
+module.exports.consumeHttpEvent = httpHandler;
 ```
 
-### Implement your simple client
+Make sure to map AWS API Gateway v1 events to Lambda's `consumeHttpEvent` handler.
+
+### 2a Connect to the server using Apollo Client and `subscriptions-transport-ts`
+
+First install dependencies
+
+```console
+yarn add apollo-link-ws apollo-cache-inmemory apollo-client subscriptions-transport-ws
+# or
+npm install apollo-link-ws apollo-cache-inmemory apollo-client subscriptions-transport-ws
+```
 
 ```js
 import { WebSocketLink } from 'apollo-link-ws';
@@ -162,7 +202,7 @@ import { ApolloClient } from 'apollo-client';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
 
 const wsClient = new SubscriptionClient(
-  'ws://localhost:8000',
+  'ws://localhost:8000', // please provide the uri of the api gateway v2 endpoint
   { lazy: true, reconnect: true },
   null,
   [],
@@ -172,21 +212,17 @@ const client = new ApolloClient({
   cache: new InMemoryCache(),
   link,
 });
-
-// ...
 ```
 
-## Usage (Apollo client + aws-lambda-ws-link)
+### 2b Connect to the server using Apollo Client and `aws-lambda-ws-link`
 
-This library also have it's own client which is using a little bit different protocol than Apollo's.
+**⚠️ `aws-lambda-ws-link` package is basically deprecated as of version `0.8.0`. There is no need to support 2 different protocols. Use [`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws) please.**
 
 ```console
-yarn add aws-lambda-ws-link graphql
+yarn add aws-lambda-ws-link apollo-cache-inmemory apollo-client graphql graphql-subscriptions
 # or
-npm install aws-lambda-ws-link graphql
+npm install aws-lambda-ws-link apollo-cache-inmemory apollo-client graphql graphql-subscriptions
 ```
-
-### Implement your simple client
 
 ```js
 import { Client, WebSocketLink } from 'aws-lambda-ws-link';
@@ -194,23 +230,39 @@ import { InMemoryCache } from 'apollo-cache-inmemory';
 import { ApolloClient } from 'apollo-client';
 
 const wsClient = new Client({
-  uri: 'ws://localhost:8000',
+  uri: 'ws://localhost:8000', // please provide the uri of the api gateway v2 endpoint
 });
 const link = new WebSocketLink(wsClient);
 const client = new ApolloClient({
   cache: new InMemoryCache(),
   link,
 });
-
-// ...
 ```
+
+## Packages
+
+### aws-lambda-graphql package
+
+GraphQL client and server implementation for AWS Lambda.
+
+See [package](./packages/aws-lambda-graphql)
+
+### aws-lambda-ws-link package
+
+GraphQL WebSocket link implementation for [Apollo](https://www.apollographql.com/docs/) GraphQL Client.
+
+## Infrastructure
+
+Current infrastructure is implemented using [AWS Lambda](https://aws.amazon.com/lambda/) + AWS API Gateway v2 + [AWS DynamoDB](https://aws.amazon.com/dynamodb/) (with [DynamoDB streams](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/Streams.html)). But it can be implemented using various solutions (Kinesis, etc) because it's written to be modular.
+
+![](./docs/How%20it%20works.svg)
 
 ## Examples
 
 - [Chat App](./packages/chat-example-app) - React app
 - [Chat Server](./packages/chat-example-server)
   - contains AWS Lambda that handles HTTP, WebSocket and DynamoDB streams
-  - also includes serverless.yaml file for easy deployment
+  - also includes `serverless.yml` file for easy deployment
 
 ## Contributing
 
