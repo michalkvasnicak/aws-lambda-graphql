@@ -11,7 +11,7 @@
     "@types/node": "10.17.5"
   },
   "devDependencies": {
-    "all-contributors-cli": "^6.11.0",
+    "all-contributors-cli": "^6.11.2",
     "@babel/core": "^7.7.2",
     "@babel/plugin-proposal-class-properties": "^7.7.0",
     "@babel/preset-env": "^7.7.1",
