@@ -214,14 +214,26 @@ const client = new ApolloClient({
 
 ## Contributing
 
-Running tests locally:
+- This project uses TypeScript for static typing.
+- This project uses Yarn and Yarn workspaces so only `yarn.lock` is commited.
+
+### Testing
 
 ```console
-yarn install
 yarn test
 ```
 
-This project uses TypeScript for static typing. Please add yourself to contributors according to [all-contributors](https://allcontributors.org/docs/en/cli/usage#all-contributors-add) specification. You can use `yarn all-contributors add {your-github-username} code,bug,...`.
+### Typecheck
+
+```console
+yarn build
+```
+
+Running tests locally:
+
+```console
+yarn test
+```
 
 ## Contributors
 
