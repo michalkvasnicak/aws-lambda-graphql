@@ -2,9 +2,9 @@
 
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable -->
-![CircleCI](https://img.shields.io/circleci/project/github/michalkvasnicak/aws-lambda-graphql/master.svg?style=flat-square)
-![aws-lambda-graphql package version](https://img.shields.io/npm/v/aws-lambda-graphql?color=green&label=aws-lambda-graphql)
-![aws-lambda-ws-link package version](https://img.shields.io/npm/v/aws-lambda-ws-link?color=green&label=aws-lambda-ws-link)<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![CircleCI](https://img.shields.io/circleci/project/github/michalkvasnicak/aws-lambda-graphql/master.svg?style=flat-square)](https://circleci.com/gh/michalkvasnicak/aws-lambda-graphql)
+[![aws-lambda-graphql package version](https://img.shields.io/npm/v/aws-lambda-graphql?color=green&label=aws-lambda-graphql&style=flat-square)](https://www.npmjs.com/package/aws-lambda-graphql)
+[![aws-lambda-ws-link package version](https://img.shields.io/npm/v/aws-lambda-ws-link?color=green&label=aws-lambda-ws-link&style=flat-square)](https://www.npmjs.com/package/aws-lambda-ws-link)<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 [![All Contributors](https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 <!-- markdownlint-enable -->
@@ -242,6 +242,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
+
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors](https://allcontributors.org/docs/en/overview) specification. Contributions of any kind welcome!
