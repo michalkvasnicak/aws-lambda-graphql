@@ -16,7 +16,11 @@
     "lambda",
     "apollo",
     "graphql",
-    "subscriptions"
+    "subscriptions",
+    "apigateway",
+    "websocket",
+    "http",
+    "graphql-subscriptions"
   ],
   "files": [
     "dist",

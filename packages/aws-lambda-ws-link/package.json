@@ -15,7 +15,11 @@
     "graphql",
     "aws",
     "lambda",
-    "subscriptions"
+    "subscriptions",
+    "apigateway",
+    "websocket",
+    "http",
+    "graphql-subscriptions"
   ],
   "dependencies": {
     "apollo-link": "^1.2.11",
