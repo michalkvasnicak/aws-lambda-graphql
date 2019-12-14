@@ -4,8 +4,7 @@
 <!-- markdownlint-disable -->
 ![CircleCI](https://img.shields.io/circleci/project/github/michalkvasnicak/aws-lambda-graphql/master.svg?style=flat-square)
 ![aws-lambda-graphql package version](https://img.shields.io/npm/v/aws-lambda-graphql?color=green&label=aws-lambda-graphql)
-![aws-lambda-ws-link package version](https://img.shields.io/npm/v/aws-lambda-ws-link?color=green&label=aws-lambda-ws-link)
-<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+![aws-lambda-ws-link package version](https://img.shields.io/npm/v/aws-lambda-ws-link?color=green&label=aws-lambda-ws-link)<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 [![All Contributors](https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 <!-- markdownlint-enable -->
