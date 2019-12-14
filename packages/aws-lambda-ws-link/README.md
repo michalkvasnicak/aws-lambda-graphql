@@ -1,4 +1,4 @@
-# Apollo WebSocket link for AWS Lambda subscriptions [DEPRECATED]
+# aws-lambda-ws-link [DEPRECATED]
 
 **⚠️ This package is deprecated, please use Apollo's [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws) client.**
 
