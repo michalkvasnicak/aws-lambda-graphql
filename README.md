@@ -27,6 +27,7 @@ With this library you can do:
     - [1.3 Setting up the GraphQL schema](#13-setting-up-the-graphql-schema)
     - [1.4 Create a PubSub instance](#14-create-a-pubsub-instance)
     - [1.5 Create WebSocket/HTTP event handlers and event processor handler](#15-create-websockethttp-event-handlers-and-event-processor-handler)
+    - [1.6 Pass PubSub to resolvers using GraphQL context](#16-pass-pubsub-to-resolvers-using-graphql-context)
   - [2 Connect to the server using Apollo Client and `subscriptions-transport-ts`](#2-connect-to-the-server-using-apollo-client-and-subscriptions-transport-ts)
 - [Packages](#packages)
   - [aws-lambda-graphql package](./packages/aws-lambda-graphql)
@@ -287,6 +288,92 @@ You need to map:
 In order to do that you can use [Serverless framework](https://serverless.com), see [`serverless.yml` file](./docs/serverless.yml).
 
 To connect to this server you can use [`Apollo Client + subscriptions-transport-ts`](https://github.com/apollographql/subscriptions-transport-ws) - see example in section 2
+
+#### 1.6 Pass PubSub to resolvers using GraphQL context
+
+Sometime if you have complex schema you want to pass dependencies using context so it's easier to manage.
+
+```js
+import {
+  DynamoDBConnectionManager,
+  DynamoDBEventProcessor,
+  DynamoDBEventStore,
+  DynamoDBSubscriptionManager,
+  PubSub,
+  Server,
+} from 'aws-lambda-graphql';
+
+const eventStore = new DynamoDBEventStore();
+const eventProcessor = new DynamoDBEventProcessor();
+const subscriptionManager = new DynamoDBSubscriptionManager();
+const connectionManager = new DynamoDBConnectionManager({
+  subscriptionManager,
+});
+const pubSub = new PubSub({ eventStore });
+
+const typeDefs = /* GraphQL */ `
+  type Mutation {
+      broadcastMessage(message: String!): String!
+    }
+
+    type Query {
+      """
+      Dummy query so out server won't fail during instantiation
+      """
+      dummy: String!
+    }
+
+    type Subscription {
+      messageBroadcast: String!
+    }
+`;
+
+const resolvers: {
+  Mutation: {
+    broadcastMessage: async (
+      root,
+      { message },
+      ctx,
+    ) => {
+      await ctx.pubSub.publish('NEW_MESSAGE', { message });
+
+      return message;
+    },
+  },
+  Query: {
+    dummy: () => 'dummy',
+  },
+  Subscription: {
+    messageBroadcast: {
+      resolve: rootValue => rootValue.message,
+      // subscribe works similarly as resolve in any other GraphQL type
+      // pubSub.subscribe() returns a resolver so we need to pass it all the args as were received
+      // so we can be sure that everything works correctly internally
+      subscribe: (rootValue, args, ctx, info) => {
+        return ctx.pubSub.subscribe('NEW_MESSAGE')(rootValue, args, ctx, info);
+      },
+    },
+  },
+};
+
+const server = new Server({
+  // accepts all the apollo-server-lambda options and adds few extra options
+  // provided by this package
+  context: {
+    pubSub,
+  },
+  connectionManager,
+  eventProcessor,
+  resolvers,
+  subscriptionManager,
+  typeDefs,
+});
+
+export const handleWebSocket = server.createWebSocketHandler();
+export const handleHTTP = server.createHttpHandler();
+// this creates dynamodb event handler so we can send messages to subscribed clients
+export const handleEvents = server.createEventHandler();
+```
 
 ### 2 Connect to the server using Apollo Client and `subscriptions-transport-ts`
 
