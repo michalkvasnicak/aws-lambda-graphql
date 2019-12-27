@@ -47,15 +47,16 @@ provider:
 
 functions:
   wsHandler:
-    handler: index.consumeWsEvent
+    handler: index.handleWebSocket
     events:
       - websocket:
           route: $connect
       - websocket:
           route: $disconnect
-      - websocket: $default
+      - websocket:
+          route: $default
   eventProcessorHandler:
-    handler: index.consumeDynamoDBStream
+    handler: index.handleEvents
     events:
       - stream:
           type: dynamodb
@@ -63,7 +64,7 @@ functions:
             Fn::GetAtt: [EventsDynamoDBTable, StreamArn]
   # this one is optional (if you want to support HTTP)
   httpHandler:
-    handler: index.consumeHttpEvent
+    handler: index.handleHTTP
     events:
       - http:
           path: /
