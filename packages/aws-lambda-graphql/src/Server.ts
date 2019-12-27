@@ -49,6 +49,10 @@ export interface ServerConfig<
   context?: object | ((contextParams: IContext) => object | Promise<object>);
   eventProcessor: IEventProcessor<TServer, TEventHandler>;
   /**
+   * Use to report errors from web socket handler
+   */
+  onError?: (err: any) => void;
+  /**
    * Subscriptions manager takes care of
    *  - registering/unregistering connection's subscribed operations
    */
@@ -100,6 +104,8 @@ export class Server<
 
   private eventProcessor: any;
 
+  private onError: (err: any) => void;
+
   private subscriptionManager: ISubscriptionManager;
 
   private subscriptionOptions: ServerConfig<
@@ -111,6 +117,7 @@ export class Server<
     connectionManager,
     context,
     eventProcessor,
+    onError,
     subscriptionManager,
     subscriptions,
     ...restConfig
@@ -134,6 +141,7 @@ export class Server<
 
     this.connectionManager = connectionManager;
     this.eventProcessor = eventProcessor;
+    this.onError = onError || (err => console.error(err));
     this.subscriptionManager = subscriptionManager;
     this.subscriptionOptions = subscriptions;
   }
@@ -356,11 +364,13 @@ export class Server<
                 type: SERVER_EVENT_TYPES.GQL_ERROR,
                 payload: { message: 'Prohibited connection!' },
               });
+
               await this.connectionManager.sendToConnection(
                 connection,
                 errorResponse,
               );
               await this.connectionManager.closeConnection(connection);
+
               return {
                 body: errorResponse,
                 statusCode: 401,
@@ -466,6 +476,8 @@ export class Server<
           }
         }
       } catch (e) {
+        this.onError(e);
+
         return {
           body: e.message || 'Internal server error',
           statusCode: 500,

@@ -41,6 +41,7 @@ All options from Apollo Lambda Server and
 
 - **connectionManager** (`IConnectionManager`, `required`)
 - **eventProcessor** (`IEventProcessor`, `required`)
+- **onError** (`(err: any) => void`, `optional`) - use to log errors from websocket handler on unknown error
 - **subscriptionManager** (`ISubscriptionManager`, `required`)
 - **subscriptions** (`optional`)
   - **`onConnect(messagePayload: object, connection: IConnection): Promise<boolean|object> | object | boolean`** (`optional`)
