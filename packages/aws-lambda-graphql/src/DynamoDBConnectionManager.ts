@@ -13,6 +13,8 @@ export class ConnectionNotFoundError extends ExtendableError {}
 interface DynamoDBConnectionManagerOptions {
   /**
    * Use this to override ApiGatewayManagementApi (for example in usage with serverless-offline)
+   *
+   * If not provided it will be created with endpoint from connections
    */
   apiGatewayManager?: ApiGatewayManagementApi;
   /**
@@ -32,7 +34,7 @@ interface DynamoDBConnectionManagerOptions {
  * Stores connections in DynamoDB table (default table name is Connections, you can override that)
  */
 export class DynamoDBConnectionManager implements IConnectionManager {
-  private apiGatewayManager: ApiGatewayManagementApi;
+  private apiGatewayManager: ApiGatewayManagementApi | undefined;
 
   private connectionsTable: string;
 
@@ -46,7 +48,7 @@ export class DynamoDBConnectionManager implements IConnectionManager {
     dynamoDbClient,
     subscriptions,
   }: DynamoDBConnectionManagerOptions) {
-    this.apiGatewayManager = apiGatewayManager || new ApiGatewayManagementApi();
+    this.apiGatewayManager = apiGatewayManager;
     this.connectionsTable = connectionsTable;
     this.db = dynamoDbClient || new DynamoDB.DocumentClient();
     this.subscriptions = subscriptions;
@@ -119,7 +121,7 @@ export class DynamoDBConnectionManager implements IConnectionManager {
     payload: string | Buffer,
   ): Promise<void> => {
     try {
-      await this.apiGatewayManager
+      await this.createApiGatewayManager(connection.data.endpoint)
         .postToConnection({ ConnectionId: connection.id, Data: payload })
         .promise();
     } catch (e) {
@@ -147,9 +149,24 @@ export class DynamoDBConnectionManager implements IConnectionManager {
     ]);
   };
 
-  closeConnection = async ({ id }: IConnection): Promise<void> => {
-    await this.apiGatewayManager
+  closeConnection = async ({ id, data }: IConnection): Promise<void> => {
+    await this.createApiGatewayManager(data.endpoint)
       .deleteConnection({ ConnectionId: id })
       .promise();
   };
+
+  /**
+   * Creates api gateway manager
+   *
+   * If custom api gateway manager is provided, uses it instead
+   */
+  private createApiGatewayManager(endpoint: string): ApiGatewayManagementApi {
+    if (this.apiGatewayManager) {
+      return this.apiGatewayManager;
+    }
+
+    this.apiGatewayManager = new ApiGatewayManagementApi({ endpoint });
+
+    return this.apiGatewayManager;
+  }
 }
