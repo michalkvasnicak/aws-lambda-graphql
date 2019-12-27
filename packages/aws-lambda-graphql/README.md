@@ -3,6 +3,10 @@
 [![CircleCI](https://img.shields.io/circleci/project/github/michalkvasnicak/aws-lambda-graphql/master.svg?style=flat-square)](https://circleci.com/gh/michalkvasnicak/aws-lambda-graphql)
 [![aws-lambda-graphql package version](https://img.shields.io/npm/v/aws-lambda-graphql?color=green&label=aws-lambda-graphql&style=flat-square)](https://www.npmjs.com/package/aws-lambda-graphql)
 
+**⚠️ This documentation is currently for `aws-lambda-graphql@next` package which supports only [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws) and drops the legacy protocol and client support!**
+
+[**📖Documentation for `aws-lambda-graphql0.13.0`**](https://github.com/michalkvasnicak/aws-lambda-graphql/tree/aws-lambda-graphql%400.13.0)
+
 Use [Apollo Server Lambda](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-lambda) with GraphQL subscriptions over WebSocket (AWS API Gateway v2).
 
 With this library you can do:
@@ -20,9 +24,9 @@ With this library you can do:
 ## Installation
 
 ```console
-yarn add aws-lambda-graphql graphql graphql-subscriptions
+yarn add aws-lambda-graphql@next graphql graphql-subscriptions
 # or
-npm install aws-lamda-graphql graphql graphql-subscriptions
+npm install aws-lamda-graphql@next graphql graphql-subscriptions
 ```
 
 ## Usage
