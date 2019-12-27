@@ -3,9 +3,16 @@
 [![CircleCI](https://img.shields.io/circleci/project/github/michalkvasnicak/aws-lambda-graphql/master.svg?style=flat-square)](https://circleci.com/gh/michalkvasnicak/aws-lambda-graphql)
 [![aws-lambda-graphql package version](https://img.shields.io/npm/v/aws-lambda-graphql?color=green&label=aws-lambda-graphql&style=flat-square)](https://www.npmjs.com/package/aws-lambda-graphql)
 
-GraphQL server and client implementation for AWS Lambda with WebSocket (AWS API Gateway v2) and HTTP support (AWS API Gateway v1).
+**⚠️ This documentation is currently for `aws-lambda-graphql@next` package which supports only [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws) and drops the legacy protocol and client support!**
 
-The server is fully compatible with Apollo's [`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws).
+[**📖Documentation for `aws-lambda-graphql0.13.0`**](https://github.com/michalkvasnicak/aws-lambda-graphql/tree/aws-lambda-graphql%400.13.0)
+
+Use [Apollo Server Lambda](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-lambda) with GraphQL subscriptions over WebSocket (AWS API Gateway v2).
+
+With this library you can do:
+
+- same things as with [apollo-server-lambda](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-lambda) by utiizing AWS API Gateway v1
+- GraphQL subscriptions over WebSocket by utilizing AWS API Gateway v2 and [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws)
 
 ## Table of contents
 
@@ -17,60 +24,57 @@ The server is fully compatible with Apollo's [`subscriptions-transport-ws`](http
 ## Installation
 
 ```console
-yarn add aws-lambda-graphql apollo-link graphql graphql-subscriptions
+yarn add aws-lambda-graphql@next graphql graphql-subscriptions
 # or
-npm install aws-lamda-graphql apollo-link graphql graphql-subscriptions
+npm install aws-lamda-graphql@next graphql graphql-subscriptions
 ```
 
 ## Usage
 
-To implement WebSocket event handler and event stream handler please see the [example](https://github.com/michalkvasnicak/aws-lambda-graphql#1-websocket-server-handler).
-
-To implement HTTP event handler please see the [example](https://github.com/michalkvasnicak/aws-lambda-graphql#11-http-server-handler).
+There is a [quick start guide](https://github.com/michalkvasnicak/aws-lambda-graphql#quick-start).
 
 ## API
 
-### `createDynamoDBEventProcessor(options: Options): event handler function`
+### `Server`
 
-Creates an AWS DynamoDB Stream handler.
+Creates an [Apollo Lambda server](https://www.npmjs.com/package/apollo-server-lambda).
 
 #### Options
 
+All options from Apollo Lambda Server and
+
 - **connectionManager** (`IConnectionManager`, `required`)
-- **context** (`object` or [`Context creator function`](#context-creator-function), `optional`)
-- **schema** (`GraphQLSchema`, `required`)
+- **eventProcessor** (`IEventProcessor`, `required`)
+- **onError** (`(err: any) => void`, `optional`) - use to log errors from websocket handler on unknown error
 - **subscriptionManager** (`ISubscriptionManager`, `required`)
+- **subscriptions** (`optional`)
+  - **`onConnect(messagePayload: object, connection: IConnection): Promise<boolean|object> | object | boolean`** (`optional`)
+  - **`onOperation(message: OperationRequest, params: ExecutionParams, connection: IConnection): Promise<ExecutionParams>|ExecutionParams`** (`optional`)
+  - **`onOperationComplete(connection: IConnection, operationId: string): void`** (`optional`)
+  - **`onDisconnect(connection: IConnection): void`** (`optional`)
+  - **waitForInitialization** (`optional`) - if connection is not initialised on GraphQL operation, wait for connection to be initialised or throw prohibited connection error. If `onConnect` is specified then we wait for initialisation otherwise we don't wait. (this is usefull if you're performing authentication in `onConnect`).
+    - **retryCount** (`number`, `optional`, `default 10`) - how many times should we try to check the connection state?
+    - **timeout** (`number`, `optional`, `default 50ms`) - how long should we wait (in milliseconds) until we try to check the connection state again?
 
-### `createHttpHandler(options: Options): API Gateway v1 HTTP event handler function`
+#### `createHttpHandler()`
 
-Creates an AWS API Gateway v1 event handler.
+Creates an AWS Lambda API Gateway v1 handler. Events are handled by [apollo-server-lambda](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-lambda)
 
-#### Options
+#### `createWebSocketHandler()`
 
-- **connectionManager** (`IConnectionManager`, `required`)
-- **context** (`object` or [`Context creator function`](#context-creator-function), `optional`)
-- **schema** (`GraphQLSchema`, `required`)
-- **formatResponse** (`(body: any) => string`, `optional`) - formats response for `body` property of an AWS ApiGateway v1 response. Default is `JSON.stringify`
-- **validationRules** (`array of GraphQL validation rules`, `optional`)
+Creates an AWS Lambda API Gateway v2 handler that supports GraphQL subscriptions over WebSocket.
 
-### `createWsHandler(options: Options): API Gateway v2 WebSocket event handler function`
+#### `createEventHandler()`
 
-Creates an AWS API Gateway v1 event handler.
+Creates an AWS Lambda handler for events from events source (for example DynamoDBEventStore). This method internally work with `IEventProcessor`.
 
-#### Options
+### `DynamoDBEventProcessor: IEventProcessor`
 
-- **connectionManager** (`IConnectionManager`, `required`)
-- **context** (`object` or [`Context creator function`](#context-creator-function), `optional`)
-- **schema** (`GraphQLSchema`, `required`)
-- **subscriptionManager** (`ISubscriptionManager`, `required`)
-- **`onConnect(messagePayload: object, connection: IConnection): Promise<boolean|object> | object | boolean`**
-- **`onOperation(message: OperationRequest, params: object, connection: IConnection): Promise<object>|object`** (`optional`)
-- **`onOperationComplete(connection: IConnection, operationId: string): void`** (`optional`)
-- **`onDisconnect(connection: IConnection): void`** (`optional`)
-- **validationRules** (`array of GraphQL validation rules`, `optional`)
-- **waitForInitialization** (`optional`) - if connection is not initialised on GraphQL operation, wait for connection to be initialised or throw prohibited connection error. If `onConnect` is specified then we wait for initialisation otherwise we don't wait. (this is usefull if you're performing authentication in `onConnect`).
-  - **retryCount** (`number`, `optional`, `default 10`) - how many times should we try to check the connection state?
-  - **timeout** (`number`, `optional`, `default 50ms`) - how long should we wait (in milliseconds) until we try to check the connection state again?
+AWS Lambda DynamoDB stream handler. DynamoDBEventProcessor is used internally by Server.
+
+#### Options (`optional`)
+
+- **onError** (`(err: any) => void`, `optional`)
 
 ### `DynamoDBConnectionManager: IConnectionManager`
 

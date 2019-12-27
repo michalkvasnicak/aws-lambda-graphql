@@ -1,26 +1,20 @@
 import {
   GQLOperation,
-  GQLConnectedEvent,
+  GQLConnectionACK,
   GQLErrorEvent,
-  GQLOperationResult,
-  GQLSubscribed,
-  GQLUnsubscribe,
-  GQLUnsubscribed,
+  GQLData,
+  GQLComplete,
+  GQLStopOperation,
 } from './protocol';
 
 type AllowedProtocolEvents =
   | GQLOperation
-  | GQLConnectedEvent
+  | GQLConnectionACK
   | GQLErrorEvent
-  | GQLOperationResult
-  | GQLSubscribed
-  | GQLUnsubscribe
-  | GQLUnsubscribed;
+  | GQLData
+  | GQLComplete
+  | GQLStopOperation;
 
-function formatMessage(event: AllowedProtocolEvents): string {
+export function formatMessage(event: AllowedProtocolEvents): string {
   return JSON.stringify(event);
 }
-
-export { formatMessage };
-
-export default formatMessage;

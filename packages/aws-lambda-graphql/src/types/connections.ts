@@ -33,12 +33,8 @@ export interface IConnectEvent {
 }
 
 export interface IConnectionManager {
-  hydrateConnection(
-    connectionId: string,
-    useLegacyProtocol?: boolean,
-  ): Promise<IConnection>;
+  hydrateConnection(connectionId: string): Promise<IConnection>;
   setConnectionData(data: Object, connection: IConnection): Promise<void>;
-  setLegacyProtocol(connection: IConnection): Promise<void>;
   registerConnection(event: IConnectEvent): Promise<IConnection>;
   sendToConnection(
     connection: IConnection,

@@ -1,7 +1,6 @@
 import { DesignSystem } from '@napred/browser';
 import { ApolloClient } from 'apollo-client';
 import { InMemoryCache } from 'apollo-cache-inmemory';
-// import { Client, WebSocketLink } from 'aws-lambda-ws-link';
 import { WebSocketLink } from 'apollo-link-ws';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
 import React from 'react';

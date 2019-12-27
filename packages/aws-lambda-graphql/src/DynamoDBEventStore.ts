@@ -1,11 +1,18 @@
-import { ulid } from 'ulid';
 import { DynamoDB } from 'aws-sdk';
+import { ulid } from 'ulid';
 import { IEventStore, ISubscriptionEvent } from './types';
 import { computeTTL } from './helpers';
 
 const DEFAULT_TTL = 7200;
 
 interface DynamoDBEventStoreOptions {
+  /**
+   * Use this to override default document client (for example if you want to use local dynamodb)
+   */
+  dynamoDbClient?: DynamoDB.DocumentClient;
+  /**
+   * Events table name (default is Events)
+   */
   eventsTable?: string;
   /**
    * Optional TTL for events (stored in ttl field) in seconds
@@ -15,7 +22,14 @@ interface DynamoDBEventStoreOptions {
   ttl?: number;
 }
 
-class DynamoDBEventStore implements IEventStore {
+/**
+ * DynamoDB event store
+ *
+ * This event store stores published events in DynamoDB table
+ *
+ * The server needs to expose DynamoDBEventProcessor handler in order to process these events
+ */
+export class DynamoDBEventStore implements IEventStore {
   private db: DynamoDB.DocumentClient;
 
   private tableName: string;
@@ -23,10 +37,11 @@ class DynamoDBEventStore implements IEventStore {
   private ttl: number;
 
   constructor({
+    dynamoDbClient,
     eventsTable = 'Events',
     ttl = DEFAULT_TTL,
   }: DynamoDBEventStoreOptions = {}) {
-    this.db = new DynamoDB.DocumentClient();
+    this.db = dynamoDbClient || new DynamoDB.DocumentClient();
     this.tableName = eventsTable;
     this.ttl = ttl;
   }
@@ -44,6 +59,3 @@ class DynamoDBEventStore implements IEventStore {
       .promise();
   };
 }
-
-export { DynamoDBEventStore };
-export default DynamoDBEventStore;

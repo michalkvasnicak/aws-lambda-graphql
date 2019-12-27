@@ -1,10 +1,10 @@
 import { APIGatewayEvent, Context as LambdaContext } from 'aws-lambda';
-import { DocumentNode, GraphQLSchema, GraphQLResolveInfo } from 'graphql';
-import { PubSub } from 'graphql-subscriptions';
-import { IConnection, IConnectionManager } from './connections';
-// eslint-disable-next-line import/no-cycle
-import { ISubscriptionManager } from './subscriptions';
+import { GraphQLResolveInfo } from 'graphql';
+import { PubSubEngine } from 'graphql-subscriptions';
 import { APIGatewayWebSocketEvent } from './aws';
+import { IConnection, IConnectionManager } from './connections';
+import { ISubscriptionManager } from './subscriptions';
+import { OperationRequest } from './operations';
 
 /**
  * Superset of context passed to every operation invoked by websocket
@@ -18,17 +18,32 @@ export interface IContext {
   $$internal: {
     /**
      * Current connection that invoked execution
+     *
+     * This is set up only during websocket event processing:
+     *  - event processing
+     *  - $connect
+     *  - $disconnect
+     *  - $default
+     *
+     * Ignored for HTTP event handling
      */
-    connection: IConnection;
+    connection?: IConnection;
 
     connectionManager: IConnectionManager;
 
     /**
      * Current executed operation
+     *
+     * This is set up only during websocket $default and event processing
      */
-    operation: OperationRequest;
+    operation?: OperationRequest;
 
-    pubSub: PubSub;
+    /**
+     * Pub sub is set up only during event processing and websocket event processing
+     *
+     * Ignored for HTTP event handling
+     */
+    pubSub?: PubSubEngine;
 
     /**
      * Should we register subscriptions?
@@ -44,23 +59,9 @@ export interface IContext {
   [key: string]: any;
 }
 
-export interface OperationRequest {
-  [key: string]: any;
-  extensions?: { [key: string]: any };
-  operationName?: string;
-  query: string | DocumentNode;
-  variables?: { [key: string]: any };
-}
-
-export interface IdentifiedOperationRequest extends OperationRequest {
-  operationId: string;
-}
-
 export type SubcribeResolveFn = (
   rootValue: any,
   args: any,
   context: IContext,
-  info: GraphQLResolveInfo,
+  info?: GraphQLResolveInfo,
 ) => Promise<AsyncIterator<any> & AsyncIterable<any>>;
-
-export type SchemaCreatorFn = (options: {}) => GraphQLSchema;

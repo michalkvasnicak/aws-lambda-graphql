@@ -11,7 +11,34 @@ if (Symbol.asyncIterator === undefined) {
   (Symbol as any).asyncIterator = Symbol.for('asyncIterator');
 }
 
+interface DynamoDBSubscriber extends ISubscriber {
+  /**
+   * works as range key in DynamoDb (event is partition key)
+   * it is in format connectionId:operationId
+   */
+  subscriptionId: string;
+}
+
+interface DynamoDBSubscriptionManagerOptions {
+  /**
+   * Use this to override default document client (for example if you want to use local dynamodb)
+   */
+  dynamoDbClient?: DynamoDB.DocumentClient;
+  /**
+   * Subscriptions table name (default is Subscriptions)
+   */
+  subscriptionsTableName?: string;
+  /**
+   * Subscriptions operations table name (default is SubscriptionOperations)
+   */
+  subscriptionOperationsTableName?: string;
+}
+
 /**
+ * DynamoDBSubscriptionManager
+ *
+ * Stores all subsrciptions in Subscriptions and SubscriptionOperations tables (both can be overridden)
+ *
  * DynamoDB table structures
  *
  * Subscriptions:
@@ -21,21 +48,7 @@ if (Symbol.asyncIterator === undefined) {
  * SubscriptionOperations:
  *  subscriptionId: primary key (HASH) - connectionId:operationId (this is always unique per client)
  */
-
-interface DynamoDBSubscriber extends ISubscriber {
-  /**
-   * works as range key in DynamoDb (event is partition key)
-   * it is in format connectionId:operationId
-   */
-  subscriptionId: string;
-}
-
-type Options = {
-  subscriptionsTableName?: string;
-  subscriptionOperationsTableName?: string;
-};
-
-class DynamoDBSubscriptionManager implements ISubscriptionManager {
+export class DynamoDBSubscriptionManager implements ISubscriptionManager {
   private subscriptionsTableName: string;
 
   private subscriptionOperationsTableName: string;
@@ -43,12 +56,13 @@ class DynamoDBSubscriptionManager implements ISubscriptionManager {
   private db: DynamoDB.DocumentClient;
 
   constructor({
+    dynamoDbClient,
     subscriptionsTableName = 'Subscriptions',
     subscriptionOperationsTableName = 'SubscriptionOperations',
-  }: Options = {}) {
+  }: DynamoDBSubscriptionManagerOptions = {}) {
     this.subscriptionsTableName = subscriptionsTableName;
     this.subscriptionOperationsTableName = subscriptionOperationsTableName;
-    this.db = new DynamoDB.DocumentClient();
+    this.db = dynamoDbClient || new DynamoDB.DocumentClient();
   }
 
   subscribersByEventName = (
@@ -258,6 +272,3 @@ class DynamoDBSubscriptionManager implements ISubscriptionManager {
     return `${connectionId}:${operationId}`;
   };
 }
-
-export { DynamoDBSubscriptionManager };
-export default DynamoDBSubscriptionManager;

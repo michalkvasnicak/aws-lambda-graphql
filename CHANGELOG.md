@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@0.13.0...HEAD)
 
+#### Breaking changes
+
+- added `Server` as base implementation to be used instead of `createHttpHandler, createWsHandler etc`, see [#59](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/59)
+  - uses [`apollo-server-lambda`](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-lambda) as underlying implementation for HTTP handling
+  - removed legacy protocol support, please use only Client from [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws).
+
 ### [v0.13.0](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@0.12.3...aws-lambda-graphql@0.13.0) - 2019-12-12
 
 #### Added
@@ -134,7 +140,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### [v0.1.0](https://github.com/michalkvasnicak/aws-lambda-graphql/releases/tag/v0.1.0) - 2019-01-13
 
-## `aws-lambda-ws-link`
+## `aws-lambda-ws-link` **⚠️ Deprecated, do not use with versions newer that `0.13.0`**
 
 ### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-ws-link@0.13.0...HEAD)
 

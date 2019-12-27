@@ -1,201 +1,388 @@
-# AWS Lambda with GraphQL subscriptions
+# Apollo AWS Lambda with GraphQL subscriptions
 
 <!-- prettier-ignore-start -->
 <!-- markdownlint-disable -->
 [![CircleCI](https://img.shields.io/circleci/project/github/michalkvasnicak/aws-lambda-graphql/master.svg?style=flat-square)](https://circleci.com/gh/michalkvasnicak/aws-lambda-graphql)
-[![aws-lambda-graphql package version](https://img.shields.io/npm/v/aws-lambda-graphql?color=green&label=aws-lambda-graphql&style=flat-square)](https://www.npmjs.com/package/aws-lambda-graphql)
-[![aws-lambda-ws-link package version](https://img.shields.io/npm/v/aws-lambda-ws-link?color=green&label=aws-lambda-ws-link&style=flat-square)](https://www.npmjs.com/package/aws-lambda-ws-link)<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
+[![aws-lambda-graphql package version](https://img.shields.io/npm/v/aws-lambda-graphql?color=green&label=aws-lambda-graphql&style=flat-square)](https://www.npmjs.com/package/aws-lambda-graphql)<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
 [![All Contributors](https://img.shields.io/badge/all_contributors-5-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
 
-Use AWS Lambda + AWS API Gateway v2 for GraphQL subscriptions over WebSocket and AWS API Gateway v1 for HTTP.
+**⚠️ This documentation is currently for `aws-lambda-graphql@next` package which supports only [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws) and drops the legacy protocol and client support!**
 
-**`aws-lambda-graphql` is fully compatible with Apollo's [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws) client.**
-**`aws-lambda-graphql` also supports GraphQL operations over HTTP events using AWS API Gateway v1**
+[**📖Documentation for `aws-lambda-graphql0.13.0`**](https://github.com/michalkvasnicak/aws-lambda-graphql/tree/aws-lambda-graphql%400.13.0)
+
+Use [Apollo Server Lambda](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-lambda) with GraphQL subscriptions over WebSocket (AWS API Gateway v2).
+
+With this library you can do:
+
+- same things as with [apollo-server-lambda](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-lambda) by utiizing AWS API Gateway v1
+- GraphQL subscriptions over WebSocket by utilizing AWS API Gateway v2 and [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws)
 
 ![](./docs/awsgql.gif)
 
 ## Table of contents
 
 - [Quick start](#quick-start)
-  - [1. WebSocket server handler](#1-websocket-server-handler)
-  - [1.1. HTTP server handler](#11-http-server-handler)
-  - [2a Connect to the server using Apollo Client and `subscriptions-transport-ts`](#2a-connect-to-the-server-using-apollo-client-and-subscriptions-transport-ts)
-  - [2b Connect to the server using Apollo Client and `aws-lambda-ws-link`](#2b-connect-to-the-server-using-apollo-client-and-aws-lambda-ws-link)
+  - [1. Create a server](#1-create-a-server)
+    - [1.1 Setting up Connection and Subscription management](#11-setting-up-connection-and-subscription-management)
+    - [1.2 Setting up an Event store](#12-setting-up-an-event-store)
+    - [1.3 Setting up the GraphQL schema](#13-setting-up-the-graphql-schema)
+    - [1.4 Create a PubSub instance](#14-create-a-pubsub-instance)
+    - [1.5 Create WebSocket/HTTP event handlers and event processor handler](#15-create-websockethttp-event-handlers-and-event-processor-handler)
+    - [1.6 Pass PubSub to resolvers using GraphQL context](#16-pass-pubsub-to-resolvers-using-graphql-context)
+  - [2 Connect to the server using Apollo Client and `subscriptions-transport-ts`](#2-connect-to-the-server-using-apollo-client-and-subscriptions-transport-ts)
+  - [3 Deploy and development](#3-deploy-and-development)
+    - [3.1 Serverless support](#31-serverless-support)
+    - [3.2 Serverless-offline support](#32-serverless-offline-support)
 - [Packages](#packages)
   - [aws-lambda-graphql package](./packages/aws-lambda-graphql)
     - [Installation](./packages/aws-lambda-graphql#installation)
     - [Usage](./packages/aws-lambda-graphql#usage)
     - [API](./packages/aws-lambda-graphql#api)
     - [Examples](./packages/aws-lambda-graphql#examples)
-  - [aws-lambda-ws-link package](./packages/aws-lambda-ws-link)
-    - [Installation](./packages/aws-lambda-ws-link#installation)
-    - [Usage](./packages/aws-lambda-ws-link#usage)
-    - [API](./packages/aws-lambda-ws-link#api)
-      - [Client](./packages/aws-lambda-ws-link#client)
-      - [WebSocketLink](./packages/aws-lambda-ws-link#websocketlink)
-    - [Examples](./packages/aws-lambda-ws-link#examples)
 - [Infrastructure](#Infrastructure)
 - [Examples](#examples)
 
 ## Quick start
 
-In this quick example we're going to use AWS DynamoDB as an event source for our PubSub.
+In this quick example we're going to build a simple broadcasting server that broadcasts messages received using `broadcastMessage` mutation to all subscribed connections.
 
-### 1. WebSocket Server Handler
+[Skip to final implementation](#15-create-websockethttp-event-handlers-and-event-processor-handler) if you don't need a step by step guide
 
-Install dependencies:
+### 1. Create a server
+
+First we need to install dependencies:
 
 ```console
-yarn add aws-lambda-graphql apollo-link graphql graphql-subscriptions aws-sdk graphql-tools
+yarn add aws-lambda-graphql@next graphql graphql-subscriptions aws-sdk
 # or
-npm install aws-lambda-graphql apollo-link graphql graphql-subscriptions aws-sdk graphql-tools
+npm install aws-lambda-graphql@next graphql graphql-subscriptions aws-sdk
 ```
 
-Implement simple broadcasting server that broadcasts messages received using `broadcastMessage` mutation to all subscribed connections.
+**Note that `aws-sdk` is required only for local development, it's provided by the AWS Lambda by default when you deploy the app**
 
-**⚠️ This server supports only AWS ApiGateway v2 events (WebSocket), if you want to support HTTP events too, see [example for adding HTTP support](#11-http-server-handler)**
+Now we have all the dependencies installed so lets start with server implementation.
+
+#### 1.1 Setting up Connection and Subscription management
+
+Our GraphQL server needs to know how to store connections and subscriptions because Lambdas are stateless. In order to do that we need create instances of the [Connection manager](./packages/aws-lambda-graphql/src/types/connections.ts) and [Subscription manager](./packages/aws-lambda-graphql/src/types/subscriptions.ts). In this example we'll leverage DynamoDB as persistent store for our connections and subscriptions.
 
 ```js
 import {
-  createDynamoDBEventProcessor,
-  createWsHandler,
   DynamoDBConnectionManager,
-  DynamoDDBEventStore,
   DynamoDBSubscriptionManager,
-  PubSub,
 } from 'aws-lambda-graphql';
-import { makeExecutableSchema } from 'graphql-tools';
-```
 
-Next step is to instantiate an event store. Event store is responsible for publishing events to underlying event store. Event stores could be anything that supports invoking AWS Lambda (for example AWS DynamoDB or AWS Kinesis, etc).
-
-```js
-const eventStore = new DynamoDBEventStore();
-```
-
-In order to publish events to all subscribed connection and register connections to different events we need to instantiate PubSub with event store passed in. PubSub is used later in your schema to publish events. PubSub is fully compatible with [`graphql-subscriptions`](https://github.com/apollographql/graphql-subscriptions).
-
-```js
-const pubSub = new PubSub({ eventStore });
-```
-
-Now we have event store and PubSub instantiated. But we don't have a way to register subscriptions to some datastore so the information about subscriptions are shared amongst different instances of our lambda function. To fix that we'll instantiate a subscription manager (DynamoDB subscription manager for the sake of this example).
-
-```js
 const subscriptionManager = new DynamoDBSubscriptionManager();
-```
-
-The same problem as with subscriptions needs to be fixed for connections as well. For the sake of this example we're going to use DynamoDB Connection manager. Connection manager stores information about all connections and their respective subscriptions.
-
-```js
 const connectionManager = new DynamoDBConnectionManager({
   subscriptionManager,
 });
 ```
 
-Now define our simple broadcasting schema.
+#### 1.2 Setting up an Event store
+
+In order to be able to broadcast messages (publish events) we need an [Event store](./packages/aws-lambda-graphql/src/types/events.ts). Because our server can received a lot of messages we need to work with events in async, meaning that the actual events are not published directly from mutation but rather they are stored in underlying data store which works as an event source for our server. Because we decided to use DynamoDB as our persistent store, we are goint to use it as our event source.
 
 ```js
-const schema = makeExecutableSchema({
-  typeDefs: /* GraphQL */ `
-    type Mutation {
+import {
+  DynamoDBConnectionManager,
+  DynamoDBEventStore,
+  DynamoDBSubscriptionManager,
+} from 'aws-lambda-graphql';
+
+const eventStore = new DynamoDBEventStore();
+const subscriptionManager = new DynamoDBSubscriptionManager();
+const connectionManager = new DynamoDBConnectionManager({
+  subscriptionManager,
+});
+```
+
+That's it for now. Our `eventStore` will use DynamoDB to store messages that we want to broadcast to all subscribed clients.
+
+#### 1.3 Setting up the GraphQL schema
+
+Our server needs a GraphQL schema. So we'll create one.
+
+```js
+import {
+  DynamoDBConnectionManager,
+  DynamoDBEventStore,
+  DynamoDBSubscriptionManager,
+} from 'aws-lambda-graphql';
+
+const eventStore = new DynamoDBEventStore();
+const subscriptionManager = new DynamoDBSubscriptionManager();
+const connectionManager = new DynamoDBConnectionManager({
+  subscriptionManager,
+});
+
+const typeDefs = /* GraphQL */ `
+  type Mutation {
+    broadcastMessage(message: String!): String!
+  }
+
+  type Query {
+    """
+    Dummy query so out server won't fail during instantiation
+    """
+    dummy: String!
+  }
+
+  type Subscription {
+    messageBroadcast: String!
+  }
+`;
+```
+
+From given schema we already see that we need to somehow publish and process broadcasted message. For that purpose we must create a [PubSub](./packages/aws-lambda-graphql/src/types/events.ts) instance that uses our DynamoDB event store as underlying storage for events.
+
+#### 1.4 Create a PubSub instance
+
+PubSub is responsible for publishing events and subscribing to events. Anyone can broadcast message using `broadcastMessage` mutation (publish) and anyone connected over WebSocket can subscribed to `messageBroadcast` subscription (subscribing) to receive broadcasted messages.
+
+```js
+import {
+  DynamoDBConnectionManager,
+  DynamoDBEventStore,
+  DynamoDBSubscriptionManager,
+  PubSub,
+} from 'aws-lambda-graphql';
+
+const eventStore = new DynamoDBEventStore();
+const subscriptionManager = new DynamoDBSubscriptionManager();
+const connectionManager = new DynamoDBConnectionManager({
+  subscriptionManager,
+});
+const pubSub = new PubSub({ eventStore });
+
+const typeDefs = /* GraphQL */ `
+  type Mutation {
       broadcastMessage(message: String!): String!
     }
 
     type Query {
+      """
+      Dummy query so out server won't fail during instantiation
+      """
       dummy: String!
     }
 
     type Subscription {
       messageBroadcast: String!
     }
-  `,
-  resolvers: {
-    Mutation: {
-      broadcastMessage: async (
-        root,
-        { message },
-        // $$internal is provided automatically
-        // please see the documentation to `aws-lambda-graphql` package
-        { $$internal: { pubSub } },
-      ) => {
-        await pubSub.publish('NEW_MESSAGE', { message });
+`;
 
-        return message;
-      },
-    },
-    Query: {
-      dummy: () => 'dummy',
-    },
-    Subscription: {
-      messageBroadcast: {
-        // rootValue is same as the event published above ({ message: string })
-        // but our subscription should return just a string, so we're going to use resolve
-        // to extract message from an event
-        resolve: rootValue => rootValue.message,
-        subscribe: pubSub.subscribe('NEW_MESSAGE'),
-      },
+const resolvers: {
+  Mutation: {
+    broadcastMessage: async (
+      root,
+      { message },
+    ) => {
+      await pubSub.publish('NEW_MESSAGE', { message });
+
+      return message;
     },
   },
-});
+  Query: {
+    dummy: () => 'dummy',
+  },
+  Subscription: {
+    messageBroadcast: {
+      // rootValue is same as the event published above ({ message: string })
+      // but our subscription should return just a string, so we're going to use resolve
+      // to extract message from an event
+      resolve: rootValue => rootValue.message,
+      subscribe: pubSub.subscribe('NEW_MESSAGE'),
+    },
+  },
+};
 ```
 
-Our schema is finished. There are 2 things missing. We need to provide a way to communicate with the schema and we need a way to process events so we can broadcast messages to all connections that subscribed to `messageBroadcast` subscription.
+Our GraphQL schema is now finished. Now we can instantiate the server so we can actually process HTTP and WebSocket events received by our Lambda server and send messages to subscribed clients.
 
-In order to support GraphQL operations sent to our schema we need to instantiate WebSocket handler for AWS ApiGateway v2 events. WebSocket handler needs a way to remember all connections, subscriptions and a GraphQL schema so it know what to do.
+#### 1.5 Create WebSocket/HTTP event handlers and event processor handler
+
+In order to send messages to subscribed clients we need the last piece and it is a [Event processor](./packages/aws-lambda-graphql/src/types/events.ts). Event processor is responsible for processing events published to our Event store and sending them to all connections that are subscribed for given event.
+
+Because we use DynamoDB as an event store, we are going to use [DynamoDBEventProcessor](./packages/aws-lambda-graphql/src/DynamoDBEventProcessor.ts).
 
 ```js
-const wsHandler = createWsHandler({
-  connectionManager,
-  schema,
+import {
+  DynamoDBConnectionManager,
+  DynamoDBEventProcessor,
+  DynamoDBEventStore,
+  DynamoDBSubscriptionManager,
+  PubSub,
+  Server,
+} from 'aws-lambda-graphql';
+
+const eventStore = new DynamoDBEventStore();
+const eventProcessor = new DynamoDBEventProcessor();
+const subscriptionManager = new DynamoDBSubscriptionManager();
+const connectionManager = new DynamoDBConnectionManager({
   subscriptionManager,
 });
+const pubSub = new PubSub({ eventStore });
 
-module.exports.consumeWsEvent = wsHandler;
-```
+const typeDefs = /* GraphQL */ `
+  type Mutation {
+      broadcastMessage(message: String!): String!
+    }
 
-Now we are able to respond to mutations, queries and subscribe to subscriptions but when we send some message using `broadcastMessage` mutation subscribed connections won't receive anything because the event processor handler is missing. So now we will fix that with DynamoDB event processor.
+    type Query {
+      """
+      Dummy query so out server won't fail during instantiation
+      """
+      dummy: String!
+    }
 
-```js
-const eventProcessor = createDynamoDBEventProcessor({
+    type Subscription {
+      messageBroadcast: String!
+    }
+`;
+
+const resolvers: {
+  Mutation: {
+    broadcastMessage: async (
+      root,
+      { message },
+    ) => {
+      await pubSub.publish('NEW_MESSAGE', { message });
+
+      return message;
+    },
+  },
+  Query: {
+    dummy: () => 'dummy',
+  },
+  Subscription: {
+    messageBroadcast: {
+      // rootValue is same as the event published above ({ message: string })
+      // but our subscription should return just a string, so we're going to use resolve
+      // to extract message from an event
+      resolve: rootValue => rootValue.message,
+      subscribe: pubSub.subscribe('NEW_MESSAGE'),
+    },
+  },
+};
+
+const server = new Server({
+  // accepts all the apollo-server-lambda options and adds few extra options
+  // provided by this package
   connectionManager,
-  schema,
+  eventProcessor,
+  resolvers,
   subscriptionManager,
+  typeDefs,
 });
 
-module.exports.consumeDynamoDBStream = eventProcessor;
+export const handleWebSocket = server.createWebSocketHandler();
+export const handleHTTP = server.createHttpHandler();
+// this creates dynamodb event handler so we can send messages to subscribed clients
+export const handleEvents = server.createEventHandler();
 ```
 
-Now our server is finished. You just need to map the ApiGateway v2 events to `consumeWsEvent` handler and DynamoDB stream from events table to `consumeDynamoDBStream`.
+Now our server is finished.
+
+You need to map:
+
+- ApiGateway v2 events to `handleWebSocket` handler
+- ApiGateway v1 events to `handleHTTP`
+- DynamoDB stream from events table to `handleEvents`.
 
 In order to do that you can use [Serverless framework](https://serverless.com), see [`serverless.yml` file](./docs/serverless.yml).
 
-To connect to this server you can use:
+To connect to this server you can use [`Apollo Client + subscriptions-transport-ts`](https://github.com/apollographql/subscriptions-transport-ws) - see example in section 2
 
-- [`aws-lambda-ws-link`](./packages/aws-lambda-ws-link) - see example
-- [`Apollo Client + subscriptions-transport-ts`](https://github.com/apollographql/subscriptions-transport-ws) - see example
+#### 1.6 Pass PubSub to resolvers using GraphQL context
 
-### 1.1. HTTP Server Handler
-
-Our server supports only AWS API Gateway v2 events. But we can make it compatible with AWS API Gateway v1 events (without subscriptions support).
+Sometime if you have complex schema you want to pass dependencies using context so it's easier to manage.
 
 ```js
-import { createHttpHandler } from 'aws-lambda-graphql';
+import {
+  DynamoDBConnectionManager,
+  DynamoDBEventProcessor,
+  DynamoDBEventStore,
+  DynamoDBSubscriptionManager,
+  PubSub,
+  Server,
+} from 'aws-lambda-graphql';
 
-const httpHandler = createHttpHandler({
+const eventStore = new DynamoDBEventStore();
+const eventProcessor = new DynamoDBEventProcessor();
+const subscriptionManager = new DynamoDBSubscriptionManager();
+const connectionManager = new DynamoDBConnectionManager({
+  subscriptionManager,
+});
+const pubSub = new PubSub({ eventStore });
+
+const typeDefs = /* GraphQL */ `
+  type Mutation {
+      broadcastMessage(message: String!): String!
+    }
+
+    type Query {
+      """
+      Dummy query so out server won't fail during instantiation
+      """
+      dummy: String!
+    }
+
+    type Subscription {
+      messageBroadcast: String!
+    }
+`;
+
+const resolvers: {
+  Mutation: {
+    broadcastMessage: async (
+      root,
+      { message },
+      ctx,
+    ) => {
+      await ctx.pubSub.publish('NEW_MESSAGE', { message });
+
+      return message;
+    },
+  },
+  Query: {
+    dummy: () => 'dummy',
+  },
+  Subscription: {
+    messageBroadcast: {
+      resolve: rootValue => rootValue.message,
+      // subscribe works similarly as resolve in any other GraphQL type
+      // pubSub.subscribe() returns a resolver so we need to pass it all the args as were received
+      // so we can be sure that everything works correctly internally
+      subscribe: (rootValue, args, ctx, info) => {
+        return ctx.pubSub.subscribe('NEW_MESSAGE')(rootValue, args, ctx, info);
+      },
+    },
+  },
+};
+
+const server = new Server({
+  // accepts all the apollo-server-lambda options and adds few extra options
+  // provided by this package
+  context: {
+    pubSub,
+  },
   connectionManager,
-  schema,
+  eventProcessor,
+  resolvers,
+  subscriptionManager,
+  typeDefs,
 });
 
-module.exports.consumeHttpEvent = httpHandler;
+export const handleWebSocket = server.createWebSocketHandler();
+export const handleHTTP = server.createHttpHandler();
+// this creates dynamodb event handler so we can send messages to subscribed clients
+export const handleEvents = server.createEventHandler();
 ```
 
-Make sure to map AWS API Gateway v1 events to Lambda's `consumeHttpEvent` handler.
-
-### 2a Connect to the server using Apollo Client and `subscriptions-transport-ts`
+### 2 Connect to the server using Apollo Client and `subscriptions-transport-ts`
 
 First install dependencies
 
@@ -224,30 +411,17 @@ const client = new ApolloClient({
 });
 ```
 
-### 2b Connect to the server using Apollo Client and `aws-lambda-ws-link`
+### 3 Deploy and development
 
-**⚠️ `aws-lambda-ws-link` package is basically deprecated as of version `0.8.0`. There is no need to support 2 different protocols. Use [`subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws) please.**
+#### 3.1 Serverless support
 
-```console
-yarn add aws-lambda-ws-link apollo-cache-inmemory apollo-client graphql graphql-subscriptions
-# or
-npm install aws-lambda-ws-link apollo-cache-inmemory apollo-client graphql graphql-subscriptions
-```
+To deploy your api created using this library please see [`serverless.yml`](./packages/chat-example-server/serverless.yml) template of example app.
 
-```js
-import { Client, WebSocketLink } from 'aws-lambda-ws-link';
-import { InMemoryCache } from 'apollo-cache-inmemory';
-import { ApolloClient } from 'apollo-client';
+#### 3.2 Serverless-offline support
 
-const wsClient = new Client({
-  uri: 'ws://localhost:8000', // please provide the uri of the api gateway v2 endpoint
-});
-const link = new WebSocketLink(wsClient);
-const client = new ApolloClient({
-  cache: new InMemoryCache(),
-  link,
-});
-```
+This library supports [serverless-offline](https://github.com/dherault/serverless-offline). But you have to do small changes in your code to actually support it, it's not automatical.
+
+You need to set up custom endpoint for ApiGatewayManagementApi and custom endpoint for DynamoDB if you're using it. Please refer to [`chat-example-server`](./packages/chat-example-server) source code.
 
 ## Packages
 
@@ -256,10 +430,6 @@ const client = new ApolloClient({
 GraphQL client and server implementation for AWS Lambda.
 
 See [package](./packages/aws-lambda-graphql)
-
-### aws-lambda-ws-link package
-
-GraphQL WebSocket link implementation for [Apollo](https://www.apollographql.com/docs/) GraphQL Client.
 
 ## Infrastructure
 

@@ -13,21 +13,13 @@ export enum SERVER_EVENT_TYPES {
   GQL_COMPLETE = 'complete',
 }
 
-export enum LEGACY_CLIENT_EVENT_TYPES {
-  GQL_START = 'GQL_OP',
-  GQL_STOP = 'GQL_UNSUBSCRIBE',
-  GQL_CONNECTION_INIT = 'connection_init',
-}
-
-export enum LEGACY_SERVER_EVENT_TYPES {
-  GQL_CONNECTION_ACK = 'GQL_CONNECTED',
-  GQL_ERROR = 'GQL_ERROR',
-  GQL_DATA = 'GQL_OP_RESULT',
-  GQL_COMPLETE = 'GQL_UNSUNBSCRIBED',
-
-  GQL_SUBSCRIBED = 'GQL_SUBSCRIBED',
-}
-
+/**
+ * Client -> Server
+ *
+ * Starts an operation (query, mutation, subscription)
+ *
+ * https://github.com/apollographql/subscriptions-transport-ws/blob/master/src/client.ts#L324
+ */
 export interface GQLOperation {
   id: string;
   payload: {
@@ -37,78 +29,110 @@ export interface GQLOperation {
     query: string | DocumentNode;
     variables?: { [key: string]: any };
   };
-  type: CLIENT_EVENT_TYPES.GQL_START | LEGACY_CLIENT_EVENT_TYPES.GQL_START;
+  type: CLIENT_EVENT_TYPES.GQL_START;
 }
 
-export interface GQLUnsubscribe {
+export function isGQLOperation(event: any): event is GQLOperation {
+  return (
+    event &&
+    typeof event === 'object' &&
+    event.type === CLIENT_EVENT_TYPES.GQL_START
+  );
+}
+
+/**
+ * Client -> Server
+ *
+ * Stops subscription
+ */
+export interface GQLStopOperation {
   /** The ID of GQLOperation used to subscribe */
   id: string;
-  payload?: {
-    [key: string]: any;
-  };
-  type: CLIENT_EVENT_TYPES.GQL_STOP | LEGACY_CLIENT_EVENT_TYPES.GQL_STOP;
+  // there is no payload
+  // https://github.com/apollographql/subscriptions-transport-ws/blob/master/src/client.ts#L665
+  type: CLIENT_EVENT_TYPES.GQL_STOP;
 }
 
+export function isGQLStopOperation(event: any): event is GQLStopOperation {
+  return (
+    event &&
+    typeof event === 'object' &&
+    event.type === CLIENT_EVENT_TYPES.GQL_STOP
+  );
+}
+
+/**
+ * Client -> Server
+ */
 export interface GQLConnectionInit {
-  id: string;
-  payload: {
+  // id is not sent
+  // see https://github.com/apollographql/subscriptions-transport-ws/blob/master/src/client.ts#L559
+  payload?: {
     [key: string]: any;
   };
   type: CLIENT_EVENT_TYPES.GQL_CONNECTION_INIT;
 }
 
-export interface GQLUnsubscribed {
-  /** The ID of GQLOperation used to subscribe */
-  id: string;
-  type:
-    | SERVER_EVENT_TYPES.GQL_COMPLETE
-    | LEGACY_SERVER_EVENT_TYPES.GQL_COMPLETE;
+export function isGQLConnectionInit(event: any): event is GQLConnectionInit {
+  return (
+    event &&
+    typeof event === 'object' &&
+    event.type === CLIENT_EVENT_TYPES.GQL_CONNECTION_INIT
+  );
 }
 
-export interface GQLConnectedEvent {
+/**
+ * Server -> Client
+ *
+ * Subscription is done
+ */
+export interface GQLComplete {
+  /** The ID of GQLOperation used to subscribe */
+  id: string;
+  type: SERVER_EVENT_TYPES.GQL_COMPLETE;
+}
+
+/**
+ *  Server -> Client as response to GQLConnectionInit
+ */
+export interface GQLConnectionACK {
   id?: string;
   payload?: {
     [key: string]: any;
   };
-  type:
-    | SERVER_EVENT_TYPES.GQL_CONNECTION_ACK
-    | LEGACY_SERVER_EVENT_TYPES.GQL_CONNECTION_ACK;
+  type: SERVER_EVENT_TYPES.GQL_CONNECTION_ACK;
 }
 
+/**
+ * Server -> Client as response to operation or just generic error
+ */
 export interface GQLErrorEvent {
-  id: string;
+  id?: string;
   payload: {
     message: string;
   };
-  type: SERVER_EVENT_TYPES.GQL_ERROR | LEGACY_SERVER_EVENT_TYPES.GQL_ERROR;
+  type: SERVER_EVENT_TYPES.GQL_ERROR;
 }
 
-export interface GQLOperationResult {
+/**
+ * Server -> Client - response to operation
+ */
+export interface GQLData {
   /**
    * Same ID as the ID of an operation that we are returning a result for
    */
   id: string;
   payload: ExecutionResult;
-  type: SERVER_EVENT_TYPES.GQL_DATA | LEGACY_SERVER_EVENT_TYPES.GQL_DATA;
-}
-
-export interface GQLSubscribed {
-  /**
-   * Same ID as the ID of an operation (subscription) that's been used to subscribe
-   */
-  id: string;
-  payload: { [key: string]: any };
-  type: LEGACY_SERVER_EVENT_TYPES.GQL_SUBSCRIBED;
+  type: SERVER_EVENT_TYPES.GQL_DATA;
 }
 
 export type GQLClientAllEvents =
   | GQLConnectionInit
   | GQLOperation
-  | GQLUnsubscribe;
+  | GQLStopOperation;
 
 export type GQLServerAllEvents =
-  | GQLConnectedEvent
+  | GQLConnectionACK
   | GQLErrorEvent
-  | GQLOperationResult
-  | GQLSubscribed
-  | GQLUnsubscribed;
+  | GQLData
+  | GQLComplete;

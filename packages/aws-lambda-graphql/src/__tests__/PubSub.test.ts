@@ -1,6 +1,7 @@
 import { isAsyncIterable } from 'iterall';
 import { PubSub as BasePubSub } from 'graphql-subscriptions';
 import { PubSub } from '../PubSub';
+import { ISubscriptionManager, IConnectionManager } from '../types';
 
 describe('PubSub', () => {
   const eventStore = {
@@ -13,23 +14,27 @@ describe('PubSub', () => {
 
   describe('subscribe', () => {
     it('registers subscription and returns iterator', async () => {
-      const subscriptionManager = {
+      const connectionManager: IConnectionManager = {} as any;
+      const subscriptionManager: ISubscriptionManager = {
         subscribe: jest.fn(),
-      };
+      } as any;
       const ps = new PubSub({ eventStore: eventStore as any });
 
       const subscriber = ps.subscribe('test');
 
-      const connection = {};
-      const operation = {};
+      const connection: any = {};
+      const operation: any = {};
       const iterator = await subscriber(null, null, {
+        event: {} as any,
+        lambdaContext: {} as any,
         $$internal: {
           connection,
+          connectionManager,
           operation,
           subscriptionManager,
           pubSub: new BasePubSub(),
           registerSubscriptions: true,
-        } as any,
+        },
       });
 
       expect(isAsyncIterable(iterator)).toBe(true);
@@ -41,22 +46,26 @@ describe('PubSub', () => {
     });
 
     it('skips subscription registration and returns iterator', async () => {
-      const subscriptionManager = {
+      const connectionManager: IConnectionManager = {} as any;
+      const subscriptionManager: ISubscriptionManager = {
         subscribe: jest.fn(),
-      };
+      } as any;
       const ps = new PubSub({ eventStore: eventStore as any });
 
       const subscriber = ps.subscribe('test');
 
-      const connection = {};
-      const operation = {};
+      const connection: any = {};
+      const operation: any = {};
       const iterator = await subscriber(null, null, {
+        event: {} as any,
+        lambdaContext: {} as any,
         $$internal: {
           connection,
+          connectionManager,
           operation,
           subscriptionManager,
           pubSub: new BasePubSub(),
-        } as any,
+        },
       });
 
       expect(isAsyncIterable(iterator)).toBe(true);
@@ -69,13 +78,13 @@ describe('PubSub', () => {
       const ps = new PubSub({ eventStore: eventStore as any });
 
       await expect(ps.publish(undefined, {})).rejects.toThrowError(
-        'Event name cannot be empty',
+        'Event name must be nonempty string',
       );
       await expect(ps.publish(null, {})).rejects.toThrowError(
-        'Event name cannot be empty',
+        'Event name must be nonempty string',
       );
       await expect(ps.publish('', {})).rejects.toThrowError(
-        'Event name cannot be empty',
+        'Event name must be nonempty string',
       );
     });
 
