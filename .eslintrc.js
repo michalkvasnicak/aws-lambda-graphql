@@ -12,6 +12,7 @@ module.exports = {
   parser: '@typescript-eslint/parser',
   plugins: ['@typescript-eslint', 'prettier'],
   rules: {
+    'class-methods-use-this': 'off',
     'import/prefer-default-export': 'off',
     'import/no-unresolved': 'off',
     'import/no-extraneous-dependencies': 'off',
