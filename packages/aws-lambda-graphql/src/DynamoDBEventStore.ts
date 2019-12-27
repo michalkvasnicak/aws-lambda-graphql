@@ -4,7 +4,6 @@ import { IEventStore, ISubscriptionEvent } from './types';
 import { computeTTL } from './helpers';
 
 const DEFAULT_TTL = 7200;
-const defaultDynamoDBDocumentClient = new DynamoDB.DocumentClient();
 
 interface DynamoDBEventStoreOptions {
   /**
@@ -38,11 +37,11 @@ export class DynamoDBEventStore implements IEventStore {
   private ttl: number;
 
   constructor({
-    dynamoDbClient = defaultDynamoDBDocumentClient,
+    dynamoDbClient,
     eventsTable = 'Events',
     ttl = DEFAULT_TTL,
   }: DynamoDBEventStoreOptions = {}) {
-    this.db = dynamoDbClient;
+    this.db = dynamoDbClient || new DynamoDB.DocumentClient();
     this.tableName = eventsTable;
     this.ttl = ttl;
   }

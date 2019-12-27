@@ -26,9 +26,6 @@ interface DynamoDBConnectionManagerOptions {
   subscriptions: ISubscriptionManager;
 }
 
-const defaultAPIGatewayManager = new ApiGatewayManagementApi();
-const defaultDynamoDBDocumentClient = new DynamoDB.DocumentClient();
-
 /**
  * DynamoDBConnectionManager
  *
@@ -44,14 +41,14 @@ export class DynamoDBConnectionManager implements IConnectionManager {
   private subscriptions: ISubscriptionManager;
 
   constructor({
-    apiGatewayManager = defaultAPIGatewayManager,
+    apiGatewayManager,
     connectionsTable = 'Connections',
-    dynamoDbClient = defaultDynamoDBDocumentClient,
+    dynamoDbClient,
     subscriptions,
   }: DynamoDBConnectionManagerOptions) {
-    this.apiGatewayManager = apiGatewayManager;
+    this.apiGatewayManager = apiGatewayManager || new ApiGatewayManagementApi();
     this.connectionsTable = connectionsTable;
-    this.db = dynamoDbClient;
+    this.db = dynamoDbClient || new DynamoDB.DocumentClient();
     this.subscriptions = subscriptions;
   }
 

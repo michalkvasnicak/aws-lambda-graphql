@@ -6,8 +6,6 @@ import {
   IdentifiedOperationRequest,
 } from './types';
 
-const defaultDynamoDBDocumentClient = new DynamoDB.DocumentClient();
-
 // polyfill Symbol.asyncIterator
 if (Symbol.asyncIterator === undefined) {
   (Symbol as any).asyncIterator = Symbol.for('asyncIterator');
@@ -58,13 +56,13 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
   private db: DynamoDB.DocumentClient;
 
   constructor({
-    dynamoDbClient = defaultDynamoDBDocumentClient,
+    dynamoDbClient,
     subscriptionsTableName = 'Subscriptions',
     subscriptionOperationsTableName = 'SubscriptionOperations',
   }: DynamoDBSubscriptionManagerOptions = {}) {
     this.subscriptionsTableName = subscriptionsTableName;
     this.subscriptionOperationsTableName = subscriptionOperationsTableName;
-    this.db = dynamoDbClient;
+    this.db = dynamoDbClient || new DynamoDB.DocumentClient();
   }
 
   subscribersByEventName = (
