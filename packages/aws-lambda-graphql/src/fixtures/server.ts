@@ -38,12 +38,12 @@ export class TestLambdaServer {
     this.connectionManager = new WebSocketConnectionManager();
     this.subscriptionManager = new MemorySubscriptionManager();
 
-    const schema = createSchema({
-      pubSub: new PubSub({ eventStore: this.eventStore }),
-    });
+    const pubSub = new PubSub({ eventStore: this.eventStore });
+    const schema = createSchema();
 
     const server = new Server({
       connectionManager: this.connectionManager,
+      context: { pubSub },
       eventProcessor: new MemoryEventProcessor(),
       schema,
       subscriptionManager: this.subscriptionManager,

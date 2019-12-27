@@ -8,6 +8,7 @@ import { DynamoDBEventProcessor } from '../DynamoDBEventProcessor';
 import { SERVER_EVENT_TYPES } from '../protocol';
 import { ISubscriber } from '../types';
 import { Server } from '../Server';
+import { PubSub } from '../PubSub';
 
 const query = parse(/* GraphQL */ `
   subscription Test($authorId: ID) {
@@ -64,6 +65,10 @@ describe('DynamoDBEventProcessor', () => {
     };
 
     const server = new Server({
+      context: {
+        // becuase our test schema relies on this context
+        pubSub: new PubSub({ eventStore: {} as any }),
+      },
       connectionManager: connectionManager as any,
       eventProcessor: new DynamoDBEventProcessor(),
       schema: createSchema(),

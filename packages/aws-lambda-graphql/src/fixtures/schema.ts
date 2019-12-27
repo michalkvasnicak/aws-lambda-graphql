@@ -20,9 +20,10 @@ const typeDefs = /* GraphQL */ `
   }
 `;
 
-function createSchema({
-  pubSub = new PubSub({ eventStore: {} as any }),
-}: { pubSub?: PubSub } = {}) {
+// this is just test graphql context (pubSub is provided in server.ts)
+type TestGraphQLContext = IContext & { pubSub: PubSub };
+
+function createSchema() {
   return makeExecutableSchema({
     typeDefs,
     resolvers: {
@@ -30,7 +31,7 @@ function createSchema({
         testMutation(
           rootValue: any,
           args: { text: string },
-          context: IContext,
+          context: TestGraphQLContext,
         ) {
           if (context.lambdaContext == null) {
             throw new Error('Missing lambda context');
@@ -41,27 +42,31 @@ function createSchema({
         async testPublish(
           rootValue: any,
           args: { authorId: string; text: string },
-          context: IContext,
+          context: TestGraphQLContext,
         ) {
           if (context.lambdaContext == null) {
             throw new Error('Missing lambda context');
           }
 
-          await pubSub.publish('test', args);
+          await context.pubSub.publish('test', args);
 
           return args.text;
         },
       },
       Query: {
         delayed: () => new Promise(r => setTimeout(() => r(true), 100)),
-        testQuery(parent: any, args: any, context: IContext) {
+        testQuery(parent: any, args: any, context: TestGraphQLContext) {
           if (context.lambdaContext == null) {
             throw new Error('Missing lambda context');
           }
 
           return 'test';
         },
-        getFooPropertyFromContext(parent: any, args: any, ctx: IContext) {
+        getFooPropertyFromContext(
+          parent: any,
+          args: any,
+          ctx: TestGraphQLContext,
+        ) {
           return ctx.foo;
         },
       },
@@ -70,7 +75,7 @@ function createSchema({
           resolve: (
             payload: { text: string },
             args: any,
-            context: IContext,
+            context: TestGraphQLContext,
           ) => {
             if (context.lambdaContext == null) {
               throw new Error('Missing lambda context');
@@ -79,7 +84,11 @@ function createSchema({
             return payload.text;
           },
           subscribe: withFilter(
-            pubSub.subscribe('test'),
+            (payload, args, ctx, info) => {
+              // this is test for more advanced use case when the user don't want to
+              // use pubSub from the scope of a file but rather from GraphQL context
+              return ctx.pubSub.subscribe('test')(payload, args, ctx, info);
+            },
             (payload, args, ctx) => {
               const subscriberAuthorId = ctx.authorId
                 ? ctx.authorId
