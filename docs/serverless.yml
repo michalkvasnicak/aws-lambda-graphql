@@ -59,6 +59,7 @@ functions:
     handler: index.handleEvents
     events:
       - stream:
+          enabled: true
           type: dynamodb
           arn:
             Fn::GetAtt: [EventsDynamoDBTable, StreamArn]
