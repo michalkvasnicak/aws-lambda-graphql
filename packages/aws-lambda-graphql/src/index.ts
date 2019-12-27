@@ -9,4 +9,5 @@ export * from './helpers';
 export * from './protocol';
 export * from './types';
 export * from './PubSub';
+export * from './Server';
 export * from './withFilter';
