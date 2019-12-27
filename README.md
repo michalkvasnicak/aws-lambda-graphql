@@ -9,6 +9,12 @@
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
 
+**⚠️ This documentation is currently for `aws-lambda-graphql@next` package which supports only [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws) and drops the legacy protocol and client support!**
+
+[**📖Documentation for `aws-lambda-graphql0.13.0`**](https://github.com/michalkvasnicak/aws-lambda-graphql/tree/aws-lambda-graphql%400.13.0)
+
+. This
+
 Use [Apollo Server Lambda](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-lambda) with GraphQL subscriptions over WebSocket (AWS API Gateway v2).
 
 With this library you can do:
