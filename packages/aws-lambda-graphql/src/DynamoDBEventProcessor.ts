@@ -22,7 +22,7 @@ export class DynamoDBEventProcessor<TServer extends Server = Server>
   implements IEventProcessor<TServer, DynamoDBStreamHandler> {
   private onError: (err: any) => void;
 
-  constructor(options: DynamoDBEventProcessorOptions) {
+  constructor(options: DynamoDBEventProcessorOptions = {}) {
     this.onError = options.onError || ((err: any) => console.log(err));
   }
 

@@ -67,7 +67,7 @@ Creates an AWS Lambda handler for events from events source (for example DynamoD
 
 AWS Lambda DynamoDB stream handler. DynamoDBEventProcessor is used internally by Server.
 
-#### Options
+#### Options (`optional`)
 
 - **onError** (`(err: any) => void`, `optional`)
 
