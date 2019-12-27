@@ -1,21 +1,40 @@
-import { APIGatewayEvent, DynamoDBStreamEvent } from 'aws-lambda';
 import {
-  APIGatewayWebSocketEvent,
-  createDynamoDBEventProcessor,
-  createHttpHandler,
-  createWsHandler,
+  DynamoDBEventProcessor,
   DynamoDBConnectionManager,
   DynamoDBEventStore,
   DynamoDBSubscriptionManager,
   PubSub,
+  Server,
   withFilter,
 } from 'aws-lambda-graphql';
+import { ApiGatewayManagementApi, DynamoDB } from 'aws-sdk';
 import * as assert from 'assert';
-import { makeExecutableSchema } from 'graphql-tools';
 import { ulid } from 'ulid';
 
-const eventStore = new DynamoDBEventStore();
+// serverless offline support
+const apiGatewayManager = new ApiGatewayManagementApi({
+  ...(process.env.IS_OFFLINE
+    ? {
+        endpoint: 'http://localhost:3001',
+      }
+    : {}),
+});
+const dynamoDbClient = new DynamoDB.DocumentClient({
+  ...(process.env.IS_OFFLINE
+    ? {
+        endpoint: 'http://localhost:8000',
+      }
+    : {}),
+});
+
+const eventStore = new DynamoDBEventStore({ dynamoDbClient });
 const pubSub = new PubSub({ eventStore });
+const subscriptionManager = new DynamoDBSubscriptionManager({ dynamoDbClient });
+const connectionManager = new DynamoDBConnectionManager({
+  apiGatewayManager,
+  dynamoDbClient,
+  subscriptions: subscriptionManager,
+});
 
 type MessageType = 'greeting' | 'test';
 
@@ -30,109 +49,74 @@ type SendMessageArgs = {
   type: MessageType;
 };
 
-const schema = makeExecutableSchema({
-  typeDefs: /* GraphQL */ `
-    enum MessageType {
-      greeting
-      test
-    }
+const typeDefs = /* GraphQL */ `
+  enum MessageType {
+    greeting
+    test
+  }
 
-    type Message {
-      id: ID!
-      text: String!
-      type: MessageType!
-    }
+  type Message {
+    id: ID!
+    text: String!
+    type: MessageType!
+  }
 
-    type Mutation {
-      sendMessage(text: String!, type: MessageType = greeting): Message!
-    }
+  type Mutation {
+    sendMessage(text: String!, type: MessageType = greeting): Message!
+  }
 
-    type Query {
-      serverTime: Float!
-    }
+  type Query {
+    serverTime: Float!
+  }
 
-    type Subscription {
-      messageFeed(type: MessageType): Message!
-    }
-  `,
-  resolvers: {
-    Mutation: {
-      async sendMessage(rootValue: any, { text, type }: SendMessageArgs) {
-        assert.ok(text.length > 0 && text.length < 100);
-        const payload: Message = { id: ulid(), text, type };
+  type Subscription {
+    messageFeed(type: MessageType): Message!
+  }
+`;
 
-        await pubSub.publish('NEW_MESSAGE', payload);
+const resolvers = {
+  Mutation: {
+    async sendMessage(rootValue: any, { text, type }: SendMessageArgs) {
+      assert.ok(text.length > 0 && text.length < 100);
+      const payload: Message = { id: ulid(), text, type };
 
-        return payload;
+      await pubSub.publish('NEW_MESSAGE', payload);
+
+      return payload;
+    },
+  },
+  Query: {
+    serverTime: () => Date.now(),
+  },
+  Subscription: {
+    messageFeed: {
+      resolve: (rootValue: Message) => {
+        // root value is the payload from sendMessage mutation
+        return rootValue;
       },
-    },
-    Query: {
-      serverTime: () => Date.now(),
-    },
-    Subscription: {
-      messageFeed: {
-        resolve: (rootValue: Message) => {
-          // root value is the payload from sendMessage mutation
-          return rootValue;
+      subscribe: withFilter(
+        pubSub.subscribe('NEW_MESSAGE'),
+        (rootValue: Message, args: { type: null | MessageType }) => {
+          // this can be async too :)
+          if (args.type == null) {
+            return true;
+          }
+
+          return args.type === rootValue.type;
         },
-        subscribe: withFilter(
-          pubSub.subscribe('NEW_MESSAGE'),
-          (rootValue: Message, args: { type: null | MessageType }) => {
-            // this can be async too :)
-            if (args.type == null) {
-              return true;
-            }
-
-            return args.type === rootValue.type;
-          },
-        ),
-      },
+      ),
     },
-  } as any,
-});
+  },
+};
 
-const subscriptionManager = new DynamoDBSubscriptionManager();
-const connectionManager = new DynamoDBConnectionManager({
-  subscriptions: subscriptionManager,
-});
-
-const eventProcessor = createDynamoDBEventProcessor({
+const server = new Server({
   connectionManager,
-  schema,
+  eventProcessor: new DynamoDBEventProcessor(),
+  resolvers,
   subscriptionManager,
-});
-const wsHandler = createWsHandler({
-  connectionManager,
-  schema,
-  subscriptionManager,
-});
-const httpHandler = createHttpHandler({
-  connectionManager,
-  schema,
+  typeDefs,
 });
 
-export async function handler(
-  event: APIGatewayEvent | APIGatewayWebSocketEvent | DynamoDBStreamEvent,
-  context,
-) {
-  // detect event type
-  if ((event as DynamoDBStreamEvent).Records != null) {
-    // event is DynamoDB stream event
-    return eventProcessor(event as DynamoDBStreamEvent, context, null as any);
-  }
-  if (
-    (event as APIGatewayWebSocketEvent).requestContext != null &&
-    (event as APIGatewayWebSocketEvent).requestContext.routeKey != null
-  ) {
-    // event is web socket event from api gateway v2
-    return wsHandler(event as APIGatewayWebSocketEvent, context);
-  }
-  if (
-    (event as APIGatewayEvent).requestContext != null &&
-    (event as APIGatewayEvent).requestContext.path != null
-  ) {
-    // event is http event from api gateway v1
-    return httpHandler(event as APIGatewayEvent, context, null as any);
-  }
-  throw new Error('Invalid event');
-}
+export const handleHttp = server.createHttpHandler();
+export const handleWebSocket = server.createWebSocketHandler();
+export const handleDynamoDBStream = server.createEventHandler();

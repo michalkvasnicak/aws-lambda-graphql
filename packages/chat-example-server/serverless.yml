@@ -1,5 +1,24 @@
 service: graphql-server-demo # NOTE: update this with your service name
 
+custom:
+  dynamodb:
+    stages:
+      - dev
+    start:
+      inMemory: true
+      migrate: true
+      noStart: false
+  dynamodbStream:
+    host: localhost
+    port: 8000
+    # this fixes the problem with missing region
+    region: eu-central-1
+    pollForever: true
+    streams:
+      - table: Events
+        functions:
+          - dynamoDBStreamHandler
+
 provider:
   name: aws
   runtime: nodejs10.x
@@ -46,18 +65,30 @@ provider:
       Resource: !GetAtt SubscriptionOperationsDynamoDBTable.Arn
 
 functions:
-  mainHandler:
-    handler: dist/index.handler
+  httpHandler:
+    handler: src/index.handleHttp
     events:
-      - websocket: 
-         route: $connect
-      - websocket: 
-         route: $disconnect
-      - websocket: $default
+      - http:
+          path: /
+          method: any
+          cors: true
+  webSocketHandler:
+    handler: src/index.handleWebSocket
+    events:
+      - websocket:
+          route: $connect
+      - websocket:
+          route: $disconnect
+      - websocket:
+          route: $default
+  dynamoDBStreamHandler:
+    handler: src/index.handleDynamoDBStream
+    events:
       - stream:
+          enabled: true
           type: dynamodb
           arn:
-            Fn::GetAtt: [ EventsDynamoDBTable, StreamArn ]
+            Fn::GetAtt: [EventsDynamoDBTable, StreamArn]
 
 resources:
   Resources:
@@ -120,3 +151,9 @@ resources:
             AttributeType: S
         StreamSpecification:
           StreamViewType: NEW_IMAGE
+
+plugins:
+  - serverless-webpack
+  - serverless-dynamodb-local
+  - serverless-plugin-offline-dynamodb-stream
+  - serverless-offline

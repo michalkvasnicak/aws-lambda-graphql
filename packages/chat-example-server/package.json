@@ -5,19 +5,23 @@
   "dependencies": {
     "aws-lambda-graphql": "^0.13.0",
     "graphql": "^14.5.8",
-    "graphql-tools": "^4.0.6",
     "ulid": "^2.3.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.36",
-    "@zeit/ncc": "^0.20.5",
-    "serverless": "^1.58.0"
+    "babel-loader": "^8.0.6",
+    "serverless": "^1.58.0",
+    "serverless-offline": "^5.12.1",
+    "serverless-dynamodb-local": "^0.2.38",
+    "serverless-plugin-offline-dynamodb-stream": "^1.0.19",
+    "serverless-webpack": "^5.3.1",
+    "webpack": "^4.41.4",
+    "webpack-node-externals": "^1.7.2"
   },
   "scripts": {
-    "build": "ncc build src/index.ts -o dist",
-    "predeploy": "yarn run build",
     "deploy": "sls deploy",
-    "prestart": "yarn run build",
-    "start": "node dist/index.js"
+    "install:dynamodb": "sls dynamodb install",
+    "start": "sls offline start",
+    "start:dynamodb": "sls dynamodb start"
   }
 }
