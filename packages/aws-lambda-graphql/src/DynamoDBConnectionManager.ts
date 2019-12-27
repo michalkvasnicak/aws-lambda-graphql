@@ -10,10 +10,24 @@ import {
 
 export class ConnectionNotFoundError extends ExtendableError {}
 
-type Options = {
+interface DynamoDBConnectionManagerOptions {
+  /**
+   * Use this to override ApiGatewayManagementApi (for example in usage with serverless-offline)
+   */
+  apiGatewayManager?: ApiGatewayManagementApi;
+  /**
+   * Connections table name (default is Connections)
+   */
   connectionsTable?: string;
+  /**
+   * Use this to override default document client (for example if you want to use local dynamodb)
+   */
+  dynamoDbClient?: DynamoDB.DocumentClient;
   subscriptions: ISubscriptionManager;
-};
+}
+
+const defaultAPIGatewayManager = new ApiGatewayManagementApi();
+const defaultDynamoDBDocumentClient = new DynamoDB.DocumentClient();
 
 /**
  * DynamoDBConnectionManager
@@ -21,15 +35,23 @@ type Options = {
  * Stores connections in DynamoDB table (default table name is Connections, you can override that)
  */
 export class DynamoDBConnectionManager implements IConnectionManager {
+  private apiGatewayManager: ApiGatewayManagementApi;
+
   private connectionsTable: string;
 
   private db: DynamoDB.DocumentClient;
 
   private subscriptions: ISubscriptionManager;
 
-  constructor({ connectionsTable = 'Connections', subscriptions }: Options) {
+  constructor({
+    apiGatewayManager = defaultAPIGatewayManager,
+    connectionsTable = 'Connections',
+    dynamoDbClient = defaultDynamoDBDocumentClient,
+    subscriptions,
+  }: DynamoDBConnectionManagerOptions) {
+    this.apiGatewayManager = apiGatewayManager;
     this.connectionsTable = connectionsTable;
-    this.db = new DynamoDB.DocumentClient();
+    this.db = dynamoDbClient;
     this.subscriptions = subscriptions;
   }
 
@@ -53,13 +75,13 @@ export class DynamoDBConnectionManager implements IConnectionManager {
 
   setConnectionData = async (
     data: IConnectionData,
-    connection: IConnection,
+    { id }: IConnection,
   ): Promise<void> => {
     await this.db
       .update({
         TableName: this.connectionsTable,
         Key: {
-          id: connection.id,
+          id,
         },
         UpdateExpression: 'set #data = :data',
         ExpressionAttributeValues: {
@@ -99,18 +121,9 @@ export class DynamoDBConnectionManager implements IConnectionManager {
     connection: IConnection,
     payload: string | Buffer,
   ): Promise<void> => {
-    const {
-      data: { endpoint },
-      id,
-    } = connection;
-    const managementApi = new ApiGatewayManagementApi({
-      endpoint,
-      apiVersion: '2018-11-29',
-    });
-
     try {
-      await managementApi
-        .postToConnection({ ConnectionId: id, Data: payload })
+      await this.apiGatewayManager
+        .postToConnection({ ConnectionId: connection.id, Data: payload })
         .promise();
     } catch (e) {
       // this is stale connection
@@ -123,29 +136,23 @@ export class DynamoDBConnectionManager implements IConnectionManager {
     }
   };
 
-  unregisterConnection = async (connection: IConnection): Promise<void> => {
+  unregisterConnection = async ({ id }: IConnection): Promise<void> => {
     await Promise.all([
       this.db
         .delete({
           Key: {
-            id: connection.id,
+            id,
           },
           TableName: this.connectionsTable,
         })
         .promise(),
-      this.subscriptions.unsubscribeAllByConnectionId(connection.id),
+      this.subscriptions.unsubscribeAllByConnectionId(id),
     ]);
   };
 
-  closeConnection = async (connection: IConnection): Promise<void> => {
-    const {
-      data: { endpoint },
-      id,
-    } = connection;
-    const managementApi = new ApiGatewayManagementApi({
-      endpoint,
-      apiVersion: '2018-11-29',
-    });
-    await managementApi.deleteConnection({ ConnectionId: id }).promise();
+  closeConnection = async ({ id }: IConnection): Promise<void> => {
+    await this.apiGatewayManager
+      .deleteConnection({ ConnectionId: id })
+      .promise();
   };
 }

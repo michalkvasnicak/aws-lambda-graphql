@@ -6,6 +6,8 @@ import {
   IdentifiedOperationRequest,
 } from './types';
 
+const defaultDynamoDBDocumentClient = new DynamoDB.DocumentClient();
+
 // polyfill Symbol.asyncIterator
 if (Symbol.asyncIterator === undefined) {
   (Symbol as any).asyncIterator = Symbol.for('asyncIterator');
@@ -20,7 +22,17 @@ interface DynamoDBSubscriber extends ISubscriber {
 }
 
 interface DynamoDBSubscriptionManagerOptions {
+  /**
+   * Use this to override default document client (for example if you want to use local dynamodb)
+   */
+  dynamoDbClient?: DynamoDB.DocumentClient;
+  /**
+   * Subscriptions table name (default is Subscriptions)
+   */
   subscriptionsTableName?: string;
+  /**
+   * Subscriptions operations table name (default is SubscriptionOperations)
+   */
   subscriptionOperationsTableName?: string;
 }
 
@@ -46,12 +58,13 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
   private db: DynamoDB.DocumentClient;
 
   constructor({
+    dynamoDbClient = defaultDynamoDBDocumentClient,
     subscriptionsTableName = 'Subscriptions',
     subscriptionOperationsTableName = 'SubscriptionOperations',
   }: DynamoDBSubscriptionManagerOptions = {}) {
     this.subscriptionsTableName = subscriptionsTableName;
     this.subscriptionOperationsTableName = subscriptionOperationsTableName;
-    this.db = new DynamoDB.DocumentClient();
+    this.db = dynamoDbClient;
   }
 
   subscribersByEventName = (
