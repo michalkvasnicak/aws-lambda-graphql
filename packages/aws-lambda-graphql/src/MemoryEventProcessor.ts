@@ -1,27 +1,15 @@
-import { ExecutionResult, GraphQLSchema } from 'graphql';
+import { ExecutionResult } from 'graphql';
 import { getAsyncIterator, isAsyncIterable } from 'iterall';
 import { ArrayPubSub } from './ArrayPubSub';
 import { formatMessage } from './formatMessage';
-import { execute, ExecuteOptions } from './execute';
-import {
-  IConnectionManager,
-  ISubscriptionEvent,
-  ISubscriptionManager,
-  IEventProcessor,
-} from './types';
+import { execute } from './execute';
+import { ISubscriptionEvent, IEventProcessor } from './types';
 import { SERVER_EVENT_TYPES } from './protocol';
 import { Server } from './Server';
 
 // polyfill Symbol.asyncIterator
 if (Symbol.asyncIterator === undefined) {
   (Symbol as any).asyncIterator = Symbol.for('asyncIterator');
-}
-
-interface MemoryEventProcessorOptions {
-  connectionManager: IConnectionManager;
-  context?: ExecuteOptions['context'];
-  schema: GraphQLSchema;
-  subscriptionManager: ISubscriptionManager;
 }
 
 export type EventProcessorFn = (

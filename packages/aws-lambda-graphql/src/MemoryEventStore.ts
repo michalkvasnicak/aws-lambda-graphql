@@ -1,6 +1,6 @@
 import { IEventStore, ISubscriptionEvent } from './types';
 
-class MemoryEventStore implements IEventStore {
+export class MemoryEventStore implements IEventStore {
   public events: ISubscriptionEvent[];
 
   constructor() {
@@ -11,5 +11,3 @@ class MemoryEventStore implements IEventStore {
     this.events.push(event);
   };
 }
-
-export { MemoryEventStore };
