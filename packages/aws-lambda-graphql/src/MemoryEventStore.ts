@@ -13,4 +13,3 @@ class MemoryEventStore implements IEventStore {
 }
 
 export { MemoryEventStore };
-export default MemoryEventStore;

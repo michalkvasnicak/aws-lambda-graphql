@@ -11,7 +11,7 @@ if (Symbol.asyncIterator === undefined) {
   (Symbol as any).asyncIterator = Symbol.for('asyncIterator');
 }
 
-class MemorySubscriptionManager implements ISubscriptionManager {
+export class MemorySubscriptionManager implements ISubscriptionManager {
   private subscriptions: Map<string, ISubscriber[]>;
 
   constructor() {
@@ -98,6 +98,3 @@ class MemorySubscriptionManager implements ISubscriptionManager {
     return Promise.resolve();
   };
 }
-
-export { MemorySubscriptionManager };
-export default MemorySubscriptionManager;

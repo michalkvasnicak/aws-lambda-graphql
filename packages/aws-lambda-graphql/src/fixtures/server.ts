@@ -1,16 +1,18 @@
 import { ulid } from 'ulid';
 import { Server as WSServer } from 'ws';
-import { createWsHandler, APIGatewayV2Handler, PubSub } from '..';
+import { PubSub } from '..';
 import { createSchema } from './schema';
 import {
-  createMemoryEventProcessor,
+  MemoryEventProcessor,
   EventProcessorFn,
-} from '../createMemoryEventProcessor';
+} from '../MemoryEventProcessor';
 import { MemoryEventStore } from '../MemoryEventStore';
 import { MemorySubscriptionManager } from '../MemorySubscriptionManager';
 import { WebSocketConnectionManager } from '../WebSocketConnectionManager';
+import { Server } from '../Server';
+import { APIGatewayV2Handler } from '../types';
 
-class TestLambdaServer {
+export class TestLambdaServer {
   connectionManager: WebSocketConnectionManager;
 
   eventStore: MemoryEventStore;
@@ -30,27 +32,28 @@ class TestLambdaServer {
   constructor({
     port = 3001,
     onConnect,
-  }: { port?: number; onConnect?: Function } = {}) {
+  }: { port?: number; onConnect?: any } = {}) {
     this.eventStore = new MemoryEventStore();
     this.port = port;
+    this.connectionManager = new WebSocketConnectionManager();
+    this.subscriptionManager = new MemorySubscriptionManager();
 
     const schema = createSchema({
       pubSub: new PubSub({ eventStore: this.eventStore }),
     });
 
-    this.connectionManager = new WebSocketConnectionManager();
-    this.subscriptionManager = new MemorySubscriptionManager();
-    this.handler = createWsHandler({
-      schema,
+    const server = new Server({
       connectionManager: this.connectionManager,
-      subscriptionManager: this.subscriptionManager,
-      onConnect,
-    });
-    this.eventProcessor = createMemoryEventProcessor({
+      eventProcessor: new MemoryEventProcessor(),
       schema,
-      connectionManager: this.connectionManager,
       subscriptionManager: this.subscriptionManager,
+      subscriptions: {
+        onConnect,
+      },
     });
+
+    this.handler = server.createWebSocketHandler();
+    this.eventProcessor = server.createEventHandler();
   }
 
   close = async () => {
@@ -158,5 +161,3 @@ class TestLambdaServer {
     return wsStart;
   };
 }
-
-export { TestLambdaServer };

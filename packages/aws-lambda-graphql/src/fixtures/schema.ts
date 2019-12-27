@@ -94,5 +94,3 @@ function createSchema({
 }
 
 export { createSchema };
-
-export default createSchema;

@@ -1,8 +1,6 @@
-export * from './client';
-export * from './createDynamoDBEventProcessor';
-export * from './createHttpHandler';
-export * from './createWsHandler';
+export * from './ArrayPubSub';
 export * from './DynamoDBConnectionManager';
+export * from './DynamoDBEventProcessor';
 export * from './DynamoDBEventStore';
 export * from './DynamoDBSubscriptionManager';
 export * from './execute';
@@ -12,4 +10,3 @@ export * from './protocol';
 export * from './types';
 export * from './PubSub';
 export * from './withFilter';
-// export * from './WebSocketClient';

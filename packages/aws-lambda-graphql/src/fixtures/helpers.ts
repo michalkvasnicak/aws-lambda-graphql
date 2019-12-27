@@ -1,7 +1,7 @@
 import { GraphQLRequest, ExecutionResult } from 'apollo-link';
-import { Client } from '../client';
+import { SubscriptionClient } from 'subscriptions-transport-ws';
 
-export function waitForClientToConnect(client: Client) {
+export function waitForClientToConnect(client: SubscriptionClient) {
   return new Promise(resolve => {
     client.onConnected(resolve);
   });
@@ -13,7 +13,7 @@ export function execute({
   operationName,
   query,
   variables,
-}: { client: Client } & GraphQLRequest): Promise<ExecutionResult> {
+}: { client: SubscriptionClient } & GraphQLRequest): Promise<ExecutionResult> {
   return new Promise((resolve, reject) => {
     try {
       let value;
@@ -52,7 +52,7 @@ export function subscribe({
   operationName,
   query,
   variables,
-}: { client: Client } & GraphQLRequest): Iterator<any> {
+}: { client: SubscriptionClient } & GraphQLRequest): Iterator<any> {
   const events: any[] = [];
 
   const subscriber = {

@@ -1,12 +1,13 @@
 import {
   GQLClientAllEvents,
-  GQLOperation,
-  GQLUnsubscribe,
+  GQLStopOperation,
   GQLConnectionInit,
+  isGQLConnectionInit,
+  isGQLOperation,
+  isGQLStopOperation,
 } from '../protocol';
 import { ExtendableError } from '../errors';
 import { APIGatewayWebSocketEvent, IdentifiedOperationRequest } from '../types';
-import { getProtocol } from '../protocol/getProtocol';
 
 export class MalformedOperationError extends ExtendableError {
   constructor(reason?: string) {
@@ -21,8 +22,7 @@ export class InvalidOperationError extends ExtendableError {
 
 export function parseOperationFromEvent(
   event: APIGatewayWebSocketEvent,
-  useLegacyProtocol: boolean,
-): GQLConnectionInit | GQLUnsubscribe | IdentifiedOperationRequest {
+): GQLConnectionInit | GQLStopOperation | IdentifiedOperationRequest {
   const operation: GQLClientAllEvents = JSON.parse(event.body);
 
   if (typeof operation !== 'object' && operation !== null) {
@@ -33,48 +33,32 @@ export function parseOperationFromEvent(
     throw new MalformedOperationError('Type is missing');
   }
 
-  const { CLIENT_EVENT_TYPES } = getProtocol(useLegacyProtocol);
-
-  if (
-    (operation as GQLClientAllEvents).type !== CLIENT_EVENT_TYPES.GQL_START &&
-    (operation as GQLClientAllEvents).type !== CLIENT_EVENT_TYPES.GQL_STOP &&
-    (operation as GQLClientAllEvents).type !==
-      CLIENT_EVENT_TYPES.GQL_CONNECTION_INIT
-  ) {
-    throw new InvalidOperationError(
-      'Only GQL_CONNECTION_INIT, GQL_START or GQL_STOP operations are accepted',
-    );
+  if (isGQLConnectionInit(operation)) {
+    return operation;
   }
 
-  if (
-    (operation as GQLClientAllEvents).type ===
-    CLIENT_EVENT_TYPES.GQL_CONNECTION_INIT
-  ) {
-    return operation as GQLConnectionInit;
+  if (isGQLStopOperation(operation)) {
+    return operation;
   }
 
-  if ((operation as GQLOperation).id == null) {
-    throw new MalformedOperationError('Property id is missing');
+  if (isGQLOperation(operation)) {
+    if (operation.id == null) {
+      throw new MalformedOperationError('Property id is missing');
+    }
+
+    if (typeof operation.payload !== 'object' || operation.payload == null) {
+      throw new MalformedOperationError(
+        'Property payload is missing or is not an object',
+      );
+    }
+
+    return {
+      ...operation.payload,
+      operationId: operation.id,
+    };
   }
 
-  if ((operation as GQLClientAllEvents).type === CLIENT_EVENT_TYPES.GQL_STOP) {
-    return operation as GQLUnsubscribe;
-  }
-
-  if ((operation as GQLOperation).payload == null) {
-    throw new MalformedOperationError('Property payload is missing');
-  }
-
-  const payloadType = typeof (operation as GQLOperation).payload;
-
-  if (payloadType !== 'object') {
-    throw new MalformedOperationError(
-      'Invalid paylaod property, object expected',
-    );
-  }
-
-  return {
-    ...(operation as GQLOperation).payload,
-    operationId: operation.id,
-  };
+  throw new InvalidOperationError(
+    'Only GQL_CONNECTION_INIT, GQL_START or GQL_STOP operations are accepted',
+  );
 }

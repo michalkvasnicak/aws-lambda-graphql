@@ -1,4 +1,14 @@
-import { APIGatewayEventRequestContext } from 'aws-lambda';
+import {
+  APIGatewayProxyEvent,
+  APIGatewayEventRequestContext,
+  APIGatewayProxyResult,
+  Context as LambdaContext,
+} from 'aws-lambda';
+
+export type APIGatewayV2Handler = (
+  event: APIGatewayWebSocketEvent,
+  context: LambdaContext,
+) => Promise<APIGatewayProxyResult>;
 
 /**
  * Request context provided by AWS API Gateway V2 proxy event
@@ -16,7 +26,7 @@ export interface WebSocketRequestContext<MessageRouteKey extends string>
 /**
  * The event invoked by AWS API Gateway V2 on WebSockect connection
  */
-export interface WebSocketConnectEvent {
+export interface WebSocketConnectEvent extends APIGatewayProxyEvent {
   body: string;
   requestContext: WebSocketRequestContext<'$connect'>;
 }
@@ -24,7 +34,7 @@ export interface WebSocketConnectEvent {
 /**
  * The event invoked by AWS API Gateway V2 on WebSockect disconnection
  */
-export interface WebSocketDisconnectEvent {
+export interface WebSocketDisconnectEvent extends APIGatewayProxyEvent {
   body: string;
   requestContext: WebSocketRequestContext<'$disconnect'>;
 }
@@ -32,7 +42,7 @@ export interface WebSocketDisconnectEvent {
 /**
  * The event invoked by AWS API Gateway V2 when message is received
  */
-export interface WebSocketMessageEvent {
+export interface WebSocketMessageEvent extends APIGatewayProxyEvent {
   body: string;
   requestContext: WebSocketRequestContext<'$default'>;
 }

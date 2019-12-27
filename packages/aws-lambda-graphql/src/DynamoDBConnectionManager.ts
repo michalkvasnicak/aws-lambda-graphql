@@ -15,7 +15,12 @@ type Options = {
   subscriptions: ISubscriptionManager;
 };
 
-class DynamoDBConnectionManager implements IConnectionManager {
+/**
+ * DynamoDBConnectionManager
+ *
+ * Stores connections in DynamoDB table (default table name is Connections, you can override that)
+ */
+export class DynamoDBConnectionManager implements IConnectionManager {
   private connectionsTable: string;
 
   private db: DynamoDB.DocumentClient;
@@ -28,10 +33,7 @@ class DynamoDBConnectionManager implements IConnectionManager {
     this.subscriptions = subscriptions;
   }
 
-  hydrateConnection = async (
-    connectionId: string,
-    useLegacyProtocol?: boolean,
-  ): Promise<IConnection> => {
+  hydrateConnection = async (connectionId: string): Promise<IConnection> => {
     // if connection is not found, throw so we can terminate connection
     const result = await this.db
       .get({
@@ -44,11 +46,6 @@ class DynamoDBConnectionManager implements IConnectionManager {
 
     if (result.Item == null) {
       throw new ConnectionNotFoundError(`Connection ${connectionId} not found`);
-    }
-
-    if (useLegacyProtocol && !result.Item.data.useLegacyProtocol) {
-      await this.setLegacyProtocol(result.Item as IConnection);
-      result.Item.data.useLegacyProtocol = true;
     }
 
     return result.Item as IConnection;
@@ -67,24 +64,6 @@ class DynamoDBConnectionManager implements IConnectionManager {
         UpdateExpression: 'set #data = :data',
         ExpressionAttributeValues: {
           ':data': data,
-        },
-        ExpressionAttributeNames: {
-          '#data': 'data',
-        },
-      })
-      .promise();
-  };
-
-  setLegacyProtocol = async (connection: IConnection): Promise<void> => {
-    await this.db
-      .update({
-        TableName: this.connectionsTable,
-        Key: {
-          id: connection.id,
-        },
-        UpdateExpression: 'set #data.useLegacyProtocol = :useLegacyProtocol',
-        ExpressionAttributeValues: {
-          ':useLegacyProtocol': true,
         },
         ExpressionAttributeNames: {
           '#data': 'data',
@@ -170,6 +149,3 @@ class DynamoDBConnectionManager implements IConnectionManager {
     await managementApi.deleteConnection({ ConnectionId: id }).promise();
   };
 }
-
-export { DynamoDBConnectionManager };
-export default DynamoDBConnectionManager;

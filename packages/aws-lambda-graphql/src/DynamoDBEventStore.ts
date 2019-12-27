@@ -15,7 +15,14 @@ interface DynamoDBEventStoreOptions {
   ttl?: number;
 }
 
-class DynamoDBEventStore implements IEventStore {
+/**
+ * DynamoDB event store
+ *
+ * This event store stores published events in DynamoDB table
+ *
+ * The server needs to expose DynamoDBEventProcessor handler in order to process these events
+ */
+export class DynamoDBEventStore implements IEventStore {
   private db: DynamoDB.DocumentClient;
 
   private tableName: string;
@@ -44,6 +51,3 @@ class DynamoDBEventStore implements IEventStore {
       .promise();
   };
 }
-
-export { DynamoDBEventStore };
-export default DynamoDBEventStore;

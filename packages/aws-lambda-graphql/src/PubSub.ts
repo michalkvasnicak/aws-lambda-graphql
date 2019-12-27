@@ -1,14 +1,13 @@
-import * as assert from 'assert';
 import { IEventStore, OperationRequest, SubcribeResolveFn } from './types';
 
-type Options = {
+interface PubSubOptions {
   eventStore: IEventStore;
-};
+}
 
-class PubSub {
+export class PubSub {
   private eventStore: IEventStore;
 
-  constructor({ eventStore }: Options) {
+  constructor({ eventStore }: PubSubOptions) {
     this.eventStore = eventStore;
   }
 
@@ -23,9 +22,17 @@ class PubSub {
       } = $$internal;
       const names = Array.isArray(eventNames) ? eventNames : [eventNames];
 
+      if (pubSub == null) {
+        throw new Error('`pubSub` is not provided in context');
+      }
+
       // register subscriptions only if it set to do so
       // basically this means that client sent subscription operation over websocket
       if (registerSubscriptions) {
+        if (connection == null) {
+          throw new Error('`connection` is not provided in context');
+        }
+
         await subscriptionManager.subscribe(
           names,
           connection,
@@ -34,7 +41,7 @@ class PubSub {
         );
       }
 
-      return (pubSub.asyncIterator(names) as any) as AsyncIterable<any> &
+      return pubSub.asyncIterator(names) as AsyncIterable<any> &
         AsyncIterator<any>;
     };
   };
@@ -44,10 +51,9 @@ class PubSub {
    * So you should not expect to fire in same process
    */
   publish = async (eventName: string, payload: any) => {
-    assert.ok(
-      typeof eventName === 'string' && eventName !== '',
-      'Event name cannot be empty',
-    );
+    if (typeof eventName !== 'string' || eventName === '') {
+      throw new Error('Event name must be nonempty string');
+    }
 
     await this.eventStore.publish({
       payload: JSON.stringify(payload),
@@ -55,6 +61,3 @@ class PubSub {
     });
   };
 }
-
-export { PubSub };
-export default PubSub;

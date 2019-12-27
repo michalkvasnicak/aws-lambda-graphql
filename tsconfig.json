@@ -3,8 +3,5 @@
     "incremental": true
   },
   "files": [],
-  "references": [
-    { "path": "./packages/aws-lambda-graphql" },
-    { "path": "./packages/aws-lambda-ws-link" }
-  ]
+  "references": [{ "path": "./packages/aws-lambda-graphql" }]
 }

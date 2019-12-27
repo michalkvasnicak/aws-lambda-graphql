@@ -3,9 +3,11 @@ import { DynamoDB } from 'aws-sdk';
 import { parse } from 'graphql';
 import { $$asyncIterator, createAsyncIterator } from 'iterall';
 import { formatMessage } from '../formatMessage';
-import { createDynamoDBEventProcessor } from '../createDynamoDBEventProcessor';
 import { createSchema } from '../fixtures/schema';
+import { DynamoDBEventProcessor } from '../DynamoDBEventProcessor';
+import { SERVER_EVENT_TYPES } from '../protocol';
 import { ISubscriber } from '../types';
+import { Server } from '../server';
 
 const query = parse(/* GraphQL */ `
   subscription Test($authorId: ID) {
@@ -13,7 +15,7 @@ const query = parse(/* GraphQL */ `
   }
 `);
 
-describe('createDynamoDBEventProcessor', () => {
+describe('DynamoDBEventProcessor', () => {
   it('works correctly', async () => {
     const connectionManager = {
       sendToConnection: jest.fn(),
@@ -42,10 +44,7 @@ describe('createDynamoDBEventProcessor', () => {
                 operation: { query, variables: { authorId: '2' } },
               },
               {
-                connection: {
-                  id: '4',
-                  data: { useLegacyProtocol: true },
-                } as any,
+                connection: { id: '4', data: {} } as any,
                 event: 'test',
                 operationId: '1',
                 operation: { query, variables: { authorId: '1' } },
@@ -64,11 +63,13 @@ describe('createDynamoDBEventProcessor', () => {
       })),
     };
 
-    const eventProcessor = createDynamoDBEventProcessor({
+    const server = new Server({
       connectionManager: connectionManager as any,
+      eventProcessor: new DynamoDBEventProcessor(),
       schema: createSchema(),
       subscriptionManager: subscriptionManager as any,
     });
+    const eventProcessor = server.createEventHandler();
 
     const Records: DynamoDBRecord[] = [
       {
@@ -100,15 +101,15 @@ describe('createDynamoDBEventProcessor', () => {
       formatMessage({
         id: '1',
         payload: { data: { textFeed: 'test 1' } },
-        type: 'data',
+        type: SERVER_EVENT_TYPES.GQL_DATA,
       }),
     );
     expect(connectionManager.sendToConnection).toHaveBeenCalledWith(
-      { id: '4', data: { useLegacyProtocol: true } },
+      { id: '4', data: {} },
       formatMessage({
         id: '1',
         payload: { data: { textFeed: 'test 1' } },
-        type: 'GQL_OP_RESULT',
+        type: SERVER_EVENT_TYPES.GQL_DATA,
       }),
     );
     expect(connectionManager.sendToConnection).toHaveBeenCalledWith(
@@ -116,7 +117,7 @@ describe('createDynamoDBEventProcessor', () => {
       formatMessage({
         id: '1',
         payload: { data: { textFeed: 'test 2' } },
-        type: 'data',
+        type: SERVER_EVENT_TYPES.GQL_DATA,
       }),
     );
     expect(connectionManager.sendToConnection).toHaveBeenCalledWith(
@@ -124,7 +125,7 @@ describe('createDynamoDBEventProcessor', () => {
       formatMessage({
         id: '1',
         payload: { data: { textFeed: 'test 2' } },
-        type: 'data',
+        type: SERVER_EVENT_TYPES.GQL_DATA,
       }),
     );
     expect(connectionManager.sendToConnection).toHaveBeenCalledWith(
@@ -132,7 +133,7 @@ describe('createDynamoDBEventProcessor', () => {
       formatMessage({
         id: '1',
         payload: { data: { textFeed: 'test 2' } },
-        type: 'data',
+        type: SERVER_EVENT_TYPES.GQL_DATA,
       }),
     );
   });

@@ -17,27 +17,19 @@ interface WSConnection extends IConnection {
   socket: WebSocket;
 }
 
-class WebSocketConnectionManager implements IConnectionManager {
+export class WebSocketConnectionManager implements IConnectionManager {
   public connections: Map<string, WSConnection>;
 
   constructor() {
     this.connections = new Map();
   }
 
-  hydrateConnection = async (
-    connectionId: string,
-    useLegacyProtocol?: boolean,
-  ): Promise<IConnection> => {
+  hydrateConnection = async (connectionId: string): Promise<IConnection> => {
     // if connection is not found, throw so we can terminate connection
     const connection = this.connections.get(connectionId);
 
     if (connection == null) {
       throw new ConnectionNotFoundError(`Connection ${connectionId} not found`);
-    }
-
-    if (useLegacyProtocol && !connection.data.useLegacyProtocol) {
-      await this.setLegacyProtocol(connection);
-      connection.data.useLegacyProtocol = true;
     }
 
     return connection;
@@ -51,17 +43,6 @@ class WebSocketConnectionManager implements IConnectionManager {
       socket: connection.socket,
       id: connection.id,
       data,
-    });
-  };
-
-  setLegacyProtocol = async (connection: WSConnection): Promise<void> => {
-    this.connections.set(connection.id, {
-      socket: connection.socket,
-      id: connection.id,
-      data: {
-        ...connection.data,
-        useLegacyProtocol: true,
-      },
     });
   };
 
@@ -105,6 +86,3 @@ class WebSocketConnectionManager implements IConnectionManager {
     }, 10);
   };
 }
-
-export { WebSocketConnectionManager };
-export default WebSocketConnectionManager;

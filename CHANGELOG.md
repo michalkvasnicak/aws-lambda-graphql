@@ -134,7 +134,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### [v0.1.0](https://github.com/michalkvasnicak/aws-lambda-graphql/releases/tag/v0.1.0) - 2019-01-13
 
-## `aws-lambda-ws-link`
+## `aws-lambda-ws-link` **⚠️ Deprecated, do not use with versions newer that `0.13.0`**
 
 ### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-ws-link@0.13.0...HEAD)
 

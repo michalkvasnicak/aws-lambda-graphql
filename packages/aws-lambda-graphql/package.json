@@ -12,6 +12,7 @@
   },
   "sideEffects": false,
   "keywords": [
+    "apollo",
     "aws",
     "lambda",
     "apollo",
@@ -20,38 +21,33 @@
     "apigateway",
     "websocket",
     "http",
-    "graphql-subscriptions"
+    "graphql-subscriptions",
+    "serverless"
   ],
   "files": [
     "dist",
     "README.md",
     "LICENSE"
   ],
-  "description": "GraphQL server and client implementation for AWS Lambda with WebSocket support (API Gateway v1 + v2)",
+  "description": "Apollo server for AWS Lambda with WebSocket subscriptions support over API Gateway v1 + v2)",
   "dependencies": {
     "@types/aws-lambda": "^8.10.36",
-    "@types/backo2": "^1.0.1",
-    "@types/websocket": "^1.0.0",
-    "backo2": "1.0.2",
-    "content-type": "^1.0.4",
-    "eventemitter3": "^3.1.2",
+    "apollo-server-core": "^2.9.14",
+    "apollo-server-lambda": "^2.9.14",
     "iterall": "^1.2.2",
-    "ulid": "^2.3.0",
-    "xstate": "^4.2.3"
+    "ulid": "^2.3.0"
   },
   "peerDependencies": {
-    "apollo-link": "^1.2.6",
     "aws-sdk": "^2.387.0",
     "graphql": "^14.0.2",
     "graphql-subscriptions": "^1.0.0"
   },
   "engines": {
-    "node": ">=8"
+    "node": ">=10"
   },
   "engineStrict": true,
   "devDependencies": {
-    "@types/content-type": "^1.1.2",
-    "apollo-link": "1.2.11",
+    "apollo-link": "^1.2.11",
     "graphql-tag": "^2.10.1",
     "graphql-tools": "^4.0.6",
     "mock-socket": "^8.0.5",
