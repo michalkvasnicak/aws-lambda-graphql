@@ -7,7 +7,7 @@ import { createSchema } from '../fixtures/schema';
 import { DynamoDBEventProcessor } from '../DynamoDBEventProcessor';
 import { SERVER_EVENT_TYPES } from '../protocol';
 import { ISubscriber } from '../types';
-import { Server } from '../server';
+import { Server } from '../Server';
 
 const query = parse(/* GraphQL */ `
   subscription Test($authorId: ID) {
