@@ -29,6 +29,9 @@ With this library you can do:
     - [1.5 Create WebSocket/HTTP event handlers and event processor handler](#15-create-websockethttp-event-handlers-and-event-processor-handler)
     - [1.6 Pass PubSub to resolvers using GraphQL context](#16-pass-pubsub-to-resolvers-using-graphql-context)
   - [2 Connect to the server using Apollo Client and `subscriptions-transport-ts`](#2-connect-to-the-server-using-apollo-client-and-subscriptions-transport-ts)
+  - [3 Deploy and development](#3-deploy-and-development)
+    - [3.1 Serverless support](#31-serverless-support)
+    - [3.2 Serverless-offline support](#32-serverless-offline-support)
 - [Packages](#packages)
   - [aws-lambda-graphql package](./packages/aws-lambda-graphql)
     - [Installation](./packages/aws-lambda-graphql#installation)
@@ -403,6 +406,18 @@ const client = new ApolloClient({
   link,
 });
 ```
+
+### 3 Deploy and development
+
+#### 3.1 Serverless support
+
+To deploy your api created using this library please see [`serverless.yml`](./packages/chat-example-server/serverless.yml) template of example app.
+
+#### 3.2 Serverless-offline support
+
+This library supports [serverless-offline](https://github.com/dherault/serverless-offline). But you have to do small changes in your code to actually support it, it's not automatical.
+
+You need to set up custom endpoint for ApiGatewayManagementApi and custom endpoint for DynamoDB if you're using it. Please refer to [`chat-example-server`](./packages/chat-example-server) source code.
 
 ## Packages
 
