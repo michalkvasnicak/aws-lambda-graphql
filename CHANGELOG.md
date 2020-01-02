@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - uses [`apollo-server-lambda`](https://github.com/apollographql/apollo-server/tree/master/packages/apollo-server-lambda) as underlying implementation for HTTP handling
   - removed legacy protocol support, please use only Client from [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws).
 
+#### Fixed
+
+- Limit the number of request items sent to DynamoDB when cleaning up stale connections
+
 ### [v0.13.0](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@0.12.3...aws-lambda-graphql@0.13.0) - 2019-12-12
 
 #### Added

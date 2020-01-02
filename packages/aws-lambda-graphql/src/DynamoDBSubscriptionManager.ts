@@ -237,6 +237,7 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
           ExpressionAttributeValues: {
             ':connection_id': connectionId,
           },
+          Limit: 12, // Maximum of 25 request items sent to DynamoDB a time
         })
         .promise();
 
