@@ -66,6 +66,16 @@
         "bug",
         "code"
       ]
+    },
+    {
+      "login": "alvinypyim",
+      "name": "Alvin Yim",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/10244707?v=4",
+      "profile": "https://github.com/alvinypyim",
+      "contributions": [
+        "bug",
+        "code"
+      ]
     }
   ],
   "commitConvention": "none"
