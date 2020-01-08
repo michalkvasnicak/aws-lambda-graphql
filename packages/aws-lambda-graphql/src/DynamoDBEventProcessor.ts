@@ -28,11 +28,8 @@ export class DynamoDBEventProcessor<TServer extends Server = Server>
 
   public createHandler(server: TServer): DynamoDBStreamHandler {
     return async (lambdaEvent, lambdaContext) => {
-      const options = await server.createGraphQLServerOptions(
-        lambdaEvent as any,
-        lambdaContext,
-      );
-      const { connectionManager, subscriptionManager } = options.$$internal;
+      const connectionManager = server.getConnectionManager();
+      const subscriptionManager = server.getSubscriptionManager();
       const { Records } = lambdaEvent;
 
       for (const record of Records) {
@@ -62,6 +59,18 @@ export class DynamoDBEventProcessor<TServer extends Server = Server>
             .map(async subscriber => {
               // create PubSub for this subscriber
               const pubSub = new ArrayPubSub([event]);
+
+              const options = await server.createGraphQLServerOptions(
+                lambdaEvent as any,
+                lambdaContext,
+                {
+                  // this allows createGraphQLServerOptions() to append more extra data
+                  // to context from connection.data.context
+                  connection: subscriber.connection,
+                  operation: subscriber.operation,
+                  pubSub,
+                },
+              );
 
               // execute operation by executing it and then publishing the event
               const iterable = await execute({
