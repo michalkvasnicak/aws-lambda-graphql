@@ -142,4 +142,61 @@ describe('DynamoDBEventProcessor', () => {
       }),
     );
   });
+  it('receives context from connection data', async () => {
+    const generateContext = jest.fn();
+    generateContext.mockReturnValue({
+      pubSub: new PubSub({ eventStore: {} as any }),
+    });
+    const connectionManager = {
+      sendToConnection: jest.fn(),
+    };
+    const subscriptionManager = {
+      subscribersByEventName: jest.fn(() => ({
+        [$$asyncIterator]: () =>
+          createAsyncIterator([
+            [
+              {
+                connection: {
+                  id: '1',
+                  data: { context: { authorId: '1' } },
+                } as any,
+                event: 'test',
+                operationId: '1',
+                operation: { query, variables: {} },
+              },
+            ] as ISubscriber[],
+          ]),
+      })),
+    };
+
+    const server = new Server({
+      context: generateContext,
+      connectionManager: connectionManager as any,
+      eventProcessor: new DynamoDBEventProcessor(),
+      schema: createSchema(),
+      subscriptionManager: subscriptionManager as any,
+    });
+    const eventProcessor = server.createEventHandler();
+
+    const Records: DynamoDBRecord[] = [
+      {
+        dynamodb: {
+          NewImage: DynamoDB.Converter.marshall({
+            event: 'test',
+            payload: JSON.stringify({ authorId: '1', text: 'test 1' }),
+          }) as any,
+        },
+        eventName: 'INSERT',
+      },
+    ];
+
+    // now process events
+    await eventProcessor({ Records }, {} as any, {} as any);
+    expect(generateContext).toHaveBeenCalledWith({
+      authorId: '1',
+      $$internal: expect.any(Object),
+      event: expect.any(Object),
+      lambdaContext: expect.any(Object),
+    });
+  });
 });
