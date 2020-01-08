@@ -9,7 +9,7 @@
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
 
-**⚠️ This documentation is currently for `aws-lambda-graphql@next` package which supports only [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws) and drops the legacy protocol and client support!**
+**⚠️ This documentation is currently for 1.0.0-alpha.X package which supports only [subscriptions-transport-ws](https://github.com/apollographql/subscriptions-transport-ws) and drops the legacy protocol and client support! To use old version that supports legacy protocol and client see the link 0.13.0 below.**
 
 [**📖Documentation for `aws-lambda-graphql0.13.0`**](https://github.com/michalkvasnicak/aws-lambda-graphql/tree/aws-lambda-graphql%400.13.0)
 
@@ -56,9 +56,9 @@ In this quick example we're going to build a simple broadcasting server that bro
 First we need to install dependencies:
 
 ```console
-yarn add aws-lambda-graphql@next graphql graphql-subscriptions aws-sdk
+yarn add aws-lambda-graphql graphql graphql-subscriptions aws-sdk
 # or
-npm install aws-lambda-graphql@next graphql graphql-subscriptions aws-sdk
+npm install aws-lambda-graphql graphql graphql-subscriptions aws-sdk
 ```
 
 **Note that `aws-sdk` is required only for local development, it's provided by the AWS Lambda by default when you deploy the app**
@@ -487,6 +487,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
+
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors](https://allcontributors.org/docs/en/overview) specification. Contributions of any kind welcome!
