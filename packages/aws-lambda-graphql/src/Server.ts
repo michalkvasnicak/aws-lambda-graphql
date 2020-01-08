@@ -146,6 +146,14 @@ export class Server<
     this.subscriptionOptions = subscriptions;
   }
 
+  public getConnectionManager(): IConnectionManager {
+    return this.connectionManager;
+  }
+
+  public getSubscriptionManager(): ISubscriptionManager {
+    return this.subscriptionManager;
+  }
+
   public createGraphQLServerOptions(
     event: APIGatewayProxyEvent,
     context: LambdaContext,

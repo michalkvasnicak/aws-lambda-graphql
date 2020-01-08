@@ -28,7 +28,8 @@ export class DynamoDBEventProcessor<TServer extends Server = Server>
 
   public createHandler(server: TServer): DynamoDBStreamHandler {
     return async (lambdaEvent, lambdaContext) => {
-      const { connectionManager, subscriptionManager } = server;
+      const connectionManager = server.getConnectionManager();
+      const subscriptionManager = server.getSubscriptionManager();
       const { Records } = lambdaEvent;
 
       for (const record of Records) {
