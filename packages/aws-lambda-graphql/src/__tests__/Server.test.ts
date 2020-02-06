@@ -2,9 +2,14 @@ import { APIGatewayProxyEvent } from 'aws-lambda';
 import { ulid } from 'ulid';
 import { createSchema } from '../fixtures/schema';
 import { Server } from '../Server';
-import { IConnectionManager, ISubscriptionManager } from '../types';
+import {
+  IConnection,
+  IConnectionManager,
+  ISubscriptionManager,
+} from '../types';
 import { formatMessage } from '../formatMessage';
 import { SERVER_EVENT_TYPES, CLIENT_EVENT_TYPES } from '../protocol';
+import { ConnectionNotFoundError } from '../DynamoDBConnectionManager';
 
 describe('Server', () => {
   describe('createHttpHandler()', () => {
@@ -160,6 +165,67 @@ describe('Server', () => {
           connectionId: '1',
         });
       });
+
+      it('recover from missing connection on quick succession of $connect and GQL_CONNECTION_INIT message on offline server', async () => {
+        // Mock the connection database flow
+        let connection;
+        (connectionManager.registerConnection as jest.Mock).mockImplementationOnce(
+          c => {
+            connection = c;
+          },
+        );
+        (connectionManager.hydrateConnection as jest.Mock).mockImplementationOnce(
+          async connectionId => {
+            for (let i = 0; i <= 1; i++) {
+              if (connection) {
+                return connection as IConnection;
+              }
+              // wait for another round
+              await new Promise(r => setTimeout(r, 50));
+            }
+            throw new ConnectionNotFoundError(
+              `Connection ${connectionId} not found`,
+            );
+          },
+        );
+        // Call connection request before connect to over emphasize the case
+        const gqlConnectionRequest = handler(
+          {
+            body: formatMessage({
+              payload: {
+                contextAttribute: 'contextAttributeValue',
+              },
+              type: CLIENT_EVENT_TYPES.GQL_CONNECTION_INIT,
+            }),
+            requestContext: {
+              connectionId: '1',
+              domainName: 'domain',
+              routeKey: '$default',
+              stage: 'stage',
+            } as any,
+          } as any,
+          {} as any,
+        );
+        await handler(
+          {
+            requestContext: {
+              connectionId: '1',
+              domainName: 'domain',
+              routeKey: '$connect',
+              stage: 'stage',
+            } as any,
+          } as any,
+          {} as any,
+        );
+        await expect(gqlConnectionRequest).resolves.toEqual(
+          expect.objectContaining({
+            body: formatMessage({
+              type: SERVER_EVENT_TYPES.GQL_CONNECTION_ACK,
+            }),
+            statusCode: 200,
+          }),
+        );
+      });
     });
 
     describe('disconnect phase', () => {
@@ -273,7 +339,10 @@ describe('Server', () => {
         });
 
         expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
-        expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1');
+        expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1', {
+          retryCount: 10,
+          timeout: 50,
+        });
       });
 
       it('returns http 200 with GQL_CONNECTION_ACK on connection_init operation and sets context', async () => {
@@ -309,7 +378,10 @@ describe('Server', () => {
         );
 
         expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
-        expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1');
+        expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1', {
+          retryCount: 10,
+          timeout: 50,
+        });
         expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
         expect(connectionManager.setConnectionData).toHaveBeenCalledTimes(1);
         expect(connectionManager.setConnectionData).toHaveBeenCalledWith(
@@ -585,7 +657,10 @@ describe('Server', () => {
         );
 
         expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
-        expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1');
+        expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1', {
+          retryCount: 0,
+          timeout: 50,
+        });
         expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
         expect(onOperationComplete).toHaveBeenCalledTimes(1);
         expect(onOperationComplete).toHaveBeenCalledWith(
@@ -641,7 +716,10 @@ describe('Server', () => {
         );
 
         expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
-        expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1');
+        expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1', {
+          retryCount: 0,
+          timeout: 50,
+        });
         expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
       });
 
@@ -753,7 +831,10 @@ describe('Server', () => {
         );
 
         expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
-        expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1');
+        expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1', {
+          retryCount: 0,
+          timeout: 50,
+        });
         expect(subscriptionManager.unsubscribeOperation).toHaveBeenCalledTimes(
           1,
         );
@@ -810,7 +891,10 @@ describe('Server', () => {
         );
 
         expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
-        expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1');
+        expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1', {
+          retryCount: 0,
+          timeout: 50,
+        });
         expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
       });
     });

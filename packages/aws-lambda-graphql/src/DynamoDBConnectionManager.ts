@@ -6,6 +6,7 @@ import {
   IConnectionManager,
   ISubscriptionManager,
   IConnectionData,
+  HydrateConnectionOptions,
 } from './types';
 
 export class ConnectionNotFoundError extends ExtendableError {}
@@ -54,22 +55,37 @@ export class DynamoDBConnectionManager implements IConnectionManager {
     this.subscriptions = subscriptions;
   }
 
-  hydrateConnection = async (connectionId: string): Promise<IConnection> => {
+  hydrateConnection = async (
+    connectionId: string,
+    options: HydrateConnectionOptions,
+  ): Promise<IConnection> => {
+    const { retryCount = 0, timeout = 50 } = options || {};
     // if connection is not found, throw so we can terminate connection
-    const result = await this.db
-      .get({
-        TableName: this.connectionsTable,
-        Key: {
-          id: connectionId,
-        },
-      })
-      .promise();
+    let connection;
 
-    if (result.Item == null) {
+    for (let i = 0; i <= retryCount; i++) {
+      const result = await this.db
+        .get({
+          TableName: this.connectionsTable,
+          Key: {
+            id: connectionId,
+          },
+        })
+        .promise();
+      if (result.Item) {
+        // Jump out of loop
+        connection = result.Item as IConnection;
+        break;
+      }
+      // wait for another round
+      await new Promise(r => setTimeout(r, timeout));
+    }
+
+    if (!connection) {
       throw new ConnectionNotFoundError(`Connection ${connectionId} not found`);
     }
 
-    return result.Item as IConnection;
+    return connection as IConnection;
   };
 
   setConnectionData = async (
