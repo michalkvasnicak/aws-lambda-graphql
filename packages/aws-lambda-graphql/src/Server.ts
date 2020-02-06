@@ -283,7 +283,7 @@ export class Server<
             let connection = await this.connectionManager.hydrateConnection(
               connectionId,
               {
-                retryCount: isGQLConnectionInit(operation) ? waitRetryCount : 0,
+                retryCount: 1,
                 timeout: waitTimeout,
               },
             );
