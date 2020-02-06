@@ -355,7 +355,7 @@ export class Server<
                 return freshConnection;
               }
 
-              for (let i = 0; i < waitRetryCount; i++) {
+              for (let i = 0; i <= waitRetryCount; i++) {
                 freshConnection = await this.connectionManager.hydrateConnection(
                   connectionId,
                 );

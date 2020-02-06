@@ -340,7 +340,7 @@ describe('Server', () => {
 
         expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
         expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1', {
-          retryCount: 10,
+          retryCount: 1,
           timeout: 50,
         });
       });
@@ -379,7 +379,7 @@ describe('Server', () => {
 
         expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
         expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1', {
-          retryCount: 10,
+          retryCount: 1,
           timeout: 50,
         });
         expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
@@ -599,7 +599,7 @@ describe('Server', () => {
           }),
         );
 
-        expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(3);
+        expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(4);
         expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1');
         expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
       });
@@ -658,7 +658,7 @@ describe('Server', () => {
 
         expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
         expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1', {
-          retryCount: 0,
+          retryCount: 1,
           timeout: 50,
         });
         expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
@@ -717,7 +717,7 @@ describe('Server', () => {
 
         expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
         expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1', {
-          retryCount: 0,
+          retryCount: 1,
           timeout: 50,
         });
         expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
@@ -832,7 +832,7 @@ describe('Server', () => {
 
         expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
         expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1', {
-          retryCount: 0,
+          retryCount: 1,
           timeout: 50,
         });
         expect(subscriptionManager.unsubscribeOperation).toHaveBeenCalledTimes(
@@ -892,7 +892,7 @@ describe('Server', () => {
 
         expect(connectionManager.hydrateConnection).toHaveBeenCalledTimes(1);
         expect(connectionManager.hydrateConnection).toHaveBeenCalledWith('1', {
-          retryCount: 0,
+          retryCount: 1,
           timeout: 50,
         });
         expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(1);
