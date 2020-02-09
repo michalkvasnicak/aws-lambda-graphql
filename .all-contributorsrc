@@ -76,6 +76,17 @@
         "bug",
         "code"
       ]
+    },
+    {
+      "login": "nenti",
+      "name": "Tobias Nentwig",
+      "avatar_url": "https://avatars2.githubusercontent.com/u/463984?v=4",
+      "profile": "http://www.pickpack.de",
+      "contributions": [
+        "bug",
+        "code",
+        "test"
+      ]
     }
   ],
   "commitConvention": "none"
