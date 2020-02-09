@@ -275,13 +275,18 @@ export class Server<
                 timeout: waitTimeout = 50,
               } = {},
             } = this.subscriptionOptions || {};
-            // hydrate connectiont
-            let connection = await this.connectionManager.hydrateConnection(
-              connectionId,
-            );
 
             // parse operation from body
             const operation = parseOperationFromEvent(event);
+
+            // hydrate connection
+            let connection = await this.connectionManager.hydrateConnection(
+              connectionId,
+              {
+                retryCount: 1,
+                timeout: waitTimeout,
+              },
+            );
 
             if (isGQLConnectionInit(operation)) {
               let newConnectionContext = operation.payload;
@@ -350,7 +355,7 @@ export class Server<
                 return freshConnection;
               }
 
-              for (let i = 0; i < waitRetryCount; i++) {
+              for (let i = 0; i <= waitRetryCount; i++) {
                 freshConnection = await this.connectionManager.hydrateConnection(
                   connectionId,
                 );

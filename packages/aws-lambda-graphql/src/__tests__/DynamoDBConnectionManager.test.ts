@@ -99,6 +99,25 @@ describe('DynamoDBConnectionManager', () => {
 
       expect(getMock as jest.Mock).toHaveBeenCalledTimes(1);
     });
+
+    it('hydrates connection with retry', async () => {
+      (getPromiseMock as jest.Mock)
+        .mockResolvedValueOnce({})
+        .mockResolvedValueOnce({
+          Item: { id: 'id', data: { endpoint: '' } },
+        });
+
+      await expect(
+        manager.hydrateConnection('id', { retryCount: 1 }),
+      ).resolves.toEqual({
+        id: 'id',
+        data: {
+          endpoint: '',
+        },
+      });
+
+      expect(getMock as jest.Mock).toHaveBeenCalledTimes(2);
+    });
   });
 
   describe('setConnectionData', () => {
