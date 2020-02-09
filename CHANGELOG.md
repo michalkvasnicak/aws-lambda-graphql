@@ -7,9 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## `aws-lambda-graphql`
 
-### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@0.13.0...HEAD)
+### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.3...HEAD)
 
-### [v1.0.0-alpha.2](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.2...HEAD)
+### [v1.0.0-alpha.3](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.3...HEAD)
+
+#### Fixed
+
+- Fixed missing connection when in serverless-offline environment. Added retry logic to wait for connection to be hydrated by [@nenti](https://github.com/nenti) see [#68](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/68)
+
+### [v1.0.0-alpha.2](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.2...aws-lambda-graphql@1.0.0-alpha.3)
 
 #### Fixed
 
@@ -19,13 +25,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added getters for connection and subscription managers to Server by [@AlpacaGoesCrazy](https://github.com/AlpacaGoesCrazy), see [#63](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/63)
 
-### [v1.0.0-alpha.1](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.1...HEAD)
+### [v1.0.0-alpha.1](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.1...aws-lambda-graphql@1.0.0-alpha.2)
 
 #### Fixed
 
 - Limit the number of request items sent to DynamoDB when cleaning up stale connections by [@alvinypyim](https://github.com/alvinypyim), see [#61](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/61).
 
-### [v1.0.0-alpha.0](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.0...HEAD)
+### [v1.0.0-alpha.0](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.0...aws-lambda-graphql@1.0.0-alpha.1)
 
 #### Breaking changes
 
