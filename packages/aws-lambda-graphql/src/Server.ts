@@ -70,6 +70,8 @@ export interface ServerConfig<
     onConnect?: (
       messagePayload: { [key: string]: any } | undefined | null,
       connection: IConnection,
+      event: APIGatewayWebSocketEvent,
+      context: LambdaContext,
     ) =>
       | Promise<boolean | { [key: string]: any }>
       | boolean
@@ -293,7 +295,12 @@ export class Server<
 
               if (onConnect) {
                 try {
-                  const result = await onConnect(operation.payload, connection);
+                  const result = await onConnect(
+                    operation.payload,
+                    connection,
+                    event,
+                    lambdaContext,
+                  );
 
                   if (result === false) {
                     throw new Error('Prohibited connection!');
