@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fixed missing connection when in serverless-offline environment. Added retry logic to wait for connection to be hydrated by [@nenti](https://github.com/nenti) see [#68](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/68)
 
+### [v1.0.0-alpha.3](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.3...HEAD)
+
+#### Fixed
+
+- Fixed missing connection when in serverless-offline environment. Added retry logic to wait for connection to be hydrated by [@nenti](https://github.com/nenti) see [#68](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/68)
+
 ### [v1.0.0-alpha.2](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.2...aws-lambda-graphql@1.0.0-alpha.3)
 
 #### Fixed
