@@ -5,6 +5,7 @@ import {
   GQLData,
   GQLComplete,
   GQLStopOperation,
+  GQLConnectionInit,
 } from './protocol';
 
 type AllowedProtocolEvents =
@@ -13,6 +14,7 @@ type AllowedProtocolEvents =
   | GQLErrorEvent
   | GQLData
   | GQLComplete
+  | GQLConnectionInit
   | GQLStopOperation;
 
 export function formatMessage(event: AllowedProtocolEvents): string {

@@ -408,24 +408,27 @@ describe('Server', () => {
           {},
         );
 
-        await handlerWithOnConnect(
-          {
-            body: formatMessage({
-              payload: { key: 'value2' },
-              type: CLIENT_EVENT_TYPES.GQL_CONNECTION_INIT,
-            }),
-            requestContext: {
-              connectionId: '1',
-              domainName: 'domain',
-              routeKey: '$default',
-              stage: 'stage',
-            } as any,
+        const event = {
+          body: formatMessage({
+            payload: { key: 'value2' },
+            type: CLIENT_EVENT_TYPES.GQL_CONNECTION_INIT,
+          }),
+          requestContext: {
+            connectionId: '1',
+            domainName: 'domain',
+            routeKey: '$default',
+            stage: 'stage',
           } as any,
-          {} as any,
-        );
+        } as any;
+        await handlerWithOnConnect(event, {} as any);
 
         expect(onConnect).toHaveBeenCalledTimes(1);
-        expect(onConnect).toHaveBeenCalledWith({ key: 'value2' }, {});
+        expect(onConnect).toHaveBeenCalledWith(
+          { key: 'value2' },
+          {},
+          event,
+          {},
+        );
 
         expect(connectionManager.setConnectionData).toHaveBeenCalledTimes(1);
         expect(connectionManager.setConnectionData).toHaveBeenCalledWith(
@@ -503,22 +506,23 @@ describe('Server', () => {
           {},
         );
 
+        // @ts-ignore
+        const testEvent = {
+          body: formatMessage({
+            payload: {},
+            type: CLIENT_EVENT_TYPES.GQL_CONNECTION_INIT,
+          }),
+          requestContext: {
+            connectionId: '1',
+            domainName: 'domain',
+            routeKey: '$default',
+            stage: 'stage',
+          } as any,
+        } as any;
+        const testContext = { testContextVariable: true } as any;
+
         await expect(
-          handlerWithOnConnect(
-            {
-              body: formatMessage({
-                payload: {},
-                type: CLIENT_EVENT_TYPES.GQL_CONNECTION_INIT,
-              }),
-              requestContext: {
-                connectionId: '1',
-                domainName: 'domain',
-                routeKey: '$default',
-                stage: 'stage',
-              } as any,
-            } as any,
-            {} as any,
-          ),
+          handlerWithOnConnect(testEvent, testContext),
         ).resolves.toEqual(
           expect.objectContaining({
             body: formatMessage({
@@ -530,7 +534,7 @@ describe('Server', () => {
         );
 
         expect(onConnect).toHaveBeenCalledTimes(1);
-        expect(onConnect).toHaveBeenCalledWith({}, {});
+        expect(onConnect).toHaveBeenCalledWith({}, {}, testEvent, testContext);
 
         expect(connectionManager.setConnectionData).toHaveBeenCalledTimes(0);
 

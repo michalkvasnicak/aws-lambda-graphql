@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.3...HEAD)
 
+#### Added
+
+- Added lambda event and context to onConnect function payload to enable adding custom authorizer logic to the connection flow. [@nenti](https://github.com/nenti) see [#70](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/70)
+
 ### [v1.0.0-alpha.3](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.3...HEAD)
 
 #### Fixed
