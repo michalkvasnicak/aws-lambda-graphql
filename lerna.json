@@ -2,5 +2,21 @@
   "packages": ["packages/*"],
   "version": "independent",
   "npmClient": "yarn",
-  "useWorkspaces": true
+  "useWorkspaces": true,
+  "command": {
+    "version": {
+      "conventionalCommits": true,
+      "changelogPreset": "conventionalcommits",
+      "message": "chore(release): release"
+    },
+    "publish": {
+      "ignoreChanges": [
+        "README.md",
+        "jest.config.js",
+        "tsconfig.json",
+        "*.test.ts",
+        "*.test.tsx"
+      ]
+    }
+  }
 }
