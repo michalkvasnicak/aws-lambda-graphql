@@ -142,6 +142,8 @@ From given schema we already see that we need to somehow publish and process bro
 
 PubSub is responsible for publishing events and subscribing to events. Anyone can broadcast message using `broadcastMessage` mutation (publish) and anyone connected over WebSocket can subscribed to `messageBroadcast` subscription (subscribing) to receive broadcasted messages.
 
+**⚠️ Be careful! By default `PubSub` serializes event payload to JSON. If you don't want this behaviour, set `serializeEventPayload` option to `false` on your `PubSub` instance.**
+
 ```js
 import {
   DynamoDBConnectionManager,
@@ -155,7 +157,11 @@ const subscriptionManager = new DynamoDBSubscriptionManager();
 const connectionManager = new DynamoDBConnectionManager({
   subscriptionManager,
 });
-const pubSub = new PubSub({ eventStore });
+const pubSub = new PubSub({
+  eventStore,
+  // optional, if you don't want to store messages to your store as JSON
+  // serializeEventPayload: false,
+});
 
 const typeDefs = /* GraphQL */ `
   type Mutation {
@@ -447,6 +453,7 @@ Current infrastructure is implemented using [AWS Lambda](https://aws.amazon.com/
 ## Contributing
 
 - This project uses TypeScript for static typing.
+- This projects uses conventional commits.
 - This project uses Yarn and Yarn workspaces so only `yarn.lock` is commited.
 - Please add a Changelog entry under `Unreleased` section in your PR.
 
@@ -454,6 +461,8 @@ Current infrastructure is implemented using [AWS Lambda](https://aws.amazon.com/
 
 ```console
 yarn test
+# running tests in watch mode
+yarn test:watch
 ```
 
 ### Typecheck
@@ -489,6 +498,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
 
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
+
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors](https://allcontributors.org/docs/en/overview) specification. Contributions of any kind welcome!
