@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## `aws-lambda-graphql`
 
-### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.4...HEAD)
+### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.5...HEAD)
+
+### [v1.0.0-alpha.5](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.5...HEAD)
+
+#### Added
+
+- Added optional `serializeEventPayload` option to `PubSub`, that can be used to disable serialization of event payload to `JSON`. By default it's set to true, see [#78](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/78)
 
 ### [v1.0.0-alpha.4](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.4...HEAD)
 
