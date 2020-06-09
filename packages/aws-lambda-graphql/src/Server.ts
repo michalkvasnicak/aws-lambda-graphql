@@ -239,6 +239,14 @@ export class Server<
 
             return {
               body: '',
+              headers:
+                event.headers &&
+                event.headers['Sec-WebSocket-Protocol'] === 'graphql-ws'
+                  ? {
+                      'Sec-WebSocket-Protocol':
+                        event.headers['Sec-WebSocket-Protocol'],
+                    }
+                  : undefined,
               statusCode: 200,
             };
           }
