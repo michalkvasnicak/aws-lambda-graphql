@@ -1,9 +1,9 @@
 {
   "name": "serverless-chat-example-server",
   "private": true,
-  "version": "1.0.0-alpha.5",
+  "version": "1.0.0-alpha.6",
   "dependencies": {
-    "aws-lambda-graphql": "^1.0.0-alpha.5",
+    "aws-lambda-graphql": "^1.0.0-alpha.6",
     "graphql": "^14.5.8",
     "ulid": "^2.3.0"
   },
