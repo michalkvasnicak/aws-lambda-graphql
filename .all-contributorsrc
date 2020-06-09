@@ -87,6 +87,16 @@
         "code",
         "test"
       ]
+    },
+    {
+      "login": "lepilepi",
+      "name": "Lepi",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/560085?v=4",
+      "profile": "https://github.com/lepilepi",
+      "contributions": [
+        "bug",
+        "code"
+      ]
     }
   ],
   "commitConvention": "none"

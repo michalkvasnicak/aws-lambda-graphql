@@ -4,7 +4,7 @@
 <!-- markdownlint-disable -->
 [![CircleCI](https://img.shields.io/circleci/project/github/michalkvasnicak/aws-lambda-graphql/master.svg?style=flat-square)](https://circleci.com/gh/michalkvasnicak/aws-lambda-graphql)
 [![aws-lambda-graphql package version](https://img.shields.io/npm/v/aws-lambda-graphql?color=green&label=aws-lambda-graphql&style=flat-square)](https://www.npmjs.com/package/aws-lambda-graphql)<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-7-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-8-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
@@ -493,6 +493,9 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/seanchambo"><img src="https://avatars2.githubusercontent.com/u/13476523?v=4" width="100px;" alt=""/><br /><sub><b>Sean Chamberlain</b></sub></a><br /><a href="https://github.com/michalkvasnicak/aws-lambda-graphql/issues?q=author%3Aseanchambo" title="Bug reports">🐛</a> <a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=seanchambo" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/alvinypyim"><img src="https://avatars2.githubusercontent.com/u/10244707?v=4" width="100px;" alt=""/><br /><sub><b>Alvin Yim</b></sub></a><br /><a href="https://github.com/michalkvasnicak/aws-lambda-graphql/issues?q=author%3Aalvinypyim" title="Bug reports">🐛</a> <a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=alvinypyim" title="Code">💻</a></td>
     <td align="center"><a href="http://www.pickpack.de"><img src="https://avatars2.githubusercontent.com/u/463984?v=4" width="100px;" alt=""/><br /><sub><b>Tobias Nentwig</b></sub></a><br /><a href="https://github.com/michalkvasnicak/aws-lambda-graphql/issues?q=author%3Anenti" title="Bug reports">🐛</a> <a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=nenti" title="Code">💻</a> <a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=nenti" title="Tests">⚠️</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://github.com/lepilepi"><img src="https://avatars0.githubusercontent.com/u/560085?v=4" width="100px;" alt=""/><br /><sub><b>Lepi</b></sub></a><br /><a href="https://github.com/michalkvasnicak/aws-lambda-graphql/issues?q=author%3Alepilepi" title="Bug reports">🐛</a> <a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=lepilepi" title="Code">💻</a></td>
   </tr>
 </table>
 

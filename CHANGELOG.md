@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## `aws-lambda-graphql`
 
-### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.5...HEAD)
+### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.6...HEAD)
+
+### [v1.0.0-alpha.6](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.6...HEAD)
+
+#### Added
+
+- Added support for `graphql-ws` WebSocket protocol so `Sec-WebSocket-Protocol` actually returns this value (fixes GraphQL playground and addresses [#79](https://github.com/michalkvasnicak/aws-lambda-graphql/issues/79). [@lepilepi](https://github.com/lepilepi) see [#84](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/84)
 
 ### [v1.0.0-alpha.5](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.5...HEAD)
 
