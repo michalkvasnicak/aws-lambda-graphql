@@ -9,7 +9,7 @@ import {
 } from '../types';
 import { formatMessage } from '../formatMessage';
 import { SERVER_EVENT_TYPES, CLIENT_EVENT_TYPES } from '../protocol';
-import { ConnectionNotFoundError } from '../DynamoDBConnectionManager';
+import { ConnectionNotFoundError } from '../errors';
 
 describe('Server', () => {
   describe('createHttpHandler()', () => {
