@@ -1,56 +1,38 @@
 import {
   // @ts-ignore
-  deleteMock,
-  // @ts-ignore
-  deletePromiseMock,
-  // @ts-ignore
-  getMock,
-  // @ts-ignore
-  getPromiseMock,
-  // @ts-ignore
-  postToConnectionMock,
-  // @ts-ignore
   postToConnectionPromiseMock,
   // @ts-ignore
-  deleteConnectionMock,
-  // @ts-ignore
   deleteConnectionPromiseMock,
-  // @ts-ignore
-  putMock,
-  // @ts-ignore
-  putPromiseMock,
-  // @ts-ignore
-  updateMock,
-  // @ts-ignore
-  updatePromiseMock,
 } from 'aws-sdk';
-import { DynamoDBConnectionManager } from '../DynamoDBConnectionManager';
+import { RedisConnectionManager } from '../RedisConnectionManager';
 import { ConnectionNotFoundError } from '../errors';
 
 const subscriptionManager: any = {
   unsubscribeAllByConnectionId: jest.fn(),
 };
 
-describe('DynamoDBConnectionManager', () => {
+describe('RedisConnectionManager', () => {
+  const redisClient = {
+    get: jest.fn(),
+    set: jest.fn(),
+    del: jest.fn(),
+  };
+
   beforeEach(() => {
-    deleteMock.mockClear();
-    getMock.mockClear();
-    postToConnectionMock.mockClear();
-    deleteConnectionMock.mockClear();
-    putMock.mockClear();
-    deletePromiseMock.mockReset();
-    getPromiseMock.mockReset();
+    // eslint-disable-next-line guard-for-in
+    for (const key in redisClient) {
+      (redisClient[key] as jest.Mock).mockReset();
+    }
     postToConnectionPromiseMock.mockReset();
     deleteConnectionPromiseMock.mockReset();
-    putPromiseMock.mockReset();
     subscriptionManager.unsubscribeAllByConnectionId.mockReset();
-    updatePromiseMock.mockReset();
   });
 
   describe('registerConnection', () => {
     it('registers connection by its connectionId and returns a Connection', async () => {
-      const manager = new DynamoDBConnectionManager({
+      const manager = new RedisConnectionManager({
         subscriptions: subscriptionManager,
+        redisClient,
       });
 
       await expect(
@@ -64,29 +46,33 @@ describe('DynamoDBConnectionManager', () => {
         },
       });
 
-      expect(putMock as jest.Mock).toHaveBeenCalledTimes(1);
+      expect(redisClient.set as jest.Mock).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('hydrateConnection', () => {
-    const manager = new DynamoDBConnectionManager({
+    const manager = new RedisConnectionManager({
       subscriptions: subscriptionManager,
+      redisClient,
     });
 
     it('throws ConnectionNotFoundError if connection is not registered', async () => {
-      (getPromiseMock as jest.Mock).mockResolvedValueOnce({ Item: null });
+      (redisClient.get as jest.Mock).mockResolvedValueOnce(null);
 
       await expect(manager.hydrateConnection('id')).rejects.toThrowError(
         ConnectionNotFoundError,
       );
 
-      expect(getMock as jest.Mock).toHaveBeenCalledTimes(1);
+      expect(redisClient.get as jest.Mock).toHaveBeenCalledTimes(1);
     });
 
     it('hydrates connection', async () => {
-      (getPromiseMock as jest.Mock).mockResolvedValueOnce({
-        Item: { id: 'id', data: { endpoint: '' } },
-      });
+      (redisClient.get as jest.Mock).mockResolvedValueOnce(
+        JSON.stringify({
+          id: 'id',
+          data: { endpoint: '' },
+        }),
+      );
 
       await expect(manager.hydrateConnection('id')).resolves.toEqual({
         id: 'id',
@@ -95,45 +81,28 @@ describe('DynamoDBConnectionManager', () => {
         },
       });
 
-      expect(getMock as jest.Mock).toHaveBeenCalledTimes(1);
-    });
-
-    it('hydrates connection with retry', async () => {
-      (getPromiseMock as jest.Mock)
-        .mockResolvedValueOnce({})
-        .mockResolvedValueOnce({
-          Item: { id: 'id', data: { endpoint: '' } },
-        });
-
-      await expect(
-        manager.hydrateConnection('id', { retryCount: 1 }),
-      ).resolves.toEqual({
-        id: 'id',
-        data: {
-          endpoint: '',
-        },
-      });
-
-      expect(getMock as jest.Mock).toHaveBeenCalledTimes(2);
+      expect(redisClient.get as jest.Mock).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('setConnectionData', () => {
-    const manager = new DynamoDBConnectionManager({
+    const manager = new RedisConnectionManager({
       subscriptions: subscriptionManager,
+      redisClient,
     });
 
     it('updates connection data', async () => {
       await expect(
         manager.setConnectionData({}, { id: 'id', data: {} }),
       ).resolves.toBeUndefined();
-      expect(updateMock as jest.Mock).toHaveBeenCalledTimes(1);
+      expect(redisClient.set as jest.Mock).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('sendToConnection', () => {
-    const manager = new DynamoDBConnectionManager({
+    const manager = new RedisConnectionManager({
       subscriptions: subscriptionManager,
+      redisClient,
     });
 
     it('unregisters connection and all subscriptions if it is stale', async () => {
@@ -150,7 +119,7 @@ describe('DynamoDBConnectionManager', () => {
       ).resolves.toBeUndefined();
 
       expect(postToConnectionPromiseMock).toHaveBeenCalledTimes(1);
-      expect(deletePromiseMock as jest.Mock).toHaveBeenCalledTimes(1);
+      expect(redisClient.del as jest.Mock).toHaveBeenCalledTimes(1);
       expect(
         subscriptionManager.unsubscribeAllByConnectionId,
       ).toHaveBeenCalledTimes(1);
@@ -172,7 +141,7 @@ describe('DynamoDBConnectionManager', () => {
       ).rejects.toThrowError(err);
 
       expect(postToConnectionPromiseMock).toHaveBeenCalledTimes(1);
-      expect(deletePromiseMock as jest.Mock).not.toHaveBeenCalled();
+      expect(redisClient.del as jest.Mock).not.toHaveBeenCalled();
     });
 
     it('sends data to connection', async () => {
@@ -186,17 +155,18 @@ describe('DynamoDBConnectionManager', () => {
       ).resolves.toBeUndefined();
 
       expect(postToConnectionPromiseMock).toHaveBeenCalledTimes(1);
-      expect(deletePromiseMock as jest.Mock).not.toHaveBeenCalled();
+      expect(redisClient.del as jest.Mock).not.toHaveBeenCalled();
     });
   });
 
   describe('unregisterConnection', () => {
-    const manager = new DynamoDBConnectionManager({
+    const manager = new RedisConnectionManager({
       subscriptions: subscriptionManager,
+      redisClient,
     });
 
     it('deletes connection', async () => {
-      (deletePromiseMock as jest.Mock).mockResolvedValueOnce({
+      (redisClient.del as jest.Mock).mockResolvedValueOnce({
         Item: { id: 'id', data: {} },
       });
 
@@ -204,13 +174,14 @@ describe('DynamoDBConnectionManager', () => {
         manager.unregisterConnection({ id: 'id', data: {} }),
       ).resolves.toBeUndefined();
 
-      expect(deletePromiseMock as jest.Mock).toHaveBeenCalledTimes(1);
+      expect(redisClient.del as jest.Mock).toHaveBeenCalledTimes(1);
     });
   });
 
   describe('closeConnection', () => {
-    const manager = new DynamoDBConnectionManager({
+    const manager = new RedisConnectionManager({
       subscriptions: subscriptionManager,
+      redisClient,
     });
     it('closes connection', async () => {
       await expect(

@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.6...HEAD)
 
+#### Added
+
+- Added SubscriptionManager and ConnectionManager that use Redis for data storage, see [#85](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/85).
+
 ### [v1.0.0-alpha.6](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.6...HEAD)
 
 #### Added

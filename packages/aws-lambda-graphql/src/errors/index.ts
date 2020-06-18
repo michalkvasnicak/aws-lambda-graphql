@@ -10,3 +10,5 @@ export class ExtendableError extends Error {
     Error.captureStackTrace(this, this.constructor);
   }
 }
+
+export class ConnectionNotFoundError extends ExtendableError {}

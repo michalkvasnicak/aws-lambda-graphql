@@ -1,4 +1,5 @@
-import { ApiGatewayManagementApi, DynamoDB } from 'aws-sdk';
+import { ApiGatewayManagementApi } from 'aws-sdk';
+import { Redis } from 'ioredis';
 import { ConnectionNotFoundError } from './errors';
 import {
   IConnection,
@@ -8,8 +9,9 @@ import {
   IConnectionData,
   HydrateConnectionOptions,
 } from './types';
+import { prefixRedisKey } from './helpers';
 
-interface DynamoDBConnectionManagerOptions {
+interface RedisConnectionManagerOptions {
   /**
    * Use this to override ApiGatewayManagementApi (for example in usage with serverless-offline)
    *
@@ -17,39 +19,31 @@ interface DynamoDBConnectionManagerOptions {
    */
   apiGatewayManager?: ApiGatewayManagementApi;
   /**
-   * Connections table name (default is Connections)
+   * IORedis client instance
    */
-  connectionsTable?: string;
-  /**
-   * Use this to override default document client (for example if you want to use local dynamodb)
-   */
-  dynamoDbClient?: DynamoDB.DocumentClient;
+  redisClient: Redis;
   subscriptions: ISubscriptionManager;
 }
 
 /**
- * DynamoDBConnectionManager
+ * RedisConnectionManager
  *
- * Stores connections in DynamoDB table (default table name is Connections, you can override that)
+ * Stores connections in Redis store
  */
-export class DynamoDBConnectionManager implements IConnectionManager {
+export class RedisConnectionManager implements IConnectionManager {
   private apiGatewayManager: ApiGatewayManagementApi | undefined;
 
-  private connectionsTable: string;
-
-  private db: DynamoDB.DocumentClient;
+  private redisClient: Redis;
 
   private subscriptions: ISubscriptionManager;
 
   constructor({
     apiGatewayManager,
-    connectionsTable = 'Connections',
-    dynamoDbClient,
+    redisClient,
     subscriptions,
-  }: DynamoDBConnectionManagerOptions) {
+  }: RedisConnectionManagerOptions) {
     this.apiGatewayManager = apiGatewayManager;
-    this.connectionsTable = connectionsTable;
-    this.db = dynamoDbClient || new DynamoDB.DocumentClient();
+    this.redisClient = redisClient;
     this.subscriptions = subscriptions;
   }
 
@@ -62,17 +56,11 @@ export class DynamoDBConnectionManager implements IConnectionManager {
     let connection;
 
     for (let i = 0; i <= retryCount; i++) {
-      const result = await this.db
-        .get({
-          TableName: this.connectionsTable,
-          Key: {
-            id: connectionId,
-          },
-        })
-        .promise();
-      if (result.Item) {
+      const key = prefixRedisKey(`connection:${connectionId}`);
+      const result = await this.redisClient.get(key);
+      if (result) {
         // Jump out of loop
-        connection = result.Item as IConnection;
+        connection = JSON.parse(result) as IConnection;
         break;
       }
       // wait for another round
@@ -88,23 +76,17 @@ export class DynamoDBConnectionManager implements IConnectionManager {
 
   setConnectionData = async (
     data: IConnectionData,
-    { id }: IConnection,
+    connection: IConnection,
   ): Promise<void> => {
-    await this.db
-      .update({
-        TableName: this.connectionsTable,
-        Key: {
-          id,
-        },
-        UpdateExpression: 'set #data = :data',
-        ExpressionAttributeValues: {
-          ':data': data,
-        },
-        ExpressionAttributeNames: {
-          '#data': 'data',
-        },
-      })
-      .promise();
+    await this.redisClient.set(
+      prefixRedisKey(`connection:${connection.id}`),
+      JSON.stringify({
+        ...connection,
+        data,
+      }),
+      'EX',
+      7200, // two hours maximal ttl for apigatrway websocket connections
+    );
   };
 
   registerConnection = async ({
@@ -116,17 +98,16 @@ export class DynamoDBConnectionManager implements IConnectionManager {
       data: { endpoint, context: {}, isInitialized: false },
     };
 
-    await this.db
-      .put({
-        TableName: this.connectionsTable,
-        Item: {
-          createdAt: new Date().toString(),
-          id: connection.id,
-          data: connection.data,
-        },
-      })
-      .promise();
-
+    await this.redisClient.set(
+      prefixRedisKey(`connection:${connectionId}`),
+      JSON.stringify({
+        createdAt: new Date().toString(),
+        id: connection.id,
+        data: connection.data,
+      }),
+      'EX',
+      7200, // two hours maximal ttl for apigatrway websocket connections
+    );
     return connection;
   };
 
@@ -140,7 +121,7 @@ export class DynamoDBConnectionManager implements IConnectionManager {
         .promise();
     } catch (e) {
       // this is stale connection
-      // remove it from DB
+      // remove it from store
       if (e && e.statusCode === 410) {
         await this.unregisterConnection(connection);
       } else {
@@ -150,15 +131,9 @@ export class DynamoDBConnectionManager implements IConnectionManager {
   };
 
   unregisterConnection = async ({ id }: IConnection): Promise<void> => {
+    const key = prefixRedisKey(`connection:${id}`);
     await Promise.all([
-      this.db
-        .delete({
-          Key: {
-            id,
-          },
-          TableName: this.connectionsTable,
-        })
-        .promise(),
+      this.redisClient.del(key),
       this.subscriptions.unsubscribeAllByConnectionId(id),
     ]);
   };

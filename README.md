@@ -67,7 +67,9 @@ Now we have all the dependencies installed so lets start with server implementat
 
 #### 1.1 Setting up Connection and Subscription management
 
-Our GraphQL server needs to know how to store connections and subscriptions because Lambdas are stateless. In order to do that we need create instances of the [Connection manager](./packages/aws-lambda-graphql/src/types/connections.ts) and [Subscription manager](./packages/aws-lambda-graphql/src/types/subscriptions.ts). In this example we'll leverage DynamoDB as persistent store for our connections and subscriptions.
+Our GraphQL server needs to know how to store connections and subscriptions because Lambdas are stateless. In order to do that we need create instances of the [Connection manager](./packages/aws-lambda-graphql/src/types/connections.ts) and [Subscription manager](./packages/aws-lambda-graphql/src/types/subscriptions.ts). We have two options of persistent storage for our connections and subscriptions.
+
+DynamoDB:
 
 ```js
 import {
@@ -78,6 +80,29 @@ import {
 const subscriptionManager = new DynamoDBSubscriptionManager();
 const connectionManager = new DynamoDBConnectionManager({
   subscriptionManager,
+});
+```
+
+Redis:
+
+```js
+import {
+  RedisConnectionManager,
+  RedisSubscriptionManager,
+} from 'aws-lambda-graphql';
+import Redis from 'ioredis';
+
+const redisClient = new Redis({
+  port: 6379, // Redis port
+  host: '127.0.0.1', // Redis host
+});
+
+const subscriptionManager = new RedisSubscriptionManager({
+  redisClient,
+});
+const connectionManager = new RedisConnectionManager({
+  subscriptionManager,
+  redisClient,
 });
 ```
 
