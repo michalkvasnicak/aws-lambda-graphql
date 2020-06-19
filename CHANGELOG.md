@@ -7,53 +7,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## `aws-lambda-graphql`
 
-### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.6...HEAD)
+### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.7...HEAD)
+
+### [v1.0.0-alpha.7](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.7...HEAD) - 2020-06-19
 
 #### Added
 
 - Added SubscriptionManager and ConnectionManager that use Redis for data storage, see [#85](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/85).
 
-### [v1.0.0-alpha.6](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.6...HEAD)
+### [v1.0.0-alpha.6](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.6...aws-lambda-graphql@1.0.0-alpha.7) - 2020-06-09
 
 #### Added
 
 - Added support for `graphql-ws` WebSocket protocol so `Sec-WebSocket-Protocol` actually returns this value (fixes GraphQL playground and addresses [#79](https://github.com/michalkvasnicak/aws-lambda-graphql/issues/79). [@lepilepi](https://github.com/lepilepi) see [#84](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/84)
 
-### [v1.0.0-alpha.5](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.5...HEAD)
+### [v1.0.0-alpha.5](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.5...aws-lambda-graphql@1.0.0-alpha.6) - 2020-05-26
 
 #### Added
 
 - Added optional `serializeEventPayload` option to `PubSub`, that can be used to disable serialization of event payload to `JSON`. By default it's set to true, see [#78](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/78)
 
-### [v1.0.0-alpha.4](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.4...HEAD)
+### [v1.0.0-alpha.4](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.4...aws-lambda-graphql@1.0.0-alpha.5) - 2020-02-14
 
 #### Added
 
 - Added lambda event and context to onConnect function payload to enable adding custom authorizer logic to the connection flow. [@nenti](https://github.com/nenti) see [#70](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/70)
 
-### [v1.0.0-alpha.3](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.3...HEAD)
+### [v1.0.0-alpha.3](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.3...aws-lambda-graphql@1.0.0-alpha.4) - 2020-02-09
 
 #### Fixed
 
 - Fixed missing connection when in serverless-offline environment. Added retry logic to wait for connection to be hydrated by [@nenti](https://github.com/nenti) see [#68](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/68)
 
-### [v1.0.0-alpha.2](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.2...aws-lambda-graphql@1.0.0-alpha.3)
+### [v1.0.0-alpha.2](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.2...aws-lambda-graphql@1.0.0-alpha.3) - 2020-01-08
 
 #### Fixed
 
-- Fixed missing connection GraphQL context data in Event processor by [@AlpacaGoesCrazy](https://github.com/AlpacaGoesCrazy), see [#63](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/63)
+- Fixed missing connection GraphQL context data in Event processor by [@AlpacaGoesCrazy](https://github.com/AlpacaGoesCrazy), see [#63](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/63) - 2020-01-02
 
 #### Added
 
 - Added getters for connection and subscription managers to Server by [@AlpacaGoesCrazy](https://github.com/AlpacaGoesCrazy), see [#63](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/63)
 
-### [v1.0.0-alpha.1](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.1...aws-lambda-graphql@1.0.0-alpha.2)
+### [v1.0.0-alpha.1](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.1...aws-lambda-graphql@1.0.0-alpha.2) - 2020-01-02
 
 #### Fixed
 
 - Limit the number of request items sent to DynamoDB when cleaning up stale connections by [@alvinypyim](https://github.com/alvinypyim), see [#61](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/61).
 
-### [v1.0.0-alpha.0](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.0...aws-lambda-graphql@1.0.0-alpha.1)
+### [v1.0.0-alpha.0](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.0...aws-lambda-graphql@1.0.0-alpha.1) - 2019-12-27
 
 #### Breaking changes
 
