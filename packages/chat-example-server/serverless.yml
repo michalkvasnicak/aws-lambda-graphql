@@ -105,6 +105,10 @@ resources:
           # connection id
           - AttributeName: id
             KeyType: HASH
+        # This one is optional (all subscription operations have 2 hours of lifetime in ttl field but enabling TTL is up to you)
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
 
     SubscriptionsDynamoDBTable:
       Type: AWS::DynamoDB::Table
@@ -122,6 +126,10 @@ resources:
             KeyType: HASH
           - AttributeName: subscriptionId
             KeyType: RANGE
+        # This one is optional (all subscription operations have 2 hours of lifetime in ttl field but enabling TTL is up to you)
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
 
     SubscriptionOperationsDynamoDBTable:
       Type: AWS::DynamoDB::Table
@@ -135,6 +143,10 @@ resources:
         KeySchema:
           - AttributeName: subscriptionId
             KeyType: HASH
+        # This one is optional (all subscription operations have 2 hours of lifetime in ttl field but enabling TTL is up to you)
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
 
     EventsDynamoDBTable:
       Type: AWS::DynamoDB::Table
@@ -151,6 +163,10 @@ resources:
             AttributeType: S
         StreamSpecification:
           StreamViewType: NEW_IMAGE
+        # This one is optional (all subscription operations have 2 hours of lifetime in ttl field but enabling TTL is up to you)
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
 
 plugins:
   - serverless-webpack
