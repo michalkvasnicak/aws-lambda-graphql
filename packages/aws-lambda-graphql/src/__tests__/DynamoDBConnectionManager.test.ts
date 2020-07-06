@@ -65,6 +65,21 @@ describe('DynamoDBConnectionManager', () => {
       });
 
       expect(putMock as jest.Mock).toHaveBeenCalledTimes(1);
+      expect(putMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          Item: {
+            createdAt: expect.any(String),
+            data: {
+              context: {},
+              endpoint: '',
+              isInitialized: false,
+            },
+            id: 'id',
+            ttl: expect.any(Number),
+          },
+          TableName: 'Connections',
+        }),
+      );
     });
   });
 

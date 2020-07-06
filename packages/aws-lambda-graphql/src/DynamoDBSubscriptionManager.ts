@@ -5,6 +5,9 @@ import {
   ISubscriptionManager,
   IdentifiedOperationRequest,
 } from './types';
+import { computeTTL } from './helpers';
+
+const DEFAULT_TTL = 7200;
 
 // polyfill Symbol.asyncIterator
 if (Symbol.asyncIterator === undefined) {
@@ -32,6 +35,12 @@ interface DynamoDBSubscriptionManagerOptions {
    * Subscriptions operations table name (default is SubscriptionOperations)
    */
   subscriptionOperationsTableName?: string;
+  /**
+   * Optional TTL for subscriptions (stored in ttl field) in seconds
+   *
+   * Default value is 2 hours
+   */
+  ttl?: number;
 }
 
 /**
@@ -55,14 +64,18 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
 
   private db: DynamoDB.DocumentClient;
 
+  private ttl: number;
+
   constructor({
     dynamoDbClient,
     subscriptionsTableName = 'Subscriptions',
     subscriptionOperationsTableName = 'SubscriptionOperations',
+    ttl = DEFAULT_TTL,
   }: DynamoDBSubscriptionManagerOptions = {}) {
     this.subscriptionsTableName = subscriptionsTableName;
     this.subscriptionOperationsTableName = subscriptionOperationsTableName;
     this.db = dynamoDbClient || new DynamoDB.DocumentClient();
+    this.ttl = ttl;
   }
 
   subscribersByEventName = (
@@ -123,6 +136,8 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
     }
     const [name] = names;
 
+    const ttl = computeTTL(this.ttl);
+
     await this.db
       .batchWrite({
         RequestItems: {
@@ -135,6 +150,7 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
                   event: name,
                   subscriptionId,
                   operationId: operation.operationId,
+                  ttl,
                 } as DynamoDBSubscriber,
               },
             },
@@ -145,6 +161,7 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
                 Item: {
                   subscriptionId,
                   event: name,
+                  ttl,
                 },
               },
             },
