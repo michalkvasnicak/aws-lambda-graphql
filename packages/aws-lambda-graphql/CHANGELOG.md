@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 1.0.0-alpha.8 (2020-07-06)
+
+- feat: ttl support for dynamodb connections and subscriptions ([35d35b7](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/35d35b7))
+
 ## 1.0.0-alpha.7 (2020-06-19)
 
 - feat: subscription and connection managers for ioredis ([1f10537](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/1f10537))
