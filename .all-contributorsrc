@@ -97,6 +97,17 @@
         "bug",
         "code"
       ]
+    },
+    {
+      "login": "IslamWahid",
+      "name": "Islam Salem",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/24783905?v=4",
+      "profile": "https://github.com/IslamWahid",
+      "contributions": [
+        "bug",
+        "code",
+        "doc"
+      ]
     }
   ],
   "commitConvention": "none"
