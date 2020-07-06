@@ -83,6 +83,8 @@ const connectionManager = new DynamoDBConnectionManager({
 });
 ```
 
+**⚠️ in order to clean up stale connections and subscriptions please set up TTL on `ttl` field in Connections, Subscriptions and SubscriptionOperations tables.**
+
 Redis:
 
 ```js
@@ -125,6 +127,8 @@ const connectionManager = new DynamoDBConnectionManager({
 ```
 
 That's it for now. Our `eventStore` will use DynamoDB to store messages that we want to broadcast to all subscribed clients.
+
+**⚠️ in order to clean up old events, please set up TTL on `ttl` field in Events store table**
 
 #### 1.3 Setting up the GraphQL schema
 
