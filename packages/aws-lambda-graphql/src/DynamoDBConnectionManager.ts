@@ -8,6 +8,9 @@ import {
   IConnectionData,
   HydrateConnectionOptions,
 } from './types';
+import { computeTTL } from './helpers';
+
+const DEFAULT_TTL = 7200;
 
 interface DynamoDBConnectionManagerOptions {
   /**
@@ -25,6 +28,12 @@ interface DynamoDBConnectionManagerOptions {
    */
   dynamoDbClient?: DynamoDB.DocumentClient;
   subscriptions: ISubscriptionManager;
+  /**
+   * Optional TTL for connections (stored in ttl field) in seconds
+   *
+   * Default value is 2 hours
+   */
+  ttl?: number;
 }
 
 /**
@@ -41,16 +50,20 @@ export class DynamoDBConnectionManager implements IConnectionManager {
 
   private subscriptions: ISubscriptionManager;
 
+  private ttl: number;
+
   constructor({
     apiGatewayManager,
     connectionsTable = 'Connections',
     dynamoDbClient,
     subscriptions,
+    ttl = DEFAULT_TTL,
   }: DynamoDBConnectionManagerOptions) {
     this.apiGatewayManager = apiGatewayManager;
     this.connectionsTable = connectionsTable;
     this.db = dynamoDbClient || new DynamoDB.DocumentClient();
     this.subscriptions = subscriptions;
+    this.ttl = ttl;
   }
 
   hydrateConnection = async (
@@ -123,6 +136,7 @@ export class DynamoDBConnectionManager implements IConnectionManager {
           createdAt: new Date().toString(),
           id: connection.id,
           data: connection.data,
+          ttl: computeTTL(this.ttl),
         },
       })
       .promise();
