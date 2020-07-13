@@ -77,13 +77,22 @@ import {
   DynamoDBSubscriptionManager,
 } from 'aws-lambda-graphql';
 
+/*
+ By default subscriptions and connections use TTL of 2 hours. 
+ This can be changed by `ttl` option in DynamoDBSubscriptionManager and DynamoDBConnectionManager.
+
+ ttl accepts a number in seconds (default is 7200 seconds) or
+ false to turn it off.
+
+ It's your responsibility to set up TTL on your connections and subscriptions tables.
+*/
 const subscriptionManager = new DynamoDBSubscriptionManager();
 const connectionManager = new DynamoDBConnectionManager({
   subscriptionManager,
 });
 ```
 
-**⚠️ in order to clean up stale connections and subscriptions please set up TTL on `ttl` field in Connections, Subscriptions and SubscriptionOperations tables.**
+**⚠️ in order to clean up stale connections and subscriptions please set up TTL on `ttl` field in Connections, Subscriptions and SubscriptionOperations tables. You can turn off the TTL by setting up `ttl` option to `false` in `DynamoDBSubscriptionManager` and `DynamoDBConnectionManager`.**
 
 Redis:
 
@@ -119,6 +128,14 @@ import {
   DynamoDBSubscriptionManager,
 } from 'aws-lambda-graphql';
 
+/*
+ By default event stores uses TTL of 2 hours on every event. 
+ This can be changed by `ttl` option in DynamoDBEventStore.
+ ttl accepts a number in seconds (default is 7200 seconds) or
+ false to turn it off.
+
+ It's your responsibility to set up TTL on your events table.
+*/
 const eventStore = new DynamoDBEventStore();
 const subscriptionManager = new DynamoDBSubscriptionManager();
 const connectionManager = new DynamoDBConnectionManager({
@@ -128,7 +145,7 @@ const connectionManager = new DynamoDBConnectionManager({
 
 That's it for now. Our `eventStore` will use DynamoDB to store messages that we want to broadcast to all subscribed clients.
 
-**⚠️ in order to clean up old events, please set up TTL on `ttl` field in Events store table**
+**⚠️ in order to clean up old events, please set up TTL on `ttl` field in Events store table. This can be turned off by setting up the `ttl` option to `false`.**
 
 #### 1.3 Setting up the GraphQL schema
 

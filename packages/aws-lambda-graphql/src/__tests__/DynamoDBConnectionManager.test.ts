@@ -26,6 +26,7 @@ import {
 } from 'aws-sdk';
 import { DynamoDBConnectionManager } from '../DynamoDBConnectionManager';
 import { ConnectionNotFoundError } from '../errors';
+import { computeTTL } from '../helpers';
 
 const subscriptionManager: any = {
   unsubscribeAllByConnectionId: jest.fn(),
@@ -81,6 +82,34 @@ describe('DynamoDBConnectionManager', () => {
         }),
       );
     });
+
+    it('supports turning off ttl', async () => {
+      const manager = new DynamoDBConnectionManager({
+        subscriptions: subscriptionManager,
+        ttl: false,
+      });
+
+      await expect(
+        manager.registerConnection({ connectionId: 'id', endpoint: '' }),
+      ).resolves.toEqual({
+        id: 'id',
+        data: {
+          endpoint: '',
+          context: {},
+          isInitialized: false,
+        },
+      });
+
+      expect(putMock as jest.Mock).toHaveBeenCalledTimes(1);
+      expect(putMock).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          Item: {
+            ttl: expect.any(Number),
+          },
+          TableName: 'Connections',
+        }),
+      );
+    });
   });
 
   describe('hydrateConnection', () => {
@@ -90,6 +119,18 @@ describe('DynamoDBConnectionManager', () => {
 
     it('throws ConnectionNotFoundError if connection is not registered', async () => {
       (getPromiseMock as jest.Mock).mockResolvedValueOnce({ Item: null });
+
+      await expect(manager.hydrateConnection('id')).rejects.toThrowError(
+        ConnectionNotFoundError,
+      );
+
+      expect(getMock as jest.Mock).toHaveBeenCalledTimes(1);
+    });
+
+    it('throws ConnectionNotFoundError if connection is expired', async () => {
+      (getPromiseMock as jest.Mock).mockResolvedValueOnce({
+        Item: { ttl: computeTTL(-10) },
+      });
 
       await expect(manager.hydrateConnection('id')).rejects.toThrowError(
         ConnectionNotFoundError,

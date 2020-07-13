@@ -3,11 +3,13 @@ import { DynamoDB } from 'aws-sdk';
 import { isAsyncIterable, getAsyncIterator } from 'iterall';
 import { ExecutionResult } from 'graphql';
 import { ArrayPubSub } from './ArrayPubSub';
-import { ISubscriptionEvent, IEventProcessor } from './types';
+import { IEventProcessor } from './types';
 import { formatMessage } from './formatMessage';
 import { execute } from './execute';
 import { SERVER_EVENT_TYPES } from './protocol';
 import { Server } from './Server';
+import { IDynamoDBSubscriptionEvent } from './DynamoDBEventStore';
+import { isTTLExpired } from './helpers/isTTLExpired';
 
 interface DynamoDBEventProcessorOptions {
   onError?: (err: any) => void;
@@ -39,9 +41,14 @@ export class DynamoDBEventProcessor<TServer extends Server = Server>
         }
 
         // now construct event from dynamodb image
-        const event: ISubscriptionEvent = DynamoDB.Converter.unmarshall(
+        const event: IDynamoDBSubscriptionEvent = DynamoDB.Converter.unmarshall(
           record.dynamodb!.NewImage as any,
         ) as any;
+
+        // skip if event is expired
+        if (isTTLExpired(event.ttl)) {
+          continue;
+        }
 
         // iterate over subscribers that listen to this event
         // and for each connection:
