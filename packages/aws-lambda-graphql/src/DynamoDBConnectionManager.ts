@@ -9,8 +9,16 @@ import {
   HydrateConnectionOptions,
 } from './types';
 import { computeTTL } from './helpers';
+import { isTTLExpired } from './helpers/isTTLExpired';
 
 const DEFAULT_TTL = 7200;
+
+interface DynamoDBConnection extends IConnection {
+  /**
+   * TTL in UNIX seconds
+   */
+  ttl?: number;
+}
 
 interface DynamoDBConnectionManagerOptions {
   /**
@@ -32,8 +40,10 @@ interface DynamoDBConnectionManagerOptions {
    * Optional TTL for connections (stored in ttl field) in seconds
    *
    * Default value is 2 hours
+   *
+   * Set to false to turn off TTL
    */
-  ttl?: number;
+  ttl?: number | false;
 }
 
 /**
@@ -50,7 +60,7 @@ export class DynamoDBConnectionManager implements IConnectionManager {
 
   private subscriptions: ISubscriptionManager;
 
-  private ttl: number;
+  private ttl: number | false;
 
   constructor({
     apiGatewayManager,
@@ -68,8 +78,8 @@ export class DynamoDBConnectionManager implements IConnectionManager {
 
   hydrateConnection = async (
     connectionId: string,
-    options: HydrateConnectionOptions,
-  ): Promise<IConnection> => {
+    options?: HydrateConnectionOptions,
+  ): Promise<DynamoDBConnection> => {
     const { retryCount = 0, timeout = 50 } = options || {};
     // if connection is not found, throw so we can terminate connection
     let connection;
@@ -83,16 +93,18 @@ export class DynamoDBConnectionManager implements IConnectionManager {
           },
         })
         .promise();
+
       if (result.Item) {
         // Jump out of loop
-        connection = result.Item as IConnection;
+        connection = result.Item as DynamoDBConnection;
         break;
       }
+
       // wait for another round
       await new Promise(r => setTimeout(r, timeout));
     }
 
-    if (!connection) {
+    if (!connection || isTTLExpired(connection.ttl)) {
       throw new ConnectionNotFoundError(`Connection ${connectionId} not found`);
     }
 
@@ -101,7 +113,7 @@ export class DynamoDBConnectionManager implements IConnectionManager {
 
   setConnectionData = async (
     data: IConnectionData,
-    { id }: IConnection,
+    { id }: DynamoDBConnection,
   ): Promise<void> => {
     await this.db
       .update({
@@ -123,7 +135,7 @@ export class DynamoDBConnectionManager implements IConnectionManager {
   registerConnection = async ({
     connectionId,
     endpoint,
-  }: IConnectEvent): Promise<IConnection> => {
+  }: IConnectEvent): Promise<DynamoDBConnection> => {
     const connection: IConnection = {
       id: connectionId,
       data: { endpoint, context: {}, isInitialized: false },
@@ -136,7 +148,11 @@ export class DynamoDBConnectionManager implements IConnectionManager {
           createdAt: new Date().toString(),
           id: connection.id,
           data: connection.data,
-          ttl: computeTTL(this.ttl),
+          ...(this.ttl === false || this.ttl == null
+            ? {}
+            : {
+                ttl: computeTTL(this.ttl),
+              }),
         },
       })
       .promise();
@@ -145,7 +161,7 @@ export class DynamoDBConnectionManager implements IConnectionManager {
   };
 
   sendToConnection = async (
-    connection: IConnection,
+    connection: DynamoDBConnection,
     payload: string | Buffer,
   ): Promise<void> => {
     try {
@@ -163,7 +179,7 @@ export class DynamoDBConnectionManager implements IConnectionManager {
     }
   };
 
-  unregisterConnection = async ({ id }: IConnection): Promise<void> => {
+  unregisterConnection = async ({ id }: DynamoDBConnection): Promise<void> => {
     await Promise.all([
       this.db
         .delete({
@@ -177,7 +193,7 @@ export class DynamoDBConnectionManager implements IConnectionManager {
     ]);
   };
 
-  closeConnection = async ({ id, data }: IConnection): Promise<void> => {
+  closeConnection = async ({ id, data }: DynamoDBConnection): Promise<void> => {
     await this.createApiGatewayManager(data.endpoint)
       .deleteConnection({ ConnectionId: id })
       .promise();

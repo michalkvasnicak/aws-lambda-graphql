@@ -20,6 +20,10 @@ interface DynamoDBSubscriber extends ISubscriber {
    * it is in format connectionId:operationId
    */
   subscriptionId: string;
+  /**
+   * TTL in UNIX seconds
+   */
+  ttl?: number;
 }
 
 interface DynamoDBSubscriptionManagerOptions {
@@ -39,8 +43,10 @@ interface DynamoDBSubscriptionManagerOptions {
    * Optional TTL for subscriptions (stored in ttl field) in seconds
    *
    * Default value is 2 hours
+   *
+   * Set to false to turn off TTL
    */
-  ttl?: number;
+  ttl?: number | false;
 }
 
 /**
@@ -64,7 +70,7 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
 
   private db: DynamoDB.DocumentClient;
 
-  private ttl: number;
+  private ttl: number | false;
 
   constructor({
     dynamoDbClient,
@@ -90,14 +96,20 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
           return { value: [], done: true };
         }
 
+        const time = Math.round(Date.now() / 1000);
         const result = await this.db
           .query({
             ExclusiveStartKey,
             TableName: this.subscriptionsTableName,
             Limit: 50,
             KeyConditionExpression: 'event = :event',
+            FilterExpression: '#ttl > :time OR attribute_not_exists(#ttl)',
             ExpressionAttributeValues: {
               ':event': name,
+              ':time': time,
+            },
+            ExpressionAttributeNames: {
+              '#ttl': 'ttl',
             },
           })
           .promise();
@@ -136,7 +148,10 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
     }
     const [name] = names;
 
-    const ttl = computeTTL(this.ttl);
+    const ttlField =
+      this.ttl === false || this.ttl == null
+        ? {}
+        : { ttl: computeTTL(this.ttl) };
 
     await this.db
       .batchWrite({
@@ -150,7 +165,7 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
                   event: name,
                   subscriptionId,
                   operationId: operation.operationId,
-                  ttl,
+                  ...ttlField,
                 } as DynamoDBSubscriber,
               },
             },
@@ -161,7 +176,7 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
                 Item: {
                   subscriptionId,
                   event: name,
-                  ttl,
+                  ...ttlField,
                 },
               },
             },

@@ -126,6 +126,48 @@ describe('DynamoDBSubscriptionManager', () => {
         }),
       );
     });
+
+    it('supports turning off ttl', async () => {
+      const subscriptionManager = new DynamoDBSubscriptionManager({
+        ttl: false,
+      });
+
+      (batchWritePromiseMock as jest.Mock).mockResolvedValueOnce({});
+
+      await expect(
+        subscriptionManager.subscribe(
+          ['name1'],
+          { id: '1' } as any,
+          { operationId: '1' } as any,
+        ),
+      ).resolves.toBeUndefined();
+
+      expect(batchWritePromiseMock).toHaveBeenCalledTimes(1);
+      expect(batchWriteMock).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          RequestItems: {
+            SubscriptionOperations: [
+              {
+                PutRequest: {
+                  Item: {
+                    ttl: expect.any(Number),
+                  },
+                },
+              },
+            ],
+            Subscriptions: [
+              {
+                PutRequest: {
+                  Item: {
+                    ttl: expect.any(Number),
+                  },
+                },
+              },
+            ],
+          },
+        }),
+      );
+    });
   });
 
   describe('unsubscribe', () => {

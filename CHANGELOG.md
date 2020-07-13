@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.7...HEAD)
 
+#### Added
+
+- Added support for filtering out expired DynamoDB connections, subscriptions and events, see [#92](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/92).
+
 ### [v1.0.0-alpha.8](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.7...aws-lambda-graphql@1.0.0-alpha.8) - 2020-07-06
 
 #### Added
