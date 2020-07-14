@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 1.0.0-alpha.9 (2020-07-14)
+
+**Note:** Version bump only for package serverless-chat-example-server
+
 ## 1.0.0-alpha.8 (2020-07-06)
 
 - docs: add ttl to example chat server ([5652b24](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/5652b24))

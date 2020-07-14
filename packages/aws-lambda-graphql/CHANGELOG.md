@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 1.0.0-alpha.9 (2020-07-14)
+
+- feat: filter out ddb expired connections/subscriptions/events ([d826725](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/d826725))
+
 ## 1.0.0-alpha.8 (2020-07-06)
 
 - feat: ttl support for dynamodb connections and subscriptions ([35d35b7](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/35d35b7))
