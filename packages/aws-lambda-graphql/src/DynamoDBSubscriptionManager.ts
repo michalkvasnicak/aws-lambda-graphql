@@ -280,12 +280,12 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
       await this.db
         .batchWrite({
           RequestItems: {
-            [this.subscriptionsTableName]: Items.map(item => ({
+            [this.subscriptionsTableName]: Items.map((item) => ({
               DeleteRequest: {
                 Key: { event: item.event, subscriptionId: item.subscriptionId },
               },
             })),
-            [this.subscriptionOperationsTableName]: Items.map(item => ({
+            [this.subscriptionOperationsTableName]: Items.map((item) => ({
               DeleteRequest: {
                 Key: { subscriptionId: item.subscriptionId },
               },

@@ -63,7 +63,7 @@ export class DynamoDBEventProcessor<TServer extends Server = Server>
           event.event,
         )) {
           const promises = subscribers
-            .map(async subscriber => {
+            .map(async (subscriber) => {
               // create PubSub for this subscriber
               const pubSub = new ArrayPubSub([event]);
 
@@ -114,7 +114,7 @@ export class DynamoDBEventProcessor<TServer extends Server = Server>
 
               return Promise.resolve();
             })
-            .map(promise => promise.catch(this.onError));
+            .map((promise) => promise.catch(this.onError));
 
           await Promise.all(promises);
         }

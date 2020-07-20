@@ -68,7 +68,9 @@ export class WebSocketConnectionManager implements IConnectionManager {
   ): Promise<void> => {
     return new Promise((resolve, reject) => {
       try {
-        connection.socket.send(payload, err => (err ? reject(err) : resolve()));
+        connection.socket.send(payload, (err) =>
+          err ? reject(err) : resolve(),
+        );
       } catch (e) {
         reject(e);
       }

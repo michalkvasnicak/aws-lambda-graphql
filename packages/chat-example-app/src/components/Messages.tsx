@@ -25,7 +25,7 @@ function Messages() {
   const onSubscriptionData = useCallback(
     (result: OnSubscriptionDataOptions) => {
       if (result.subscriptionData.data != null) {
-        setMessages(state => [
+        setMessages((state) => [
           ...state,
           result.subscriptionData.data.messageFeed,
         ]);

@@ -101,7 +101,7 @@ export class DynamoDBConnectionManager implements IConnectionManager {
       }
 
       // wait for another round
-      await new Promise(r => setTimeout(r, timeout));
+      await new Promise((r) => setTimeout(r, timeout));
     }
 
     if (!connection || isTTLExpired(connection.ttl)) {
