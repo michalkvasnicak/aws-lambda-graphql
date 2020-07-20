@@ -2,7 +2,7 @@ import { GraphQLRequest, ExecutionResult } from 'apollo-link';
 import { SubscriptionClient } from 'subscriptions-transport-ws';
 
 export function waitForClientToConnect(client: SubscriptionClient) {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     client.onConnected(resolve);
   });
 }

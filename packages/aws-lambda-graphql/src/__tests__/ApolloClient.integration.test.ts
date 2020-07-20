@@ -14,7 +14,7 @@ describe('apollo client integration test', () => {
   beforeEach(async () => {
     server = new TestLambdaServer({
       port: 3002,
-      onConnect: messagePayload => {
+      onConnect: (messagePayload) => {
         if (messagePayload.isUnauthorized) {
           return false;
         }
@@ -30,7 +30,7 @@ describe('apollo client integration test', () => {
   });
 
   describe('connect', () => {
-    it('connects to server', done => {
+    it('connects to server', (done) => {
       const client = new SubscriptionClient(
         'ws://localhost:3002',
         {},
@@ -42,7 +42,7 @@ describe('apollo client integration test', () => {
       });
     });
 
-    it('disconnects unauthorized client', done => {
+    it('disconnects unauthorized client', (done) => {
       const client = new SubscriptionClient(
         'ws://localhost:3002',
         {
@@ -124,7 +124,7 @@ describe('apollo client integration test', () => {
       );
 
       // wait for event processor to process events
-      await new Promise(r => setTimeout(r, 200));
+      await new Promise((r) => setTimeout(r, 200));
 
       expect(operation1Iterator.next()).toEqual({
         done: false,

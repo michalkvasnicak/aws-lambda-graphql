@@ -64,7 +64,7 @@ export class RedisConnectionManager implements IConnectionManager {
         break;
       }
       // wait for another round
-      await new Promise(r => setTimeout(r, timeout));
+      await new Promise((r) => setTimeout(r, timeout));
     }
 
     if (!connection) {
