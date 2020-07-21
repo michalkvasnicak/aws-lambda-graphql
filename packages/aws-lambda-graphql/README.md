@@ -86,6 +86,9 @@ Each connection is stored as [`IConnection` object](#iconnection).
 
 - **connectionsTable** (`string`, `optional`, `default: 'Connections'`) - name of DynamoDB table used to store connections
 - **subscriptions** (`ISubscriptionManager`, `required`) - subscription manager used to register subscriptions for connections.
+- **ttl** (`number`, `optional`, `default: 2 hours`)
+  - optional TTL for connections set in seconds
+  - the value is stored as `ttl` field on the row (you are responsible for enabling TTL on given field)
 
 ### `DynamoDBEventStore: IEventStore`
 
@@ -110,6 +113,9 @@ Stores subscription operations to a subscription operations table as `subscripti
 
 - **subscriptionsTableName** (`string`, `optional`, `default: 'Subscriptions'`)
 - **subscriptionOperationsTableName** - (`string`, `optional`, `default: 'SubscriptionOperations'`)
+- **ttl** (`number`, `optional`, `default: 2 hours`)
+  - optional TTL for subscriptions and subscriptionOperations set in seconds
+  - the value is stored as `ttl` field on the row (you are responsible for enabling TTL on given field)
 
 ### `IConnection`
 

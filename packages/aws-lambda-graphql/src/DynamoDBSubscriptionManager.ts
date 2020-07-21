@@ -5,6 +5,9 @@ import {
   ISubscriptionManager,
   IdentifiedOperationRequest,
 } from './types';
+import { computeTTL } from './helpers';
+
+const DEFAULT_TTL = 7200;
 
 // polyfill Symbol.asyncIterator
 if (Symbol.asyncIterator === undefined) {
@@ -17,6 +20,10 @@ interface DynamoDBSubscriber extends ISubscriber {
    * it is in format connectionId:operationId
    */
   subscriptionId: string;
+  /**
+   * TTL in UNIX seconds
+   */
+  ttl?: number;
 }
 
 interface DynamoDBSubscriptionManagerOptions {
@@ -32,6 +39,14 @@ interface DynamoDBSubscriptionManagerOptions {
    * Subscriptions operations table name (default is SubscriptionOperations)
    */
   subscriptionOperationsTableName?: string;
+  /**
+   * Optional TTL for subscriptions (stored in ttl field) in seconds
+   *
+   * Default value is 2 hours
+   *
+   * Set to false to turn off TTL
+   */
+  ttl?: number | false;
 }
 
 /**
@@ -55,14 +70,18 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
 
   private db: DynamoDB.DocumentClient;
 
+  private ttl: number | false;
+
   constructor({
     dynamoDbClient,
     subscriptionsTableName = 'Subscriptions',
     subscriptionOperationsTableName = 'SubscriptionOperations',
+    ttl = DEFAULT_TTL,
   }: DynamoDBSubscriptionManagerOptions = {}) {
     this.subscriptionsTableName = subscriptionsTableName;
     this.subscriptionOperationsTableName = subscriptionOperationsTableName;
     this.db = dynamoDbClient || new DynamoDB.DocumentClient();
+    this.ttl = ttl;
   }
 
   subscribersByEventName = (
@@ -77,14 +96,20 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
           return { value: [], done: true };
         }
 
+        const time = Math.round(Date.now() / 1000);
         const result = await this.db
           .query({
             ExclusiveStartKey,
             TableName: this.subscriptionsTableName,
             Limit: 50,
             KeyConditionExpression: 'event = :event',
+            FilterExpression: '#ttl > :time OR attribute_not_exists(#ttl)',
             ExpressionAttributeValues: {
               ':event': name,
+              ':time': time,
+            },
+            ExpressionAttributeNames: {
+              '#ttl': 'ttl',
             },
           })
           .promise();
@@ -123,6 +148,11 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
     }
     const [name] = names;
 
+    const ttlField =
+      this.ttl === false || this.ttl == null
+        ? {}
+        : { ttl: computeTTL(this.ttl) };
+
     await this.db
       .batchWrite({
         RequestItems: {
@@ -135,6 +165,7 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
                   event: name,
                   subscriptionId,
                   operationId: operation.operationId,
+                  ...ttlField,
                 } as DynamoDBSubscriber,
               },
             },
@@ -145,6 +176,7 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
                 Item: {
                   subscriptionId,
                   event: name,
+                  ...ttlField,
                 },
               },
             },
@@ -248,12 +280,12 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
       await this.db
         .batchWrite({
           RequestItems: {
-            [this.subscriptionsTableName]: Items.map(item => ({
+            [this.subscriptionsTableName]: Items.map((item) => ({
               DeleteRequest: {
                 Key: { event: item.event, subscriptionId: item.subscriptionId },
               },
             })),
-            [this.subscriptionOperationsTableName]: Items.map(item => ({
+            [this.subscriptionOperationsTableName]: Items.map((item) => ({
               DeleteRequest: {
                 Key: { subscriptionId: item.subscriptionId },
               },

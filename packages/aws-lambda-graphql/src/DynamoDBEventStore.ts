@@ -3,6 +3,13 @@ import { ulid } from 'ulid';
 import { IEventStore, ISubscriptionEvent } from './types';
 import { computeTTL } from './helpers';
 
+export interface IDynamoDBSubscriptionEvent extends ISubscriptionEvent {
+  /**
+   * TTL in UNIX seconds
+   */
+  ttl?: number;
+}
+
 const DEFAULT_TTL = 7200;
 
 interface DynamoDBEventStoreOptions {
@@ -18,8 +25,10 @@ interface DynamoDBEventStoreOptions {
    * Optional TTL for events (stored in ttl field) in seconds
    *
    * Default value is 2 hours
+   *
+   * Set to false to turn off TTL
    */
-  ttl?: number;
+  ttl?: number | false;
 }
 
 /**
@@ -34,7 +43,7 @@ export class DynamoDBEventStore implements IEventStore {
 
   private tableName: string;
 
-  private ttl: number;
+  private ttl: number | false;
 
   constructor({
     dynamoDbClient,
@@ -53,7 +62,9 @@ export class DynamoDBEventStore implements IEventStore {
         Item: {
           id: ulid(),
           ...event,
-          ttl: computeTTL(this.ttl),
+          ...(this.ttl === false || this.ttl == null
+            ? {}
+            : { ttl: computeTTL(this.ttl) }),
         },
       })
       .promise();

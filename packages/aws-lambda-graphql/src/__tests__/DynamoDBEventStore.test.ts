@@ -35,4 +35,28 @@ describe('DynamoDBEventStore', () => {
       }),
     );
   });
+
+  it('supports turning off the TTL', async () => {
+    const eventStore = new DynamoDBEventStore({
+      ttl: false,
+    });
+
+    await expect(
+      eventStore.publish({
+        event: 'test',
+        payload: {
+          custom: true,
+        },
+      }),
+    ).resolves.toBeUndefined();
+
+    expect(putPromiseMock).toHaveBeenCalledTimes(1);
+    expect(putMock).not.toHaveBeenCalledWith(
+      expect.objectContaining({
+        Item: expect.objectContaining({
+          ttl: expect.any(Number),
+        }),
+      }),
+    );
+  });
 });

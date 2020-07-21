@@ -7,7 +7,7 @@ describe('withFilter', () => {
 
     const iterator = await withFilter(
       async () => createAsyncIterator(events) as any,
-      payload => payload.type === 'A',
+      (payload) => payload.type === 'A',
     )();
 
     await expect(iterator.next()).resolves.toEqual({
@@ -29,7 +29,7 @@ describe('withFilter', () => {
 
     const iterator = await withFilter(
       async () => createAsyncIterator(events) as any,
-      async payload => payload.type === 'A',
+      async (payload) => payload.type === 'A',
     )();
 
     await expect(iterator.next()).resolves.toEqual({

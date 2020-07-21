@@ -61,7 +61,7 @@ export class TestLambdaServer {
       if (this.wsServer == null) {
         reject(new Error('Server not initialized'));
       } else {
-        this.wsServer.close(err => {
+        this.wsServer.close((err) => {
           clearInterval(this.eventProcessingInterval!);
 
           return err ? reject(err) : resolve();
@@ -84,7 +84,7 @@ export class TestLambdaServer {
     const wsStart = new Promise((resolve, reject) => {
       this.wsServer = new WSServer({ port: this.port });
 
-      this.wsServer.on('connection', async ws => {
+      this.wsServer.on('connection', async (ws) => {
         const connectionId = ulid();
         const result = await this.handler(
           {
@@ -110,7 +110,7 @@ export class TestLambdaServer {
           );
         });
 
-        ws.on('message', async data => {
+        ws.on('message', async (data) => {
           const defaultResult = await this.handler(
             {
               requestContext: {

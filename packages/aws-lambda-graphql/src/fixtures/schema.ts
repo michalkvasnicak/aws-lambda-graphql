@@ -54,7 +54,7 @@ function createSchema() {
         },
       },
       Query: {
-        delayed: () => new Promise(r => setTimeout(() => r(true), 100)),
+        delayed: () => new Promise((r) => setTimeout(() => r(true), 100)),
         testQuery(parent: any, args: any, context: TestGraphQLContext) {
           if (context.lambdaContext == null) {
             throw new Error('Missing lambda context');

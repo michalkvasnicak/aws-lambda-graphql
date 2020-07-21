@@ -13,6 +13,7 @@ import { ulid } from 'ulid';
 
 // serverless offline support
 const dynamoDbClient = new DynamoDB.DocumentClient({
+  // use serverless-dynamodb endpoint in offline mode
   ...(process.env.IS_OFFLINE
     ? {
         endpoint: 'http://localhost:8000',
@@ -117,6 +118,14 @@ const server = new Server({
   eventProcessor: new DynamoDBEventProcessor(),
   resolvers,
   subscriptionManager,
+  // use serverless-offline endpoint in offline mode
+  ...(process.env.IS_OFFLINE
+    ? {
+        playground: {
+          subscriptionEndpoint: 'ws://localhost:3001',
+        },
+      }
+    : {}),
   typeDefs,
 });
 

@@ -88,7 +88,7 @@ describe('PubSub', () => {
       );
     });
 
-    it('works correctly', async () => {
+    it('serializes payload to JSON by default', async () => {
       const ps = new PubSub({ eventStore: eventStore as any });
 
       await expect(ps.publish('test', {})).resolves.toBeUndefined();
@@ -97,6 +97,21 @@ describe('PubSub', () => {
       expect(eventStore.publish).toBeCalledWith({
         event: 'test',
         payload: JSON.stringify({}),
+      });
+    });
+
+    it('sends raw payload if serialization is disabled', async () => {
+      const ps = new PubSub({
+        eventStore: eventStore as any,
+        serializeEventPayload: false,
+      });
+
+      await expect(ps.publish('test', { a: true })).resolves.toBeUndefined();
+
+      expect(eventStore.publish).toBeCalledTimes(1);
+      expect(eventStore.publish).toBeCalledWith({
+        event: 'test',
+        payload: { a: true },
       });
     });
   });

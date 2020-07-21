@@ -4,7 +4,7 @@
 <!-- markdownlint-disable -->
 [![CircleCI](https://img.shields.io/circleci/project/github/michalkvasnicak/aws-lambda-graphql/master.svg?style=flat-square)](https://circleci.com/gh/michalkvasnicak/aws-lambda-graphql)
 [![aws-lambda-graphql package version](https://img.shields.io/npm/v/aws-lambda-graphql?color=green&label=aws-lambda-graphql&style=flat-square)](https://www.npmjs.com/package/aws-lambda-graphql)<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-7-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-9-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
@@ -67,7 +67,9 @@ Now we have all the dependencies installed so lets start with server implementat
 
 #### 1.1 Setting up Connection and Subscription management
 
-Our GraphQL server needs to know how to store connections and subscriptions because Lambdas are stateless. In order to do that we need create instances of the [Connection manager](./packages/aws-lambda-graphql/src/types/connections.ts) and [Subscription manager](./packages/aws-lambda-graphql/src/types/subscriptions.ts). In this example we'll leverage DynamoDB as persistent store for our connections and subscriptions.
+Our GraphQL server needs to know how to store connections and subscriptions because Lambdas are stateless. In order to do that we need create instances of the [Connection manager](./packages/aws-lambda-graphql/src/types/connections.ts) and [Subscription manager](./packages/aws-lambda-graphql/src/types/subscriptions.ts). We have two options of persistent storage for our connections and subscriptions.
+
+DynamoDB:
 
 ```js
 import {
@@ -75,9 +77,43 @@ import {
   DynamoDBSubscriptionManager,
 } from 'aws-lambda-graphql';
 
+/*
+ By default subscriptions and connections use TTL of 2 hours. 
+ This can be changed by `ttl` option in DynamoDBSubscriptionManager and DynamoDBConnectionManager.
+
+ ttl accepts a number in seconds (default is 7200 seconds) or
+ false to turn it off.
+
+ It's your responsibility to set up TTL on your connections and subscriptions tables.
+*/
 const subscriptionManager = new DynamoDBSubscriptionManager();
 const connectionManager = new DynamoDBConnectionManager({
   subscriptionManager,
+});
+```
+
+**⚠️ in order to clean up stale connections and subscriptions please set up TTL on `ttl` field in Connections, Subscriptions and SubscriptionOperations tables. You can turn off the TTL by setting up `ttl` option to `false` in `DynamoDBSubscriptionManager` and `DynamoDBConnectionManager`.**
+
+Redis:
+
+```js
+import {
+  RedisConnectionManager,
+  RedisSubscriptionManager,
+} from 'aws-lambda-graphql';
+import Redis from 'ioredis';
+
+const redisClient = new Redis({
+  port: 6379, // Redis port
+  host: '127.0.0.1', // Redis host
+});
+
+const subscriptionManager = new RedisSubscriptionManager({
+  redisClient,
+});
+const connectionManager = new RedisConnectionManager({
+  subscriptionManager,
+  redisClient,
 });
 ```
 
@@ -92,6 +128,14 @@ import {
   DynamoDBSubscriptionManager,
 } from 'aws-lambda-graphql';
 
+/*
+ By default event stores uses TTL of 2 hours on every event. 
+ This can be changed by `ttl` option in DynamoDBEventStore.
+ ttl accepts a number in seconds (default is 7200 seconds) or
+ false to turn it off.
+
+ It's your responsibility to set up TTL on your events table.
+*/
 const eventStore = new DynamoDBEventStore();
 const subscriptionManager = new DynamoDBSubscriptionManager();
 const connectionManager = new DynamoDBConnectionManager({
@@ -100,6 +144,8 @@ const connectionManager = new DynamoDBConnectionManager({
 ```
 
 That's it for now. Our `eventStore` will use DynamoDB to store messages that we want to broadcast to all subscribed clients.
+
+**⚠️ in order to clean up old events, please set up TTL on `ttl` field in Events store table. This can be turned off by setting up the `ttl` option to `false`.**
 
 #### 1.3 Setting up the GraphQL schema
 
@@ -142,6 +188,8 @@ From given schema we already see that we need to somehow publish and process bro
 
 PubSub is responsible for publishing events and subscribing to events. Anyone can broadcast message using `broadcastMessage` mutation (publish) and anyone connected over WebSocket can subscribed to `messageBroadcast` subscription (subscribing) to receive broadcasted messages.
 
+**⚠️ Be careful! By default `PubSub` serializes event payload to JSON. If you don't want this behaviour, set `serializeEventPayload` option to `false` on your `PubSub` instance.**
+
 ```js
 import {
   DynamoDBConnectionManager,
@@ -155,7 +203,11 @@ const subscriptionManager = new DynamoDBSubscriptionManager();
 const connectionManager = new DynamoDBConnectionManager({
   subscriptionManager,
 });
-const pubSub = new PubSub({ eventStore });
+const pubSub = new PubSub({
+  eventStore,
+  // optional, if you don't want to store messages to your store as JSON
+  // serializeEventPayload: false,
+});
 
 const typeDefs = /* GraphQL */ `
   type Mutation {
@@ -447,6 +499,7 @@ Current infrastructure is implemented using [AWS Lambda](https://aws.amazon.com/
 ## Contributing
 
 - This project uses TypeScript for static typing.
+- This projects uses conventional commits.
 - This project uses Yarn and Yarn workspaces so only `yarn.lock` is commited.
 - Please add a Changelog entry under `Unreleased` section in your PR.
 
@@ -454,6 +507,8 @@ Current infrastructure is implemented using [AWS Lambda](https://aws.amazon.com/
 
 ```console
 yarn test
+# running tests in watch mode
+yarn test:watch
 ```
 
 ### Typecheck
@@ -485,10 +540,15 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/alvinypyim"><img src="https://avatars2.githubusercontent.com/u/10244707?v=4" width="100px;" alt=""/><br /><sub><b>Alvin Yim</b></sub></a><br /><a href="https://github.com/michalkvasnicak/aws-lambda-graphql/issues?q=author%3Aalvinypyim" title="Bug reports">🐛</a> <a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=alvinypyim" title="Code">💻</a></td>
     <td align="center"><a href="http://www.pickpack.de"><img src="https://avatars2.githubusercontent.com/u/463984?v=4" width="100px;" alt=""/><br /><sub><b>Tobias Nentwig</b></sub></a><br /><a href="https://github.com/michalkvasnicak/aws-lambda-graphql/issues?q=author%3Anenti" title="Bug reports">🐛</a> <a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=nenti" title="Code">💻</a> <a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=nenti" title="Tests">⚠️</a></td>
   </tr>
+  <tr>
+    <td align="center"><a href="https://github.com/lepilepi"><img src="https://avatars0.githubusercontent.com/u/560085?v=4" width="100px;" alt=""/><br /><sub><b>Lepi</b></sub></a><br /><a href="https://github.com/michalkvasnicak/aws-lambda-graphql/issues?q=author%3Alepilepi" title="Bug reports">🐛</a> <a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=lepilepi" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/IslamWahid"><img src="https://avatars0.githubusercontent.com/u/24783905?v=4" width="100px;" alt=""/><br /><sub><b>Islam Salem</b></sub></a><br /><a href="https://github.com/michalkvasnicak/aws-lambda-graphql/issues?q=author%3AIslamWahid" title="Bug reports">🐛</a> <a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=IslamWahid" title="Code">💻</a> <a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=IslamWahid" title="Documentation">📖</a></td>
+  </tr>
 </table>
 
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
+
 <!-- ALL-CONTRIBUTORS-LIST:END -->
 
 This project follows the [all-contributors](https://allcontributors.org/docs/en/overview) specification. Contributions of any kind welcome!

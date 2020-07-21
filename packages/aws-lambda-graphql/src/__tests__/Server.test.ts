@@ -9,7 +9,7 @@ import {
 } from '../types';
 import { formatMessage } from '../formatMessage';
 import { SERVER_EVENT_TYPES, CLIENT_EVENT_TYPES } from '../protocol';
-import { ConnectionNotFoundError } from '../DynamoDBConnectionManager';
+import { ConnectionNotFoundError } from '../errors';
 
 describe('Server', () => {
   describe('createHttpHandler()', () => {
@@ -170,18 +170,18 @@ describe('Server', () => {
         // Mock the connection database flow
         let connection;
         (connectionManager.registerConnection as jest.Mock).mockImplementationOnce(
-          c => {
+          (c) => {
             connection = c;
           },
         );
         (connectionManager.hydrateConnection as jest.Mock).mockImplementationOnce(
-          async connectionId => {
+          async (connectionId) => {
             for (let i = 0; i <= 1; i++) {
               if (connection) {
                 return connection as IConnection;
               }
               // wait for another round
-              await new Promise(r => setTimeout(r, 50));
+              await new Promise((r) => setTimeout(r, 50));
             }
             throw new ConnectionNotFoundError(
               `Connection ${connectionId} not found`,
@@ -222,6 +222,68 @@ describe('Server', () => {
             body: formatMessage({
               type: SERVER_EVENT_TYPES.GQL_CONNECTION_ACK,
             }),
+            statusCode: 200,
+          }),
+        );
+      });
+
+      it('passes provided Sec-WebSocket-Protocol multi header', async () => {
+        (connectionManager.registerConnection as jest.Mock).mockResolvedValueOnce(
+          {},
+        );
+
+        await expect(
+          handler(
+            {
+              multiValueHeaders: {
+                'Sec-WebSocket-Protocol': ['graphql-ws', 'graphql-ws1'],
+              },
+              requestContext: {
+                connectionId: '1',
+                domainName: 'domain',
+                routeKey: '$connect',
+                stage: 'stage',
+              } as any,
+            } as any,
+            {} as any,
+          ),
+        ).resolves.toEqual(
+          expect.objectContaining({
+            body: '',
+            multiValueHeaders: {
+              'Sec-WebSocket-Protocol': ['graphql-ws', 'graphql-ws1'],
+            },
+            statusCode: 200,
+          }),
+        );
+      });
+
+      it('passes provided Sec-WebSocket-Protocol header', async () => {
+        (connectionManager.registerConnection as jest.Mock).mockResolvedValueOnce(
+          {},
+        );
+
+        await expect(
+          handler(
+            {
+              headers: {
+                'Sec-WebSocket-Protocol': 'graphql-ws',
+              },
+              requestContext: {
+                connectionId: '1',
+                domainName: 'domain',
+                routeKey: '$connect',
+                stage: 'stage',
+              } as any,
+            } as any,
+            {} as any,
+          ),
+        ).resolves.toEqual(
+          expect.objectContaining({
+            body: '',
+            headers: {
+              'Sec-WebSocket-Protocol': 'graphql-ws',
+            },
             statusCode: 200,
           }),
         );

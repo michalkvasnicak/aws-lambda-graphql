@@ -3,6 +3,8 @@ export * from './DynamoDBConnectionManager';
 export * from './DynamoDBEventProcessor';
 export * from './DynamoDBEventStore';
 export * from './DynamoDBSubscriptionManager';
+export * from './RedisConnectionManager';
+export * from './RedisSubscriptionManager';
 export * from './execute';
 export * from './errors';
 export * from './helpers';

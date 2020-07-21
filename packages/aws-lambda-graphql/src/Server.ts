@@ -131,7 +131,7 @@ export class Server<
         // if it's object, merge it with integrationContext
         typeof context === 'function'
           ? (integrationContext: IContext) =>
-              Promise.resolve(context(integrationContext)).then(ctx => ({
+              Promise.resolve(context(integrationContext)).then((ctx) => ({
                 ...ctx,
                 ...integrationContext,
               }))
@@ -143,7 +143,7 @@ export class Server<
 
     this.connectionManager = connectionManager;
     this.eventProcessor = eventProcessor;
-    this.onError = onError || (err => console.error(err));
+    this.onError = onError || ((err) => console.error(err));
     this.subscriptionManager = subscriptionManager;
     this.subscriptionOptions = subscriptions;
   }
@@ -181,7 +181,7 @@ export class Server<
           ? $$internal.connection.data.context
           : {}),
       })
-      .then(options => ({ ...options, $$internal }));
+      .then((options) => ({ ...options, $$internal }));
   }
 
   /**
@@ -239,6 +239,20 @@ export class Server<
 
             return {
               body: '',
+              multiValueHeaders: event.multiValueHeaders?.[
+                'Sec-WebSocket-Protocol'
+              ]
+                ? {
+                    'Sec-WebSocket-Protocol':
+                      event.multiValueHeaders['Sec-WebSocket-Protocol'],
+                  }
+                : undefined,
+              headers: event.headers?.['Sec-WebSocket-Protocol']
+                ? {
+                    'Sec-WebSocket-Protocol':
+                      event.headers['Sec-WebSocket-Protocol'],
+                  }
+                : undefined,
               statusCode: 200,
             };
           }
@@ -372,7 +386,7 @@ export class Server<
                 }
 
                 // wait for another round
-                await new Promise(r => setTimeout(r, waitTimeout));
+                await new Promise((r) => setTimeout(r, waitTimeout));
               }
 
               return freshConnection;

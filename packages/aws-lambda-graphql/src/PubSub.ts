@@ -1,14 +1,24 @@
 import { IEventStore, OperationRequest, SubcribeResolveFn } from './types';
 
 interface PubSubOptions {
+  /**
+   * Event store instance where events will be published
+   */
   eventStore: IEventStore;
+  /**
+   * Serialize event payload to JSON, default is true.
+   */
+  serializeEventPayload?: boolean;
 }
 
 export class PubSub {
   private eventStore: IEventStore;
 
-  constructor({ eventStore }: PubSubOptions) {
+  private serializeEventPayload: boolean;
+
+  constructor({ eventStore, serializeEventPayload = true }: PubSubOptions) {
     this.eventStore = eventStore;
+    this.serializeEventPayload = serializeEventPayload;
   }
 
   subscribe = (eventNames: string | string[]): SubcribeResolveFn => {
@@ -56,7 +66,7 @@ export class PubSub {
     }
 
     await this.eventStore.publish({
-      payload: JSON.stringify(payload),
+      payload: this.serializeEventPayload ? JSON.stringify(payload) : payload,
       event: eventName,
     });
   };

@@ -1,6 +1,6 @@
 {
   "name": "aws-lambda-graphql",
-  "version": "1.0.0-alpha.3",
+  "version": "1.0.0-alpha.10",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "bugs": {
@@ -32,6 +32,7 @@
   "description": "Apollo server for AWS Lambda with WebSocket subscriptions support over API Gateway v1 + v2)",
   "dependencies": {
     "@types/aws-lambda": "^8.10.36",
+    "@types/ioredis": "^4.16.6",
     "apollo-server-core": "^2.9.14",
     "apollo-server-lambda": "^2.9.14",
     "iterall": "^1.2.2",
@@ -40,7 +41,8 @@
   "peerDependencies": {
     "aws-sdk": "^2.387.0",
     "graphql": "^14.0.2",
-    "graphql-subscriptions": "^1.0.0"
+    "graphql-subscriptions": "^1.0.0",
+    "ioredis": "^4.17.3"
   },
   "engines": {
     "node": ">=10"

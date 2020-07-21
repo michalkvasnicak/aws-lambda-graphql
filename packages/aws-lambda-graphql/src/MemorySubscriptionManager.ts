@@ -26,7 +26,7 @@ export class MemorySubscriptionManager implements ISubscriptionManager {
         const subscriptions = this.subscriptions.get(name) || [];
 
         const subscribers = subscriptions.filter(
-          subscriber => subscriber.event === name,
+          (subscriber) => subscriber.event === name,
         );
 
         return createAsyncIterator([subscribers]);
@@ -39,7 +39,7 @@ export class MemorySubscriptionManager implements ISubscriptionManager {
     connection: IConnection,
     operation: OperationRequest & { operationId: string },
   ): Promise<void> => {
-    names.forEach(name => {
+    names.forEach((name) => {
       const subscriptions = this.subscriptions.get(name);
       const subscription = {
         connection,
@@ -50,7 +50,9 @@ export class MemorySubscriptionManager implements ISubscriptionManager {
 
       if (subscriptions == null) {
         this.subscriptions.set(name, [subscription]);
-      } else if (!subscriptions.find(s => s.connection.id === connection.id)) {
+      } else if (
+        !subscriptions.find((s) => s.connection.id === connection.id)
+      ) {
         subscriptions.push({
           connection,
           operation,
@@ -67,7 +69,9 @@ export class MemorySubscriptionManager implements ISubscriptionManager {
     if (subscriptions) {
       this.subscriptions.set(
         subscriber.event,
-        subscriptions.filter(s => s.connection.id !== subscriber.connection.id),
+        subscriptions.filter(
+          (s) => s.connection.id !== subscriber.connection.id,
+        ),
       );
     }
   };
@@ -77,7 +81,7 @@ export class MemorySubscriptionManager implements ISubscriptionManager {
       this.subscriptions.set(
         event,
         subscribers.filter(
-          subscriber =>
+          (subscriber) =>
             subscriber.connection.id !== connectionId &&
             subscriber.operationId !== operationId,
         ),
@@ -91,7 +95,7 @@ export class MemorySubscriptionManager implements ISubscriptionManager {
         key,
         this.subscriptions
           .get(key)!
-          .filter(s => s.connection.id === connectionId),
+          .filter((s) => s.connection.id === connectionId),
       );
     }
 
