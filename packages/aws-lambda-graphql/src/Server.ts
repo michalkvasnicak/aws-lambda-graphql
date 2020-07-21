@@ -239,14 +239,6 @@ export class Server<
 
             return {
               body: '',
-              multiValueHeaders: event.multiValueHeaders?.[
-                'Sec-WebSocket-Protocol'
-              ]
-                ? {
-                    'Sec-WebSocket-Protocol':
-                      event.multiValueHeaders['Sec-WebSocket-Protocol'],
-                  }
-                : undefined,
               headers: event.headers?.['Sec-WebSocket-Protocol'].includes(
                 'graphql-ws',
               )

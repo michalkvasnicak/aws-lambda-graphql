@@ -227,37 +227,6 @@ describe('Server', () => {
         );
       });
 
-      it('passes provided Sec-WebSocket-Protocol multi header', async () => {
-        (connectionManager.registerConnection as jest.Mock).mockResolvedValueOnce(
-          {},
-        );
-
-        await expect(
-          handler(
-            {
-              multiValueHeaders: {
-                'Sec-WebSocket-Protocol': ['graphql-ws', 'graphql-ws1'],
-              },
-              requestContext: {
-                connectionId: '1',
-                domainName: 'domain',
-                routeKey: '$connect',
-                stage: 'stage',
-              } as any,
-            } as any,
-            {} as any,
-          ),
-        ).resolves.toEqual(
-          expect.objectContaining({
-            body: '',
-            multiValueHeaders: {
-              'Sec-WebSocket-Protocol': ['graphql-ws', 'graphql-ws1'],
-            },
-            statusCode: 200,
-          }),
-        );
-      });
-
       it('passes provided Sec-WebSocket-Protocol header', async () => {
         (connectionManager.registerConnection as jest.Mock).mockResolvedValueOnce(
           {},
