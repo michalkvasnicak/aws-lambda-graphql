@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## `aws-lambda-graphql`
 
-### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.10...HEAD)
+### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.11...HEAD)
+
+### [v1.0.0-alpha.11](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.10...aws-lambda-graphql@1.0.0-alpha.11) - 2020-07-21
+
+#### Fixed
+
+- Returning only single `graphql-ws` value in `Sec-WebSocket-Protocol` if header contains `graphql-ws`, see [#97](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/97).
 
 ### [v1.0.0-alpha.10](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.9...aws-lambda-graphql@1.0.0-alpha.10) - 2020-07-21
 

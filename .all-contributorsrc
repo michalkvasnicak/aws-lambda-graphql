@@ -108,6 +108,16 @@
         "code",
         "doc"
       ]
+    },
+    {
+      "login": "clmntrss",
+      "name": "Clement",
+      "avatar_url": "https://avatars0.githubusercontent.com/u/28146493?v=4",
+      "profile": "https://github.com/clmntrss",
+      "contributions": [
+        "bug",
+        "code"
+      ]
     }
   ],
   "commitConvention": "none"
