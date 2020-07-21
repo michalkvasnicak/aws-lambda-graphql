@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## `aws-lambda-graphql`
 
-### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.9...HEAD)
+### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.10...HEAD)
+
+### [v1.0.0-alpha.10](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.9...aws-lambda-graphql@1.0.0-alpha.10) - 2020-07-21
+
+#### Added
+
+- Added support for `Sec-WebSocket-Protocol` headers. Now the value is returned back to client, see [#94](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/94).
 
 ### [v1.0.0-alpha.9](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.8...aws-lambda-graphql@1.0.0-alpha.9) - 2020-07-06
 
