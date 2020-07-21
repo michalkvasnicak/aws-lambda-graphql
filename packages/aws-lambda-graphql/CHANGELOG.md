@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 1.0.0-alpha.11 (2020-07-21)
+
+- feat: remove multiple headers not support by websocket ([47cd86e](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/47cd86e))
+
 ## 1.0.0-alpha.10 (2020-07-21)
 
 - feat: pass Sec-WebSocket-Protocol headers during connect phase ([a1261fa](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/a1261fa))
