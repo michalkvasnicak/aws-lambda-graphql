@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 1.0.0-alpha.12 (2020-07-21)
+
+- fix: remove multiValueHeader not supported by WebSocket (#98) ([214a4bd](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/214a4bd)), closes [#98](https://github.com/michalkvasnicak/aws-lambda-graphql/issues/98)
+
 ## 1.0.0-alpha.11 (2020-07-21)
 
 - feat: remove multiple headers not support by websocket ([47cd86e](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/47cd86e))
