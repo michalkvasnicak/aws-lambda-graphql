@@ -247,10 +247,11 @@ export class Server<
                       event.multiValueHeaders['Sec-WebSocket-Protocol'],
                   }
                 : undefined,
-              headers: event.headers?.['Sec-WebSocket-Protocol']
+              headers: event.headers?.['Sec-WebSocket-Protocol'].includes(
+                'graphql-ws',
+              )
                 ? {
-                    'Sec-WebSocket-Protocol':
-                      event.headers['Sec-WebSocket-Protocol'],
+                    'Sec-WebSocket-Protocol': 'graphql-ws',
                   }
                 : undefined,
               statusCode: 200,
