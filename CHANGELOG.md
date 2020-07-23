@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## `aws-lambda-graphql`
 
-### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.12...HEAD)
+### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.13...HEAD)
+
+### [v1.0.0-alpha.13](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.12...aws-lambda-graphql@1.0.0-alpha.13) - 2020-07-23
+
+#### Fixed
+
+- Fixed `graphql-ws` protocol check, see [#101](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/101).
 
 ### [v1.0.0-alpha.12](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.11...aws-lambda-graphql@1.0.0-alpha.12) - 2020-07-21
 
