@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 1.0.0-alpha.13 (2020-07-23)
+
+- fix: check sec-websocket-protocol only if provided (#101) ([79f3c6c](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/79f3c6c)), closes [#101](https://github.com/michalkvasnicak/aws-lambda-graphql/issues/101)
+
 ## 1.0.0-alpha.12 (2020-07-21)
 
 - fix: remove multiValueHeader not supported by WebSocket (#98) ([214a4bd](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/214a4bd)), closes [#98](https://github.com/michalkvasnicak/aws-lambda-graphql/issues/98)
