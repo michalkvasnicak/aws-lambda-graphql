@@ -239,7 +239,7 @@ export class Server<
 
             return {
               body: '',
-              headers: event.headers?.['Sec-WebSocket-Protocol'].includes(
+              headers: event.headers?.['Sec-WebSocket-Protocol']?.includes(
                 'graphql-ws',
               )
                 ? {
