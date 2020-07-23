@@ -256,6 +256,27 @@ describe('Server', () => {
             statusCode: 200,
           }),
         );
+
+        await expect(
+          handler(
+            {
+              headers: {},
+              requestContext: {
+                connectionId: '1',
+                domainName: 'domain',
+                routeKey: '$connect',
+                stage: 'stage',
+              } as any,
+            } as any,
+            {} as any,
+          ),
+        ).resolves.toEqual(
+          expect.objectContaining({
+            body: '',
+            headers: undefined,
+            statusCode: 200,
+          }),
+        );
       });
     });
 
