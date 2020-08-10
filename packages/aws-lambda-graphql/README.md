@@ -48,7 +48,8 @@ All options from Apollo Lambda Server and
 - **onError** (`(err: any) => void`, `optional`) - use to log errors from websocket handler on unknown error
 - **subscriptionManager** (`ISubscriptionManager`, `required`)
 - **subscriptions** (`optional`)
-  - **`onConnect(messagePayload: object, connection: IConnection, event: APIGatewayWebSocketEvent, context: LambdaContext): Promise<boolean|object> | object | boolean`** (`optional`) - Return an object to set a context to your connection object saved in the database e.g. for saving authentication details
+  - **`onWebsocketConnect(connection: IConnection, event: APIGatewayWebSocketEvent, context: LambdaContext): Promise<boolean|object> | object | boolean`** (`optional`) - onWebsocketConnect is called when the Websocket connection is initialized ($connect route).  Return an object to set a context to your connection object saved in the database e.g. for saving authentication details. This is especially useful to get authentication details (API GW authorizers only run in $connect route)
+  - **`onConnect(messagePayload: object, connection: IConnection, event: APIGatewayWebSocketEvent, context: LambdaContext): Promise<boolean|object> | object | boolean`** (`optional`) - onConnect is called when the GraphQL connection is initialized (connection_init message). Return an object to set a context to your connection object saved in the database e.g. for saving authentication details. NOTE: This is not the websocket $connect route, see onWebsocketConnect for the $connect route.
   - **`onOperation(message: OperationRequest, params: ExecutionParams, connection: IConnection): Promise<ExecutionParams>|ExecutionParams`** (`optional`)
   - **`onOperationComplete(connection: IConnection, operationId: string): void`** (`optional`)
   - **`onDisconnect(connection: IConnection): void`** (`optional`)

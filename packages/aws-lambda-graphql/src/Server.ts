@@ -67,6 +67,27 @@ export interface ServerConfig<
       connection: IConnection,
       operationId: string,
     ) => void;
+  /**
+     * onWebsocketConnect is called when the Websocket connection is initialized ($connect route).
+     * Return an object to set a context to your connection object saved in the database e.g. for saving authentication details.
+     * This is especially useful to get authentication details (API GW authorizers only run in $connect route)
+     * 
+     */
+    onWebsocketConnect?: (
+      connection: IConnection,
+      event: APIGatewayWebSocketEvent,
+      context: LambdaContext,
+    ) =>
+      | Promise<boolean | { [key: string]: any }>
+      | boolean
+      | { [key: string]: any };
+    /**
+     * onConnect is called when the GraphQL connection is initialized (connection_init message).
+     * Return an object to set a context to your connection object saved in the database e.g. for saving authentication details.
+     * 
+     * NOTE: This is not the websocket $connect route, see onWebsocketConnect for the $connect route
+     *
+     */
     onConnect?: (
       messagePayload: { [key: string]: any } | undefined | null,
       connection: IConnection,
@@ -227,15 +248,64 @@ export class Server<
         // based on routeKey, do actions
         switch (event.requestContext.routeKey) {
           case '$connect': {
+            const {
+              onWebsocketConnect,
+            } = this.subscriptionOptions || {};
+
             // register connection
             // if error is thrown during registration, connection is rejected
             // we can implement some sort of authorization here
             const endpoint = extractEndpointFromEvent(event);
 
-            await this.connectionManager.registerConnection({
+            const connection = await this.connectionManager.registerConnection({
               endpoint,
               connectionId: event.requestContext.connectionId,
             });
+
+            let newConnectionContext = {}
+
+            if (onWebsocketConnect) {
+              try {
+                const result = await onWebsocketConnect(
+                  connection,
+                  event,
+                  lambdaContext,
+                );
+
+                if (result === false) {
+                  throw new Error('Prohibited connection!');
+                } else if (result !== null && typeof result === 'object') {
+                  newConnectionContext = result
+                }
+              } catch (err) {
+                const errorResponse = formatMessage({
+                  type: SERVER_EVENT_TYPES.GQL_ERROR,
+                  payload: { message: err.message },
+                });
+
+                await this.connectionManager.sendToConnection(
+                  connection,
+                  errorResponse,
+                );
+                await this.connectionManager.closeConnection(connection);
+
+                return {
+                  body: errorResponse,
+                  statusCode: 401,
+                };
+              }
+            }
+
+            // set connection context which will be available during graphql execution
+            const connectionData = {
+              ...connection.data,
+              context: newConnectionContext
+            };
+
+            await this.connectionManager.setConnectionData(
+              connectionData,
+              connection,
+            );
 
             return {
               body: '',
@@ -336,7 +406,7 @@ export class Server<
               // set connection context which will be available during graphql execution
               const connectionData = {
                 ...connection.data,
-                context: newConnectionContext,
+                context: {...connection.data.context, ...newConnectionContext},
                 isInitialized: true,
               };
 
