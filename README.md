@@ -4,7 +4,7 @@
 <!-- markdownlint-disable -->
 [![CircleCI](https://img.shields.io/circleci/project/github/michalkvasnicak/aws-lambda-graphql/master.svg?style=flat-square)](https://circleci.com/gh/michalkvasnicak/aws-lambda-graphql)
 [![aws-lambda-graphql package version](https://img.shields.io/npm/v/aws-lambda-graphql?color=green&label=aws-lambda-graphql&style=flat-square)](https://www.npmjs.com/package/aws-lambda-graphql)<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-10-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-11-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
@@ -544,6 +544,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/lepilepi"><img src="https://avatars0.githubusercontent.com/u/560085?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Lepi</b></sub></a><br /><a href="https://github.com/michalkvasnicak/aws-lambda-graphql/issues?q=author%3Alepilepi" title="Bug reports">🐛</a> <a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=lepilepi" title="Code">💻</a></td>
     <td align="center"><a href="https://github.com/IslamWahid"><img src="https://avatars0.githubusercontent.com/u/24783905?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Islam Salem</b></sub></a><br /><a href="https://github.com/michalkvasnicak/aws-lambda-graphql/issues?q=author%3AIslamWahid" title="Bug reports">🐛</a> <a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=IslamWahid" title="Code">💻</a> <a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=IslamWahid" title="Documentation">📖</a></td>
     <td align="center"><a href="https://github.com/clmntrss"><img src="https://avatars0.githubusercontent.com/u/28146493?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Clement</b></sub></a><br /><a href="https://github.com/michalkvasnicak/aws-lambda-graphql/issues?q=author%3Aclmntrss" title="Bug reports">🐛</a> <a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=clmntrss" title="Code">💻</a></td>
+    <td align="center"><a href="https://github.com/jcane86"><img src="https://avatars0.githubusercontent.com/u/729994?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Pepe Cane</b></sub></a><br /><a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=jcane86" title="Code">💻</a> <a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=jcane86" title="Documentation">📖</a> <a href="#ideas-jcane86" title="Ideas, Planning, & Feedback">🤔</a></td>
   </tr>
 </table>
 
