@@ -169,9 +169,10 @@ describe('Server', () => {
       it('recover from missing connection on quick succession of $connect and GQL_CONNECTION_INIT message on offline server', async () => {
         // Mock the connection database flow
         let connection;
-        (connectionManager.registerConnection as jest.Mock).mockImplementationOnce(
-          (c) => {
+        (connectionManager.registerConnection as jest.Mock).mockImplementation(
+          async (c) => {
             connection = c;
+            return connection;
           },
         );
         (connectionManager.hydrateConnection as jest.Mock).mockImplementationOnce(
@@ -228,7 +229,7 @@ describe('Server', () => {
       });
 
       it('passes provided Sec-WebSocket-Protocol header', async () => {
-        (connectionManager.registerConnection as jest.Mock).mockResolvedValueOnce(
+        (connectionManager.registerConnection as jest.Mock).mockResolvedValue(
           {},
         );
 

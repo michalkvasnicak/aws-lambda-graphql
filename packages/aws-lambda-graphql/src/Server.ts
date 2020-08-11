@@ -401,7 +401,7 @@ export class Server<
               const connectionData = {
                 ...connection.data,
                 context: {
-                  ...connection.data.context,
+                  ...connection.data?.context,
                   ...newConnectionContext,
                 },
                 isInitialized: true,
