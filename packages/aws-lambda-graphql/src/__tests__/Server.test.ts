@@ -166,6 +166,100 @@ describe('Server', () => {
         });
       });
 
+      it('calls onWebsocketConnect and sets return object as context', async () => {
+        (connectionManager.registerConnection as jest.Mock).mockResolvedValueOnce(
+          {},
+        );
+        const onWebsocketConnect = jest
+          .fn()
+          .mockResolvedValueOnce({ key: 'value1' });
+        const handlerWithOnWebsocketConnect = new Server({
+          connectionManager,
+          schema: createSchema(),
+          subscriptionManager,
+          subscriptions: {
+            onWebsocketConnect,
+          },
+        }).createWebSocketHandler();
+
+        (connectionManager.hydrateConnection as jest.Mock).mockResolvedValueOnce(
+          {},
+        );
+
+        const event = {
+          requestContext: {
+            connectionId: '1',
+            domainName: 'domain',
+            routeKey: '$connect',
+            stage: 'stage',
+          } as any,
+        } as any;
+        await handlerWithOnWebsocketConnect(event, {} as any);
+
+        expect(onWebsocketConnect).toHaveBeenCalledTimes(1);
+        expect(onWebsocketConnect).toHaveBeenCalledWith({}, event, {});
+
+        expect(connectionManager.setConnectionData).toHaveBeenCalledTimes(1);
+        expect(connectionManager.setConnectionData).toHaveBeenCalledWith(
+          {
+            context: { key: 'value1' },
+          },
+          {},
+        );
+      });
+
+      it('refuses connection when onWebsocketConnect returns false', async () => {
+        (connectionManager.registerConnection as jest.Mock).mockResolvedValueOnce(
+          {},
+        );
+        const onWebsocketConnect = jest.fn().mockResolvedValueOnce(false);
+        const handlerWithOnWebsocketConnect = new Server({
+          connectionManager,
+          schema: createSchema(),
+          subscriptionManager,
+          subscriptions: {
+            onWebsocketConnect,
+          },
+        }).createWebSocketHandler();
+
+        // @ts-ignore
+        const testEvent = {
+          requestContext: {
+            connectionId: '1',
+            domainName: 'domain',
+            routeKey: '$connect',
+            stage: 'stage',
+          } as any,
+        } as any;
+        const testContext = { testContextVariable: true } as any;
+
+        await expect(
+          handlerWithOnWebsocketConnect(testEvent, testContext),
+        ).resolves.toEqual(
+          expect.objectContaining({
+            body: formatMessage({
+              type: SERVER_EVENT_TYPES.GQL_ERROR,
+              payload: { message: 'Prohibited connection!' },
+            }),
+            statusCode: 401,
+          }),
+        );
+
+        expect(onWebsocketConnect).toHaveBeenCalledTimes(1);
+        expect(onWebsocketConnect).toHaveBeenCalledWith(
+          {},
+          testEvent,
+          testContext,
+        );
+
+        expect(connectionManager.setConnectionData).toHaveBeenCalledTimes(0);
+
+        expect(connectionManager.sendToConnection).toHaveBeenCalledTimes(0);
+
+        expect(connectionManager.unregisterConnection).toHaveBeenCalledTimes(1);
+        expect(connectionManager.unregisterConnection).toHaveBeenCalledWith({});
+      });
+
       it('recover from missing connection on quick succession of $connect and GQL_CONNECTION_INIT message on offline server', async () => {
         // Mock the connection database flow
         let connection;
