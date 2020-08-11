@@ -67,11 +67,11 @@ export interface ServerConfig<
       connection: IConnection,
       operationId: string,
     ) => void;
-  /**
+    /**
      * onWebsocketConnect is called when the Websocket connection is initialized ($connect route).
      * Return an object to set a context to your connection object saved in the database e.g. for saving authentication details.
      * This is especially useful to get authentication details (API GW authorizers only run in $connect route)
-     * 
+     *
      */
     onWebsocketConnect?: (
       connection: IConnection,
@@ -84,7 +84,7 @@ export interface ServerConfig<
     /**
      * onConnect is called when the GraphQL connection is initialized (connection_init message).
      * Return an object to set a context to your connection object saved in the database e.g. for saving authentication details.
-     * 
+     *
      * NOTE: This is not the websocket $connect route, see onWebsocketConnect for the $connect route
      *
      */
@@ -248,9 +248,7 @@ export class Server<
         // based on routeKey, do actions
         switch (event.requestContext.routeKey) {
           case '$connect': {
-            const {
-              onWebsocketConnect,
-            } = this.subscriptionOptions || {};
+            const { onWebsocketConnect } = this.subscriptionOptions || {};
 
             // register connection
             // if error is thrown during registration, connection is rejected
@@ -262,7 +260,7 @@ export class Server<
               connectionId: event.requestContext.connectionId,
             });
 
-            let newConnectionContext = {}
+            let newConnectionContext = {};
 
             if (onWebsocketConnect) {
               try {
@@ -275,7 +273,7 @@ export class Server<
                 if (result === false) {
                   throw new Error('Prohibited connection!');
                 } else if (result !== null && typeof result === 'object') {
-                  newConnectionContext = result
+                  newConnectionContext = result;
                 }
               } catch (err) {
                 const errorResponse = formatMessage({
@@ -295,7 +293,7 @@ export class Server<
             // set connection context which will be available during graphql execution
             const connectionData = {
               ...connection.data,
-              context: newConnectionContext
+              context: newConnectionContext,
             };
 
             await this.connectionManager.setConnectionData(
@@ -402,7 +400,10 @@ export class Server<
               // set connection context which will be available during graphql execution
               const connectionData = {
                 ...connection.data,
-                context: {...connection.data.context, ...newConnectionContext},
+                context: {
+                  ...connection.data.context,
+                  ...newConnectionContext,
+                },
                 isInitialized: true,
               };
 
