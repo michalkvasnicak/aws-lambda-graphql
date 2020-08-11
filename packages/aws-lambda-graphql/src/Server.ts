@@ -283,11 +283,7 @@ export class Server<
                   payload: { message: err.message },
                 });
 
-                await this.connectionManager.sendToConnection(
-                  connection,
-                  errorResponse,
-                );
-                await this.connectionManager.closeConnection(connection);
+                await this.connectionManager.unregisterConnection(connection);
 
                 return {
                   body: errorResponse,
