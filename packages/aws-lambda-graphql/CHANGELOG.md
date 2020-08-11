@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 1.0.0-alpha.14 (2020-08-11)
+
+- feat(tests): add tests for onWebsocketConnect ([e5f1246](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/e5f1246))
+- fix(test): fix existing tests ([b22dd7b](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/b22dd7b))
+- add onWebsocketConnect handler ([06d074f](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/06d074f))
+- prettier format ([bfb2e96](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/bfb2e96))
+- remove unnecessary responses ([397326c](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/397326c))
+
 ## 1.0.0-alpha.13 (2020-07-23)
 
 - fix: check sec-websocket-protocol only if provided (#101) ([79f3c6c](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/79f3c6c)), closes [#101](https://github.com/michalkvasnicak/aws-lambda-graphql/issues/101)
