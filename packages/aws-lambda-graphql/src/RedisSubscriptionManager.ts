@@ -1,3 +1,4 @@
+import assert from 'assert';
 import { Redis } from 'ioredis';
 import {
   IConnection,
@@ -55,6 +56,11 @@ export class RedisSubscriptionManager implements ISubscriptionManager {
   private redisClient: Redis;
 
   constructor({ redisClient }: RedisSubscriptionManagerOptions) {
+    assert.ok(
+      redisClient == null || typeof redisClient === 'object',
+      'Please provide redisClient as an instance of ioredis.Redis',
+    );
+
     this.redisClient = redisClient;
   }
 

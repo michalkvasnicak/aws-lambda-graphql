@@ -1,3 +1,4 @@
+import assert from 'assert';
 import { IEventStore, OperationRequest, SubcribeResolveFn } from './types';
 
 interface PubSubOptions {
@@ -17,6 +18,14 @@ export class PubSub {
   private serializeEventPayload: boolean;
 
   constructor({ eventStore, serializeEventPayload = true }: PubSubOptions) {
+    assert.ok(
+      eventStore && typeof eventStore === 'object',
+      'Please provide eventStore as an instance implementing IEventStore',
+    );
+    assert.ok(
+      typeof serializeEventPayload === 'boolean',
+      'Please provide serializeEventPayload as a boolean',
+    );
     this.eventStore = eventStore;
     this.serializeEventPayload = serializeEventPayload;
   }

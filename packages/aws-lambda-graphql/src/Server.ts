@@ -4,6 +4,7 @@ import {
   CreateHandlerOptions,
   GraphQLOptions,
 } from 'apollo-server-lambda';
+import assert from 'assert';
 import {
   APIGatewayProxyResult,
   APIGatewayProxyEvent,
@@ -161,6 +162,27 @@ export class Server<
               ...integrationContext,
             }),
     });
+
+    assert.ok(
+      connectionManager,
+      'Please provide connectionManager and ensure it implements IConnectionManager',
+    );
+    assert.ok(
+      eventProcessor,
+      'Please provide eventProcessor and ensure it implements IEventProcessor',
+    );
+    assert.ok(
+      subscriptionManager,
+      'Please provide subscriptionManager and ensure it implements ISubscriptionManager',
+    );
+    assert.ok(
+      typeof onError === 'function' || onError == null,
+      'onError must be a function',
+    );
+    assert.ok(
+      subscriptions == null || typeof subscriptions === 'object',
+      'Property subscriptions must be an object',
+    );
 
     this.connectionManager = connectionManager;
     this.eventProcessor = eventProcessor;

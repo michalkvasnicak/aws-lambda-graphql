@@ -1,3 +1,4 @@
+import assert from 'assert';
 import { ApiGatewayManagementApi } from 'aws-sdk';
 import { Redis } from 'ioredis';
 import { ConnectionNotFoundError } from './errors';
@@ -42,6 +43,19 @@ export class RedisConnectionManager implements IConnectionManager {
     redisClient,
     subscriptions,
   }: RedisConnectionManagerOptions) {
+    assert.ok(
+      typeof subscriptions === 'object',
+      'Please provide subscriptions to manage subscriptions.',
+    );
+    assert.ok(
+      redisClient == null || typeof redisClient === 'object',
+      'Please provide redisClient as an instance of ioredis.Redis',
+    );
+    assert.ok(
+      apiGatewayManager == null || typeof apiGatewayManager === 'object',
+      'Please provide apiGatewayManager as an instance of ApiGatewayManagementApi',
+    );
+
     this.apiGatewayManager = apiGatewayManager;
     this.redisClient = redisClient;
     this.subscriptions = subscriptions;

@@ -1,3 +1,4 @@
+import assert from 'assert';
 import { DynamoDB } from 'aws-sdk';
 import {
   IConnection,
@@ -78,6 +79,23 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
     subscriptionOperationsTableName = 'SubscriptionOperations',
     ttl = DEFAULT_TTL,
   }: DynamoDBSubscriptionManagerOptions = {}) {
+    assert.ok(
+      typeof subscriptionOperationsTableName === 'string',
+      'Please provide subscriptionOperationsTableName as a string',
+    );
+    assert.ok(
+      typeof subscriptionsTableName === 'string',
+      'Please provide subscriptionsTableName as a string',
+    );
+    assert.ok(
+      ttl === false || (typeof ttl === 'number' && ttl > 0),
+      'Please provide ttl as a number greater than 0 or false to turn it off',
+    );
+    assert.ok(
+      dynamoDbClient == null || typeof dynamoDbClient === 'object',
+      'Please provide dynamoDbClient as an instance of DynamoDB.DocumentClient',
+    );
+
     this.subscriptionsTableName = subscriptionsTableName;
     this.subscriptionOperationsTableName = subscriptionOperationsTableName;
     this.db = dynamoDbClient || new DynamoDB.DocumentClient();
