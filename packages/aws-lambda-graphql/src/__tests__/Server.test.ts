@@ -10,11 +10,13 @@ import {
 import { formatMessage } from '../formatMessage';
 import { SERVER_EVENT_TYPES, CLIENT_EVENT_TYPES } from '../protocol';
 import { ConnectionNotFoundError } from '../errors';
+import { MemoryEventProcessor } from '../MemoryEventProcessor';
 
 describe('Server', () => {
   describe('createHttpHandler()', () => {
     const server = new Server({
       connectionManager: {} as any,
+      eventProcessor: new MemoryEventProcessor(),
       schema: createSchema(),
       subscriptionManager: {} as any,
     });
@@ -101,6 +103,7 @@ describe('Server', () => {
     describe('connect phase', () => {
       const server = new Server({
         connectionManager,
+        eventProcessor: new MemoryEventProcessor(),
         schema: createSchema(),
         subscriptionManager,
       });
@@ -175,6 +178,7 @@ describe('Server', () => {
           .mockResolvedValueOnce({ key: 'value1' });
         const handlerWithOnWebsocketConnect = new Server({
           connectionManager,
+          eventProcessor: new MemoryEventProcessor(),
           schema: createSchema(),
           subscriptionManager,
           subscriptions: {
@@ -215,6 +219,7 @@ describe('Server', () => {
         const onWebsocketConnect = jest.fn().mockResolvedValueOnce(false);
         const handlerWithOnWebsocketConnect = new Server({
           connectionManager,
+          eventProcessor: new MemoryEventProcessor(),
           schema: createSchema(),
           subscriptionManager,
           subscriptions: {
@@ -378,6 +383,7 @@ describe('Server', () => {
     describe('disconnect phase', () => {
       const server = new Server({
         connectionManager,
+        eventProcessor: new MemoryEventProcessor(),
         schema: createSchema(),
         subscriptionManager,
       });
@@ -418,6 +424,7 @@ describe('Server', () => {
         const onDisconnect = jest.fn();
         const handlerWithOnDisconnect = new Server({
           connectionManager,
+          eventProcessor: new MemoryEventProcessor(),
           schema: createSchema(),
           subscriptionManager,
           subscriptions: {
@@ -454,6 +461,7 @@ describe('Server', () => {
     describe('message phase', () => {
       const server = new Server({
         connectionManager,
+        eventProcessor: new MemoryEventProcessor(),
         schema: createSchema(),
         subscriptionManager,
       });
@@ -544,6 +552,7 @@ describe('Server', () => {
         const onConnect = jest.fn().mockResolvedValueOnce({ key: 'value1' });
         const handlerWithOnConnect = new Server({
           connectionManager,
+          eventProcessor: new MemoryEventProcessor(),
           schema: createSchema(),
           subscriptionManager,
           subscriptions: {
@@ -591,6 +600,7 @@ describe('Server', () => {
         const contextBuilder = jest.fn();
         const handlerWithContext = new Server({
           connectionManager,
+          eventProcessor: new MemoryEventProcessor(),
           context: contextBuilder,
           schema: createSchema(),
           subscriptionManager,
@@ -642,6 +652,7 @@ describe('Server', () => {
         const onConnect = jest.fn().mockResolvedValueOnce(false);
         const handlerWithOnConnect = new Server({
           connectionManager,
+          eventProcessor: new MemoryEventProcessor(),
           schema: createSchema(),
           subscriptionManager,
           subscriptions: {
@@ -701,6 +712,7 @@ describe('Server', () => {
       it('returns http 401 on not initialized connection operation', async () => {
         const handlerWithTimeout = new Server({
           connectionManager,
+          eventProcessor: new MemoryEventProcessor(),
           schema: createSchema(),
           subscriptionManager,
           subscriptions: {
@@ -759,6 +771,7 @@ describe('Server', () => {
         const onOperationComplete = jest.fn();
         const handlerWithOnOperationComplete = new Server({
           connectionManager,
+          eventProcessor: new MemoryEventProcessor(),
           schema: createSchema(),
           subscriptionManager,
           subscriptions: {
@@ -883,6 +896,7 @@ describe('Server', () => {
         }));
         const handlerWithOnOperation = new Server({
           connectionManager,
+          eventProcessor: new MemoryEventProcessor(),
           schema: createSchema(),
           subscriptionManager,
           subscriptions: {
@@ -941,6 +955,7 @@ describe('Server', () => {
         const onOperationComplete = jest.fn();
         const handlerWithOnOperation = new Server({
           connectionManager,
+          eventProcessor: new MemoryEventProcessor(),
           schema: createSchema(),
           subscriptionManager,
           subscriptions: {

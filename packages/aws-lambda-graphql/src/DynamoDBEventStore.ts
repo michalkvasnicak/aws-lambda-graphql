@@ -1,3 +1,4 @@
+import assert from 'assert';
 import { DynamoDB } from 'aws-sdk';
 import { ulid } from 'ulid';
 import { IEventStore, ISubscriptionEvent } from './types';
@@ -50,6 +51,19 @@ export class DynamoDBEventStore implements IEventStore {
     eventsTable = 'Events',
     ttl = DEFAULT_TTL,
   }: DynamoDBEventStoreOptions = {}) {
+    assert.ok(
+      ttl === false || (typeof ttl === 'number' && ttl > 0),
+      'Please provide ttl as a number greater than 0 or false to turn it off',
+    );
+    assert.ok(
+      dynamoDbClient == null || typeof dynamoDbClient === 'object',
+      'Please provide dynamoDbClient as an instance of DynamoDB.DocumentClient',
+    );
+    assert.ok(
+      typeof eventsTable === 'string',
+      'Please provide eventsTable as a string',
+    );
+
     this.db = dynamoDbClient || new DynamoDB.DocumentClient();
     this.tableName = eventsTable;
     this.ttl = ttl;

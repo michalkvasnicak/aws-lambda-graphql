@@ -1,3 +1,4 @@
+import assert from 'assert';
 import { ApiGatewayManagementApi, DynamoDB } from 'aws-sdk';
 import { ConnectionNotFoundError } from './errors';
 import {
@@ -69,6 +70,27 @@ export class DynamoDBConnectionManager implements IConnectionManager {
     subscriptions,
     ttl = DEFAULT_TTL,
   }: DynamoDBConnectionManagerOptions) {
+    assert.ok(
+      typeof connectionsTable === 'string',
+      'Please provide connectionsTable as a string',
+    );
+    assert.ok(
+      typeof subscriptions === 'object',
+      'Please provide subscriptions to manage subscriptions.',
+    );
+    assert.ok(
+      ttl === false || (typeof ttl === 'number' && ttl > 0),
+      'Please provide ttl as a number greater than 0 or false to turn it off',
+    );
+    assert.ok(
+      dynamoDbClient == null || typeof dynamoDbClient === 'object',
+      'Please provide dynamoDbClient as an instance of DynamoDB.DocumentClient',
+    );
+    assert.ok(
+      apiGatewayManager == null || typeof apiGatewayManager === 'object',
+      'Please provide apiGatewayManager as an instance of ApiGatewayManagementApi',
+    );
+
     this.apiGatewayManager = apiGatewayManager;
     this.connectionsTable = connectionsTable;
     this.db = dynamoDbClient || new DynamoDB.DocumentClient();
