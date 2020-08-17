@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 1.0.0-alpha.15 (2020-08-17)
+
+- feat: validate constructor options ([47cd7fe](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/47cd7fe))
+
 ## 1.0.0-alpha.14 (2020-08-11)
 
 - feat(tests): add tests for onWebsocketConnect ([e5f1246](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/e5f1246))
