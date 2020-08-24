@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 1.0.0-alpha.16 (2020-08-24)
+
+- feat: added `connectionEndpoint` parameter to `subscriptionOptions` ([54b59fc](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/54b59fc))
+
 ## 1.0.0-alpha.15 (2020-08-17)
 
 - feat: validate constructor options ([47cd7fe](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/47cd7fe))
