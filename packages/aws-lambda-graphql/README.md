@@ -56,6 +56,7 @@ All options from Apollo Lambda Server and
   - **waitForInitialization** (`optional`) - if connection is not initialised on GraphQL operation, wait for connection to be initialised or throw prohibited connection error. If `onConnect` is specified then we wait for initialisation otherwise we don't wait. (this is usefull if you're performing authentication in `onConnect`).
     - **retryCount** (`number`, `optional`, `default 10`) - how many times should we try to check the connection state?
     - **timeout** (`number`, `optional`, `default 50ms`) - how long should we wait (in milliseconds) until we try to check the connection state again?
+  - **connectionEndpoint** (`string`, `optional`) - if specified, the connection endpoint will be registered with this value as opposed to extracted from the event payload (as `${domainName}/${stage}`)
 
 #### `createHttpHandler()`
 

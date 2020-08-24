@@ -212,6 +212,49 @@ describe('Server', () => {
         );
       });
 
+      it('registers connection with the endpoint value of connectionEndpoint option', async () => {
+        (connectionManager.registerConnection as jest.Mock).mockResolvedValueOnce(
+          {},
+        );
+        (connectionManager.setConnectionData as jest.Mock).mockResolvedValueOnce(
+          {},
+        );
+        const handlerWithConnectionEndpoint = new Server({
+          connectionManager,
+          eventProcessor: new MemoryEventProcessor(),
+          schema: createSchema(),
+          subscriptionManager,
+          subscriptions: {
+            connectionEndpoint: 'customdomain',
+          },
+        }).createWebSocketHandler();
+
+        await expect(
+          handlerWithConnectionEndpoint(
+            {
+              requestContext: {
+                connectionId: '1',
+                domainName: 'domain',
+                routeKey: '$connect',
+                stage: 'stage',
+              } as any,
+            } as any,
+            {} as any,
+          ),
+        ).resolves.toEqual(
+          expect.objectContaining({
+            body: '',
+            statusCode: 200,
+          }),
+        );
+
+        expect(connectionManager.registerConnection).toHaveBeenCalledTimes(1);
+        expect(connectionManager.registerConnection).toHaveBeenCalledWith({
+          endpoint: 'customdomain',
+          connectionId: '1',
+        });
+      });
+
       it('refuses connection when onWebsocketConnect returns false', async () => {
         (connectionManager.registerConnection as jest.Mock).mockResolvedValueOnce(
           {},

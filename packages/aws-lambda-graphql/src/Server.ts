@@ -118,6 +118,12 @@ export interface ServerConfig<
        */
       timeout?: number;
     };
+
+    /**
+     * If specified, the connection endpoint will be registered with this value as opposed to extracted from the event payload
+     *
+     */
+    connectionEndpoint?: string;
   };
 }
 
@@ -270,12 +276,14 @@ export class Server<
         // based on routeKey, do actions
         switch (event.requestContext.routeKey) {
           case '$connect': {
-            const { onWebsocketConnect } = this.subscriptionOptions || {};
+            const { onWebsocketConnect, connectionEndpoint } =
+              this.subscriptionOptions || {};
 
             // register connection
             // if error is thrown during registration, connection is rejected
             // we can implement some sort of authorization here
-            const endpoint = extractEndpointFromEvent(event);
+            const endpoint =
+              connectionEndpoint || extractEndpointFromEvent(event);
 
             const connection = await this.connectionManager.registerConnection({
               endpoint,
