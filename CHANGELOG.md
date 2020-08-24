@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## `aws-lambda-graphql`
 
-### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.15...HEAD)
+### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.16...HEAD)
+
+### [v1.0.0-alpha.16](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.15..aws-lambda-graphql@1.0.0-alpha.16) - 2020-08-24
+
+#### Added
+
+- Added `connectionEndpoint` option to `subscriptionOptions` so it's possible to use API Gateway Custom Domains by [@n1te1337](https://github.com/n1te1337), see [#113](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/113)
 
 ### [v1.0.0-alpha.15](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.14..aws-lambda-graphql@1.0.0-alpha.15) - 2020-08-17
 

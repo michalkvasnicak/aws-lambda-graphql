@@ -129,6 +129,17 @@
         "doc",
         "ideas"
       ]
+    },
+    {
+      "login": "n1te1337",
+      "name": "Pav",
+      "avatar_url": "https://avatars3.githubusercontent.com/u/1946858?v=4",
+      "profile": "https://github.com/n1te1337",
+      "contributions": [
+        "code",
+        "doc",
+        "test"
+      ]
     }
   ],
   "commitConvention": "none"
