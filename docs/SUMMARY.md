@@ -3,7 +3,7 @@
 ## Getting Started
 
 - [Installation](./getting-started/00-installation.md)
-- [First service](./getting-started/01-first-server.md)
+- [First service](./getting-started/01-first-service.md)
 - [Connection and subscription management](./getting-started/02-connection-and-subscription-management.md)
 - [Event store](./getting-started/03-event-store.md)
 - [GraphQL Schema](./getting-started/04-graphql-schema.md)
