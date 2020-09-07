@@ -1,31 +1,21 @@
 ---
-title: Quick start
-description: How to quickly start using Serverless GraphQL subscriptions in your project.
+title: Event handlers
+description: How to expose AWS Lambda handlers for our real-time GraphQL service.
 ---
 
-# Quick start
+# Event handlers
 
-## Installation
+AWS Lambda needs a handler, function that processes an event received by our lambda function. Event handlers are exposed from [Server](../api/Server.md) by calling the create methods for HTTP, WebSocket or event processing handlers.
 
-```console
-yarn add aws-lambda-graphql graphql graphql-subscriptions aws-sdk
-# or
-npm install aws-lambda-graphql graphql graphql-subscriptions aws-sdk
-```
+## Put together
 
-{% hint style="info" %}
-Note that `aws-sdk` is required only for local development, it's available in AWS Lambda environment by default when you deploy the app.
-{% endhint %}
+We have functioning GraphQL schema with resolvers for `broadcastMessage` GraphQL mutation and `messageBroadcast` GraphQL subscription. We need to create a server that glues together all the pieces we created along our journey and exposes handlers:
 
-## First application (broadcasting server)
+- `handleWebSocket` for `AWS API Gateway v2` events
+- `handleHTTP` for `AWS API Gateway v1` events
+- `handeEvents` for `DynamoDB Streams` events
 
-In this quick example we're going to build simple message broadcasting server that broadcasts messages received by `broadcastMessage` mutation to all subscribed clients.
-
-### Complete code
-
-First see the complete code. If you're interested in explanation continue reading below.
-
-```ts
+```js
 import {
   DynamoDBConnectionManager,
   DynamoDBEventProcessor,
@@ -45,22 +35,19 @@ const pubSub = new PubSub({ eventStore });
 
 const typeDefs = /* GraphQL */ `
   type Mutation {
-    """
-    Sends a message to all subscribed clients
-    """
-    broadcastMessage(message: String!): String!
-  }
+      broadcastMessage(message: String!): String!
+    }
 
-  type Query {
-    """
-    Dummy query so out server won't fail during instantiation
-    """
-    dummy: String!
-  }
+    type Query {
+      """
+      Dummy query so out server won't fail during instantiation
+      """
+      dummy: String!
+    }
 
-  type Subscription {
-    messageBroadcast: String!
-  }
+    type Subscription {
+      messageBroadcast: String!
+    }
 `;
 
 const resolvers: {
@@ -104,8 +91,4 @@ export const handleHTTP = server.createHttpHandler();
 export const handleEvents = server.createEventHandler();
 ```
 
-{% hint style="info" %}
-Exported handlers need to be mapped to their event sources. `handleWebSocket` needs to be mapped to `API Gateway v2` event source, `handleHTTP` to `API Gateway v1` event source and `handleEvents` to `DynamoDB Stream` event source.
-
-See [serverless.yml](./serverless.yml) template to see how to setup event sources.
-{% endhint %}
+Our server is finished 🎉. In next section we'll deploy our service.
