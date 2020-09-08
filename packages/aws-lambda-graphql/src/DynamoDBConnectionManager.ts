@@ -45,6 +45,11 @@ interface DynamoDBConnectionManagerOptions {
    * Set to false to turn off TTL
    */
   ttl?: number | false;
+
+  /**
+   * Enable console.log
+   */
+  debug?: boolean;
 }
 
 /**
@@ -63,12 +68,15 @@ export class DynamoDBConnectionManager implements IConnectionManager {
 
   private ttl: number | false;
 
+  private debug: boolean;
+
   constructor({
     apiGatewayManager,
     connectionsTable = 'Connections',
     dynamoDbClient,
     subscriptions,
     ttl = DEFAULT_TTL,
+    debug = false,
   }: DynamoDBConnectionManagerOptions) {
     assert.ok(
       typeof connectionsTable === 'string',
@@ -90,12 +98,14 @@ export class DynamoDBConnectionManager implements IConnectionManager {
       apiGatewayManager == null || typeof apiGatewayManager === 'object',
       'Please provide apiGatewayManager as an instance of ApiGatewayManagementApi',
     );
+    assert.ok(typeof debug === 'boolean', 'Please provide debug as a boolean');
 
     this.apiGatewayManager = apiGatewayManager;
     this.connectionsTable = connectionsTable;
     this.db = dynamoDbClient || new DynamoDB.DocumentClient();
     this.subscriptions = subscriptions;
     this.ttl = ttl;
+    this.debug = debug;
   }
 
   hydrateConnection = async (
@@ -162,7 +172,7 @@ export class DynamoDBConnectionManager implements IConnectionManager {
       id: connectionId,
       data: { endpoint, context: {}, isInitialized: false },
     };
-
+    if (this.debug) console.log(`Connected ${connection.id}`, connection.data);
     await this.db
       .put({
         TableName: this.connectionsTable,
@@ -216,6 +226,7 @@ export class DynamoDBConnectionManager implements IConnectionManager {
   };
 
   closeConnection = async ({ id, data }: DynamoDBConnection): Promise<void> => {
+    if (this.debug) console.log('Disconnected ', id);
     await this.createApiGatewayManager(data.endpoint)
       .deleteConnection({ ConnectionId: id })
       .promise();
