@@ -77,6 +77,7 @@ AWS Lambda DynamoDB stream handler. DynamoDBEventProcessor is used internally by
 #### Options (`optional`)
 
 - **onError** (`(err: any) => void`, `optional`)
+- **debug** (`boolean, default: false`) - optional debug mode to add logs in Cloudwatch
 
 ### `DynamoDBConnectionManager: IConnectionManager`
 
@@ -91,6 +92,7 @@ Each connection is stored as [`IConnection` object](#iconnection).
 - **ttl** (`number`, `optional`, `default: 2 hours`)
   - optional TTL for connections set in seconds
   - the value is stored as `ttl` field on the row (you are responsible for enabling TTL on given field)
+- **debug** (`boolean,optional,default: false`) - optional debug mode to add logs in Cloudwatch
 
 ### `DynamoDBEventStore: IEventStore`
 
@@ -155,6 +157,8 @@ PubSub implementation that publishes events / subscribes to events using underly
 #### Options
 
 - **eventStore: IEventStore** - event store used to publish events / subscribe to events
+- **serializeEventPayload** (`boolean, default: true`) - Serialize event payload to JSON
+- **debug** (`boolean, default: false`) - optional debug mode to add logs in Cloudwatch
 
 ## Examples
 

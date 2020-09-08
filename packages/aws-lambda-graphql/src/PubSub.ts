@@ -10,6 +10,10 @@ interface PubSubOptions {
    * Serialize event payload to JSON, default is true.
    */
   serializeEventPayload?: boolean;
+  /**
+   * Enable console.log
+   */
+  debug?: boolean;
 }
 
 export class PubSub {
@@ -17,7 +21,13 @@ export class PubSub {
 
   private serializeEventPayload: boolean;
 
-  constructor({ eventStore, serializeEventPayload = true }: PubSubOptions) {
+  private debug: boolean;
+
+  constructor({
+    eventStore,
+    serializeEventPayload = true,
+    debug = false,
+  }: PubSubOptions) {
     assert.ok(
       eventStore && typeof eventStore === 'object',
       'Please provide eventStore as an instance implementing IEventStore',
@@ -26,8 +36,10 @@ export class PubSub {
       typeof serializeEventPayload === 'boolean',
       'Please provide serializeEventPayload as a boolean',
     );
+    assert.ok(typeof debug === 'boolean', 'Please provide debug as a boolean');
     this.eventStore = eventStore;
     this.serializeEventPayload = serializeEventPayload;
+    this.debug = debug;
   }
 
   subscribe = (eventNames: string | string[]): SubcribeResolveFn => {
@@ -58,6 +70,8 @@ export class PubSub {
           // this is called only on subscription so operationId should be filled
           operation as OperationRequest & { operationId: string },
         );
+        if (this.debug)
+          console.log('Create subscription', names, connection, operation);
       }
 
       return pubSub.asyncIterator(names) as AsyncIterable<any> &
