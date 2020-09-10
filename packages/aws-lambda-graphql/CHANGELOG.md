@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 1.0.0-alpha.17 (2020-09-10)
+
+- feat: add debug mode to console.log some events ([d382cde](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/d382cde))
+
 ## 1.0.0-alpha.16 (2020-08-24)
 
 - feat: added `connectionEndpoint` parameter to `subscriptionOptions` ([54b59fc](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/54b59fc))
