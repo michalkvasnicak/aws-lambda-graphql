@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## `aws-lambda-graphql`
 
-### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.16...HEAD)
+### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.17...HEAD)
+
+### [v1.0.0-alpha.17](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.16..aws-lambda-graphql@1.0.0-alpha.17) - 2020-09-10
+
+#### Added
+
+- Added debug mode to `PubSub, DynamoDBConnectionManager,DynamoDBEventProcessor` by [@clmntrss](https://github.com/clmntrss), see [#117](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/117)
 
 ### [v1.0.0-alpha.16](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.15..aws-lambda-graphql@1.0.0-alpha.16) - 2020-08-24
 
