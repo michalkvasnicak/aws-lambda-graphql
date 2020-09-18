@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 1.0.0-alpha.18 (2020-09-18)
+
+- fix: correctly paginate through subscriptions ([ad76624](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/ad76624))
+
 ## 1.0.0-alpha.17 (2020-09-10)
 
 - feat: add debug mode to console.log some events ([d382cde](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/d382cde))
