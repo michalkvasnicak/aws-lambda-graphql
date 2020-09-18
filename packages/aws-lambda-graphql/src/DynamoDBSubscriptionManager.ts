@@ -142,7 +142,7 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
         // need to load data from connections table
         const value = result.Items as DynamoDBSubscriber[];
 
-        return { value, done: value.length === 0 };
+        return { value, done: done && value.length === 0 };
       },
       [Symbol.asyncIterator]() {
         return this;
@@ -291,26 +291,31 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
         })
         .promise();
 
-      if (Items == null || !Items.length) {
+      if (Items == null || (LastEvaluatedKey == null && Items.length === 0)) {
         return;
       }
 
-      await this.db
-        .batchWrite({
-          RequestItems: {
-            [this.subscriptionsTableName]: Items.map((item) => ({
-              DeleteRequest: {
-                Key: { event: item.event, subscriptionId: item.subscriptionId },
-              },
-            })),
-            [this.subscriptionOperationsTableName]: Items.map((item) => ({
-              DeleteRequest: {
-                Key: { subscriptionId: item.subscriptionId },
-              },
-            })),
-          },
-        })
-        .promise();
+      if (Items.length > 0) {
+        await this.db
+          .batchWrite({
+            RequestItems: {
+              [this.subscriptionsTableName]: Items.map((item) => ({
+                DeleteRequest: {
+                  Key: {
+                    event: item.event,
+                    subscriptionId: item.subscriptionId,
+                  },
+                },
+              })),
+              [this.subscriptionOperationsTableName]: Items.map((item) => ({
+                DeleteRequest: {
+                  Key: { subscriptionId: item.subscriptionId },
+                },
+              })),
+            },
+          })
+          .promise();
+      }
 
       cursor = LastEvaluatedKey;
     } while (cursor);
