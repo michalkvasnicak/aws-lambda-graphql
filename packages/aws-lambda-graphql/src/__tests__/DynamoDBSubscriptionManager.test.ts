@@ -38,9 +38,10 @@ describe('DynamoDBSubscriptionManager', () => {
       let pages = 0;
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      for await (const page of subscriptionManager.subscribersByEvent(
-        { event: 'test', payload: {} },
-      )) {
+      for await (const page of subscriptionManager.subscribersByEvent({
+        event: 'test',
+        payload: {},
+      })) {
         pages++;
       }
 
@@ -68,9 +69,10 @@ describe('DynamoDBSubscriptionManager', () => {
       let pages = 0;
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      for await (const page of subscriptionManager.subscribersByEvent(
-        { event: 'test', payload: {} },
-      )) {
+      for await (const page of subscriptionManager.subscribersByEvent({
+        event: 'test',
+        payload: {},
+      })) {
         pages++;
       }
 
