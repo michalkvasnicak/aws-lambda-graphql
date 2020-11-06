@@ -120,6 +120,10 @@ Stores subscription operations to a subscription operations table as `subscripti
 - **ttl** (`number`, `optional`, `default: 2 hours`)
   - optional TTL for subscriptions and subscriptionOperations set in seconds
   - the value is stored as `ttl` field on the row (you are responsible for enabling TTL on given field)
+- **getSubscriptionNameFromEvent** (`function`, `optional`, `default: '(event: ISubscriptionEvent) => event.event'`)
+  - Get the subscription name from the event
+- **getSubscriptionNameFromConnection** (`function`, `optional`, `default: '(name: string, connection: IConnection) => name'`)
+  - Get the subscription name from the subscription connection
 
 ### `IConnection`
 

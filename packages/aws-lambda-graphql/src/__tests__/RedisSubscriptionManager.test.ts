@@ -26,9 +26,10 @@ describe('RedisSubscriptionManager', () => {
       let pages = 0;
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      for await (const page of subscriptionManager.subscribersByEventName(
-        'test',
-      )) {
+      for await (const page of subscriptionManager.subscribersByEvent({
+        event: 'test',
+        payload: '',
+      })) {
         pages++;
       }
 
@@ -50,9 +51,10 @@ describe('RedisSubscriptionManager', () => {
       let pages = 0;
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      for await (const page of subscriptionManager.subscribersByEventName(
-        'test',
-      )) {
+      for await (const page of subscriptionManager.subscribersByEvent({
+        event: 'test',
+        payload: '',
+      })) {
         pages++;
       }
 
