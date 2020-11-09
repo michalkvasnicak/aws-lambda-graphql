@@ -1,7 +1,6 @@
 import { createAsyncIterator } from 'iterall';
 import {
   IConnection,
-  IdentifiedOperationRequest,
   ISubscriber,
   ISubscriptionEvent,
   ISubscriptionManager,
