@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 1.0.0-alpha.19 (2020-11-13)
+
+- Allow changing subscription name (#123) ([211ace8](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/211ace8)), closes [#123](https://github.com/michalkvasnicak/aws-lambda-graphql/issues/123)
+
 ## 1.0.0-alpha.18 (2020-09-18)
 
 - fix: correctly paginate through subscriptions ([ad76624](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/ad76624))
