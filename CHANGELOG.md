@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## `aws-lambda-graphql`
 
-### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.18...HEAD)
+### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.19...HEAD)
+
+### [v1.0.0-alpha.19](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.18..aws-lambda-graphql@1.0.0-alpha.19) - 2020-11-13
+
+- Added new options `getSubscriptionNameFromEvent`, `getSubscriptionNameFromConnection` to Subscription managers to extract event name from event and connection by [@seanchambo], see [#123](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/123)
 
 ### [v1.0.0-alpha.18](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.17..aws-lambda-graphql@1.0.0-alpha.18) - 2020-09-18
 
