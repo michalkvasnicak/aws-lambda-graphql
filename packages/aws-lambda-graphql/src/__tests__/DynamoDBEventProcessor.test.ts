@@ -23,7 +23,7 @@ describe('DynamoDBEventProcessor', () => {
       sendToConnection: jest.fn(),
     };
     const subscriptionManager = {
-      subscribersByEventName: jest.fn(() => ({
+      subscribersByEvent: jest.fn(() => ({
         [$$asyncIterator]: () =>
           createAsyncIterator([
             [
@@ -149,7 +149,7 @@ describe('DynamoDBEventProcessor', () => {
       sendToConnection: jest.fn(),
     };
     const subscriptionManager = {
-      subscribersByEventName: jest.fn(() => ({
+      subscribersByEvent: jest.fn(() => ({
         [$$asyncIterator]: () =>
           createAsyncIterator([
             [
@@ -279,7 +279,7 @@ describe('DynamoDBEventProcessor', () => {
       sendToConnection: jest.fn(),
     };
     const subscriptionManager = {
-      subscribersByEventName: jest.fn(() => ({
+      subscribersByEvent: jest.fn(() => ({
         [$$asyncIterator]: () =>
           createAsyncIterator([
             [
@@ -333,7 +333,7 @@ describe('DynamoDBEventProcessor', () => {
       sendToConnection: jest.fn(),
     };
     const subscriptionManager = {
-      subscribersByEventName: jest.fn(() => ({
+      subscribersByEvent: jest.fn(() => ({
         [$$asyncIterator]: () =>
           createAsyncIterator([
             [

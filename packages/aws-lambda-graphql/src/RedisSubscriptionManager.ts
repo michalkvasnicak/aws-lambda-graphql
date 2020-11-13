@@ -6,6 +6,7 @@ import {
   ISubscriptionManager,
   IdentifiedOperationRequest,
   OperationRequest,
+  ISubscriptionEvent,
 } from './types';
 import { prefixRedisKey } from './helpers';
 
@@ -19,6 +20,25 @@ interface RedisSubscriptionManagerOptions {
    * IORedis client instance
    */
   redisClient: Redis;
+  /**
+   * Optional function that can get subscription name from event
+   *
+   * Default is (event: ISubscriptionEvent) => event.event
+   *
+   * Useful for multi-tenancy
+   */
+  getSubscriptionNameFromEvent?: (event: ISubscriptionEvent) => string;
+  /**
+   * Optional function that can get subscription name from subscription connection
+   *
+   * Default is (name: string, connection: IConnection) => name
+   *
+   * Useful for multi-tenancy
+   */
+  getSubscriptionNameFromConnection?: (
+    name: string,
+    connection: IConnection,
+  ) => string;
 }
 
 interface RedisSubscriber {
@@ -55,19 +75,33 @@ interface RedisSubscriber {
 export class RedisSubscriptionManager implements ISubscriptionManager {
   private redisClient: Redis;
 
-  constructor({ redisClient }: RedisSubscriptionManagerOptions) {
+  private getSubscriptionNameFromEvent: (event: ISubscriptionEvent) => string;
+
+  private getSubscriptionNameFromConnection: (
+    name: string,
+    connection: IConnection,
+  ) => string;
+
+  constructor({
+    redisClient,
+    getSubscriptionNameFromEvent = (event) => event.event,
+    getSubscriptionNameFromConnection = (name) => name,
+  }: RedisSubscriptionManagerOptions) {
     assert.ok(
       redisClient == null || typeof redisClient === 'object',
       'Please provide redisClient as an instance of ioredis.Redis',
     );
 
     this.redisClient = redisClient;
+    this.getSubscriptionNameFromEvent = getSubscriptionNameFromEvent;
+    this.getSubscriptionNameFromConnection = getSubscriptionNameFromConnection;
   }
 
-  subscribersByEventName = (
-    name: string,
+  subscribersByEvent = (
+    event: ISubscriptionEvent,
   ): AsyncIterable<ISubscriber[]> & AsyncIterator<ISubscriber[]> => {
     let offset = 0;
+    const name = this.getSubscriptionNameFromEvent(event);
 
     return {
       next: async () => {
@@ -107,7 +141,8 @@ export class RedisSubscriptionManager implements ISubscriptionManager {
     if (names.length !== 1) {
       throw new Error('Only one active operation per event name is allowed');
     }
-    const [eventName] = names;
+    let [eventName] = names;
+    eventName = this.getSubscriptionNameFromConnection(eventName, connection);
 
     const subscriptionOperationKey = prefixRedisKey(
       `subscriptionOperation:${subscriptionId}`,
