@@ -121,6 +121,24 @@ Stores subscription operations to a subscription operations table as `subscripti
   - optional TTL for subscriptions and subscriptionOperations set in seconds
   - the value is stored as `ttl` field on the row (you are responsible for enabling TTL on given field)
 
+### `DynamoDBRangeSubscriptionManager: ISubscriptionManager`
+
+- This one allow you to subscribe to multiple events
+
+`ISubscriptionManager` implementation that used AWS DynamoDB as storage for subscriptions.
+
+Stores subscriptions to a subscriptions table as `event: string` and `subscriptionId: string`.Make sure to set up the key schema as `event: HASH` and `subscriptionId: RANGE`.
+
+Stores subscription operations to a subscription operations table as `subscriptionId: string`. Make sure to set up the key schema as `subscriptionId: HASH` and `event: RANGE`.
+
+#### Options
+
+- **subscriptionsTableName** (`string`, `optional`, `default: 'Subscriptions'`)
+- **subscriptionOperationsTableName** - (`string`, `optional`, `default: 'SubscriptionOperations'`)
+- **ttl** (`number`, `optional`, `default: 2 hours`)
+  - optional TTL for subscriptions and subscriptionOperations set in seconds
+  - the value is stored as `ttl` field on the row (you are responsible for enabling TTL on given field)
+
 ### `IConnection`
 
 - **id: string** - connection id
