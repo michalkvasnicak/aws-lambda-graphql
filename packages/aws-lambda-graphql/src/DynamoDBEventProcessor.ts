@@ -67,8 +67,8 @@ export class DynamoDBEventProcessor<TServer extends Server = Server>
         //  - if the are no more subscriptions, process next event
         // make sure that you won't throw any errors otherwise dynamo will call
         // handler with same events again
-        for await (const subscribers of subscriptionManager.subscribersByEventName(
-          event.event,
+        for await (const subscribers of subscriptionManager.subscribersByEvent(
+          event,
         )) {
           const promises = subscribers
             .map(async (subscriber) => {

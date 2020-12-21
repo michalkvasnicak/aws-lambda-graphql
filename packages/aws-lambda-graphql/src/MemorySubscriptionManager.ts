@@ -2,6 +2,7 @@ import { createAsyncIterator } from 'iterall';
 import {
   IConnection,
   ISubscriber,
+  ISubscriptionEvent,
   ISubscriptionManager,
   OperationRequest,
 } from './types';
@@ -11,18 +12,53 @@ if (Symbol.asyncIterator === undefined) {
   (Symbol as any).asyncIterator = Symbol.for('asyncIterator');
 }
 
+interface MemorySubscriptionManagerOptions {
+  /**
+   * Optional function that can get subscription name from event
+   *
+   * Default is (event: ISubscriptionEvent) => event.event
+   *
+   * Useful for multi-tenancy
+   */
+  getSubscriptionNameFromEvent?: (event: ISubscriptionEvent) => string;
+  /**
+   * Optional function that can get subscription name from subscription connection
+   *
+   * Default is (name: string, connection: IConnection) => name
+   *
+   * Useful for multi-tenancy
+   */
+  getSubscriptionNameFromConnection?: (
+    name: string,
+    connection: IConnection,
+  ) => string;
+}
+
 export class MemorySubscriptionManager implements ISubscriptionManager {
   private subscriptions: Map<string, ISubscriber[]>;
 
-  constructor() {
+  private getSubscriptionNameFromEvent: (event: ISubscriptionEvent) => string;
+
+  private getSubscriptionNameFromConnection: (
+    name: string,
+    connection: IConnection,
+  ) => string;
+
+  constructor({
+    getSubscriptionNameFromEvent = (event) => event.event,
+    getSubscriptionNameFromConnection = (name) => name,
+  }: MemorySubscriptionManagerOptions = {}) {
     this.subscriptions = new Map();
+    this.getSubscriptionNameFromEvent = getSubscriptionNameFromEvent;
+    this.getSubscriptionNameFromConnection = getSubscriptionNameFromConnection;
   }
 
-  subscribersByEventName = (
-    name: string,
+  subscribersByEvent = (
+    event: ISubscriptionEvent,
   ): AsyncIterable<ISubscriber[]> & AsyncIterator<ISubscriber[]> => {
     return {
       [Symbol.asyncIterator]: () => {
+        const name = this.getSubscriptionNameFromEvent(event);
         const subscriptions = this.subscriptions.get(name) || [];
 
         const subscribers = subscriptions.filter(
@@ -39,7 +75,8 @@ export class MemorySubscriptionManager implements ISubscriptionManager {
     connection: IConnection,
     operation: OperationRequest & { operationId: string },
   ): Promise<void> => {
-    names.forEach((name) => {
+    names.forEach((n) => {
+      const name = this.getSubscriptionNameFromConnection(n, connection);
       const subscriptions = this.subscriptions.get(name);
       const subscription = {
         connection,
