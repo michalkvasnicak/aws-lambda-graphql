@@ -5,6 +5,7 @@ import {
   ISubscriber,
   ISubscriptionManager,
   IdentifiedOperationRequest,
+  ISubscriptionEvent,
 } from './types';
 import { computeTTL } from './helpers';
 
@@ -48,6 +49,14 @@ interface DynamoDBSubscriptionManagerOptions {
    * Set to false to turn off TTL
    */
   ttl?: number | false;
+  /**
+   * Optional function that can get subscription name from event
+   *
+   * Default is (event: ISubscriptionEvent) => event.event
+   *
+   * Useful for multi-tenancy
+   */
+  getSubscriptionNameFromEvent?: (event: ISubscriptionEvent) => string;
 }
 
 /**
@@ -77,11 +86,14 @@ export class DynamoDBRangeSubscriptionManager implements ISubscriptionManager {
 
   private ttl: number | false;
 
+  private getSubscriptionNameFromEvent: (event: ISubscriptionEvent) => string;
+
   constructor({
     dynamoDbClient,
     subscriptionsTableName = 'Subscriptions',
     subscriptionOperationsTableName = 'SubscriptionOperations',
     ttl = DEFAULT_TTL,
+    getSubscriptionNameFromEvent = (event) => event.event,
   }: DynamoDBSubscriptionManagerOptions = {}) {
     assert.ok(
       typeof subscriptionOperationsTableName === 'string',
@@ -104,13 +116,16 @@ export class DynamoDBRangeSubscriptionManager implements ISubscriptionManager {
     this.subscriptionOperationsTableName = subscriptionOperationsTableName;
     this.db = dynamoDbClient || new DynamoDB.DocumentClient();
     this.ttl = ttl;
+    this.getSubscriptionNameFromEvent = getSubscriptionNameFromEvent;
   }
 
-  subscribersByEventName = (
-    name: string,
+  subscribersByEvent = (
+    event: ISubscriptionEvent,
   ): AsyncIterable<ISubscriber[]> & AsyncIterator<ISubscriber[]> => {
     let ExclusiveStartKey: DynamoDB.DocumentClient.Key | undefined;
     let done = false;
+
+    const name = this.getSubscriptionNameFromEvent(event);
 
     return {
       next: async () => {
