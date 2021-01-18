@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 1.0.0-alpha.20 (2021-01-18)
+
+- feat: support multiple subscriptions per event and connection ([512bde8](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/512bde8))
+
 ## 1.0.0-alpha.19 (2020-11-13)
 
 - Allow changing subscription name (#123) ([211ace8](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/211ace8)), closes [#123](https://github.com/michalkvasnicak/aws-lambda-graphql/issues/123)
