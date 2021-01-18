@@ -437,7 +437,7 @@ describe('Server', () => {
           {},
         );
         (connectionManager.unregisterConnection as jest.Mock).mockResolvedValueOnce(
-          undefined,
+          [],
         );
 
         await expect(
@@ -477,6 +477,9 @@ describe('Server', () => {
 
         (connectionManager.hydrateConnection as jest.Mock).mockResolvedValueOnce(
           {},
+        );
+        (connectionManager.unregisterConnection as jest.Mock).mockResolvedValueOnce(
+          [],
         );
 
         await expect(

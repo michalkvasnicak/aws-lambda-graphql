@@ -144,12 +144,13 @@ export class RedisConnectionManager implements IConnectionManager {
     }
   };
 
-  unregisterConnection = async ({ id }: IConnection): Promise<void> => {
+  unregisterConnection = async ({ id }: IConnection) => {
     const key = prefixRedisKey(`connection:${id}`);
-    await Promise.all([
+    const [, subscribers] = await Promise.all([
       this.redisClient.del(key),
       this.subscriptions.unsubscribeAllByConnectionId(id),
     ]);
+    return subscribers;
   };
 
   closeConnection = async ({ id, data }: IConnection): Promise<void> => {

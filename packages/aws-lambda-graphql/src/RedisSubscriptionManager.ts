@@ -219,6 +219,7 @@ export class RedisSubscriptionManager implements ISubscriptionManager {
   };
 
   unsubscribeAllByConnectionId = async (connectionId: string) => {
+    const subscribers: ISubscriber[] = [];
     let done = false;
     const limit = 50;
     let offset = 0;
@@ -244,6 +245,7 @@ export class RedisSubscriptionManager implements ISubscriptionManager {
               const result = await this.redisClient.get(key);
               if (result) {
                 subscriber = JSON.parse(result);
+                subscribers.push(subscriber as ISubscriber);
                 const subscriptionId = this.generateSubscriptionId(
                   connectionId,
                   subscriber.operationId,
@@ -270,6 +272,7 @@ export class RedisSubscriptionManager implements ISubscriptionManager {
       }
     } while (!done);
     await this.redisClient.del(subscriptionListKey);
+    return subscribers;
   };
 
   generateSubscriptionId = (

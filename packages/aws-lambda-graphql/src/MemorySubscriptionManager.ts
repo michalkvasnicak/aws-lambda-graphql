@@ -136,6 +136,6 @@ export class MemorySubscriptionManager implements ISubscriptionManager {
       );
     }
 
-    return Promise.resolve();
+    return Promise.resolve([]);
   };
 }

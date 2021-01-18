@@ -77,8 +77,9 @@ export class WebSocketConnectionManager implements IConnectionManager {
     });
   };
 
-  unregisterConnection = async (connection: IConnection): Promise<void> => {
+  unregisterConnection = async (connection: IConnection) => {
     this.connections.delete(connection.id);
+    return [];
   };
 
   closeConnection = async (connection: WSConnection): Promise<void> => {

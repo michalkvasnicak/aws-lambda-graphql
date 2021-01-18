@@ -309,7 +309,10 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
     }
   };
 
-  unsubscribeAllByConnectionId = async (connectionId: string) => {
+  unsubscribeAllByConnectionId = async (
+    connectionId: string,
+  ): Promise<ISubscriber[]> => {
+    const subscribers: ISubscriber[] = [];
     let cursor: DynamoDB.DocumentClient.Key | undefined;
 
     do {
@@ -324,9 +327,10 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
           Limit: 12, // Maximum of 25 request items sent to DynamoDB a time
         })
         .promise();
+      subscribers.push(...(Items as ISubscriber[]));
 
       if (Items == null || (LastEvaluatedKey == null && Items.length === 0)) {
-        return;
+        return subscribers;
       }
 
       if (Items.length > 0) {
@@ -353,6 +357,8 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
 
       cursor = LastEvaluatedKey;
     } while (cursor);
+
+    return subscribers;
   };
 
   generateSubscriptionId = (
