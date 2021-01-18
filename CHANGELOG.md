@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## `aws-lambda-graphql`
 
-### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.19...HEAD)
+### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.20...HEAD)
+
+### [v1.0.0-alpha.20](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.19..aws-lambda-graphql@1.0.0-alpha.20) - 2021-01-18
+
+- Added new `DynamoDBRangeSubscriptionManager` that allow to create multiple subscriptions for same event and connection by [@clmntrss](https://github.com/clmntrss), see [#127](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/127)
 
 ### [v1.0.0-alpha.19](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.18..aws-lambda-graphql@1.0.0-alpha.19) - 2020-11-13
 
