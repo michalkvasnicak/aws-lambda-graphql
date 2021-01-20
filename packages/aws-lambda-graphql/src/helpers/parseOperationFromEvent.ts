@@ -5,6 +5,7 @@ import {
   isGQLConnectionInit,
   isGQLOperation,
   isGQLStopOperation,
+  isGQLConnectionTerminate,
 } from '../protocol';
 import { ExtendableError } from '../errors';
 import { APIGatewayWebSocketEvent, IdentifiedOperationRequest } from '../types';
@@ -41,6 +42,10 @@ export function parseOperationFromEvent(
     return operation;
   }
 
+  if (isGQLConnectionTerminate(operation)) {
+    return operation;
+  }
+
   if (isGQLOperation(operation)) {
     if (operation.id == null) {
       throw new MalformedOperationError('Property id is missing');
@@ -59,6 +64,6 @@ export function parseOperationFromEvent(
   }
 
   throw new InvalidOperationError(
-    'Only GQL_CONNECTION_INIT, GQL_START or GQL_STOP operations are accepted',
+    'Only GQL_CONNECTION_INIT, GQL_CONNECTION_TERMINATE, GQL_START or GQL_STOP operations are accepted',
   );
 }

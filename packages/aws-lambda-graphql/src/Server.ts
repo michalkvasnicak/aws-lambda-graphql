@@ -29,6 +29,7 @@ import {
   SERVER_EVENT_TYPES,
   isGQLConnectionInit,
   isGQLStopOperation,
+  isGQLConnectionTerminate,
 } from './protocol';
 import { formatMessage } from './formatMessage';
 import { execute, ExecutionParams } from './execute';
@@ -523,6 +524,14 @@ export class Server<
 
               return {
                 body: response,
+                statusCode: 200,
+              };
+            }
+
+            if (isGQLConnectionTerminate(operation)) {
+              // unregisterConnection will be handled by $disconnect, return straightaway
+              return {
+                body: '',
                 statusCode: 200,
               };
             }
