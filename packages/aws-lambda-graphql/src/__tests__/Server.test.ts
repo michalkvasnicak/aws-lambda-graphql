@@ -994,6 +994,40 @@ describe('Server', () => {
         expect(onOperation).toHaveBeenCalledTimes(1);
       });
 
+      it('returns http 200 with GQL_CONNECTION_TERMINATE', async () => {
+        const id = ulid();
+
+        (connectionManager.hydrateConnection as jest.Mock).mockResolvedValueOnce(
+          {
+            data: { isInitialized: true },
+          },
+        );
+
+        await expect(
+          handler(
+            {
+              body: formatMessage({
+                id,
+                payload: null,
+                type: CLIENT_EVENT_TYPES.GQL_CONNECTION_TERMINATE,
+              }),
+              requestContext: {
+                connectionId: '1',
+                domainName: 'domain',
+                routeKey: '$default',
+                stage: 'stage',
+              } as any,
+            } as any,
+            {} as any,
+          ),
+        ).resolves.toEqual(
+          expect.objectContaining({
+            body: '',
+            statusCode: 200,
+          }),
+        );
+      });
+
       it('returns http 200 with GQL_COMPLETE on unsubscibe and calls onOperationComplete', async () => {
         const onOperationComplete = jest.fn();
         const handlerWithOnOperation = new Server({

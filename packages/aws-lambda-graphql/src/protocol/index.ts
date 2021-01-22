@@ -4,6 +4,7 @@ export enum CLIENT_EVENT_TYPES {
   GQL_START = 'start',
   GQL_STOP = 'stop',
   GQL_CONNECTION_INIT = 'connection_init',
+  GQL_CONNECTION_TERMINATE = 'connection_terminate',
 }
 
 export enum SERVER_EVENT_TYPES {
@@ -78,6 +79,28 @@ export function isGQLConnectionInit(event: any): event is GQLConnectionInit {
     event &&
     typeof event === 'object' &&
     event.type === CLIENT_EVENT_TYPES.GQL_CONNECTION_INIT
+  );
+}
+
+/**
+ * Client -> Server
+ */
+export interface GQLConnectionTerminate {
+  // id is not sent
+  // see https://github.com/apollographql/subscriptions-transport-ws/blob/master/src/client.ts#L170
+  payload?: {
+    [key: string]: any;
+  };
+  type: CLIENT_EVENT_TYPES.GQL_CONNECTION_TERMINATE;
+}
+
+export function isGQLConnectionTerminate(
+  event: any,
+): event is GQLConnectionTerminate {
+  return (
+    event &&
+    typeof event === 'object' &&
+    event.type === CLIENT_EVENT_TYPES.GQL_CONNECTION_TERMINATE
   );
 }
 
