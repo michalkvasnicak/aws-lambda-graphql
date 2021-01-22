@@ -142,6 +142,16 @@
         "doc",
         "test"
       ]
+    },
+    {
+      "login": "kunhuangau",
+      "name": "Kun Huang",
+      "avatar_url": "https://avatars.githubusercontent.com/u/17120009?v=4",
+      "profile": "https://github.com/kunhuangau",
+      "contributions": [
+        "code",
+        "test"
+      ]
     }
   ],
   "commitConvention": "none"

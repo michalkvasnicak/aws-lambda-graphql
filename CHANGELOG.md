@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## `aws-lambda-graphql`
 
-### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.20...HEAD)
+### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.21...HEAD)
+
+### [v1.0.0-alpha.21](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.20..aws-lambda-graphql@1.0.0-alpha.21) - 2021-01-22
+
+- Fixed missing support for `connection_terminate` operation by [@kunhuangau](https://github.com/kunhuangau), see [#132](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/132)
 
 ### [v1.0.0-alpha.20](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.19..aws-lambda-graphql@1.0.0-alpha.20) - 2021-01-18
 
