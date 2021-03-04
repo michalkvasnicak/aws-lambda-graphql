@@ -88,7 +88,7 @@ import {
 */
 const subscriptionManager = new DynamoDBSubscriptionManager();
 const connectionManager = new DynamoDBConnectionManager({
-  subscriptionManager,
+  subscription: subscriptionManager,
 });
 ```
 
