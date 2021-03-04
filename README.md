@@ -226,7 +226,7 @@ const typeDefs = /* GraphQL */ `
     }
 `;
 
-const resolvers: {
+const resolvers = {
   Mutation: {
     broadcastMessage: async (
       root,
