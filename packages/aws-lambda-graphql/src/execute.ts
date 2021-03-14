@@ -128,7 +128,7 @@ export async function execute({
       : context;
 
   // detect operation type
-  const operationAST = getOperationAST(document, operation.operationName || '');
+  const operationAST = getOperationAST(document, operation.operationName);
 
   const baseParams: ExecutionParams = {
     context: {

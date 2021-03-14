@@ -29,7 +29,7 @@
     "README.md",
     "LICENSE"
   ],
-  "description": "Apollo server for AWS Lambda with WebSocket subscriptions support over API Gateway v1 + v2)",
+  "description": "Apollo server for AWS Lambda with WebSocket subscriptions support over API Gateway v1 + v2",
   "dependencies": {
     "@types/aws-lambda": "^8.10.36",
     "@types/ioredis": "^4.16.6",
@@ -40,7 +40,7 @@
   },
   "peerDependencies": {
     "aws-sdk": "^2.387.0",
-    "graphql": "^14.0.2",
+    "graphql": "^14.x || ^15.x",
     "graphql-subscriptions": "^1.0.0",
     "ioredis": "^4.17.3"
   },
