@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 1.0.0-alpha.22 (2021-03-14)
+
+- feat: update graphql (#138) ([05e8a71](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/05e8a71)), closes [#138](https://github.com/michalkvasnicak/aws-lambda-graphql/issues/138)
+
 ## 1.0.0-alpha.21 (2021-01-22)
 
 - fix: handle connection_terminate in \$default route to avoid throw error (#132) ([23e715b](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/23e715b)), closes [#132](https://github.com/michalkvasnicak/aws-lambda-graphql/issues/132)
