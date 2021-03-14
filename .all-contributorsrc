@@ -152,6 +152,15 @@
         "code",
         "test"
       ]
+    },
+    {
+      "login": "hally9k",
+      "name": "hally9k",
+      "avatar_url": "https://avatars.githubusercontent.com/u/3803536?v=4",
+      "profile": "https://github.com/hally9k",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "commitConvention": "none"

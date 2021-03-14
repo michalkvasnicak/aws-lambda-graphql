@@ -4,7 +4,7 @@
 <!-- markdownlint-disable -->
 [![CircleCI](https://img.shields.io/circleci/project/github/michalkvasnicak/aws-lambda-graphql/master.svg?style=flat-square)](https://circleci.com/gh/michalkvasnicak/aws-lambda-graphql)
 [![aws-lambda-graphql package version](https://img.shields.io/npm/v/aws-lambda-graphql?color=green&label=aws-lambda-graphql&style=flat-square)](https://www.npmjs.com/package/aws-lambda-graphql)<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-13-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-14-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
@@ -211,27 +211,24 @@ const pubSub = new PubSub({
 
 const typeDefs = /* GraphQL */ `
   type Mutation {
-      broadcastMessage(message: String!): String!
-    }
+    broadcastMessage(message: String!): String!
+  }
 
-    type Query {
-      """
-      Dummy query so out server won't fail during instantiation
-      """
-      dummy: String!
-    }
+  type Query {
+    """
+    Dummy query so out server won't fail during instantiation
+    """
+    dummy: String!
+  }
 
-    type Subscription {
-      messageBroadcast: String!
-    }
+  type Subscription {
+    messageBroadcast: String!
+  }
 `;
 
 const resolvers = {
   Mutation: {
-    broadcastMessage: async (
-      root,
-      { message },
-    ) => {
+    broadcastMessage: async (root, { message }) => {
       await pubSub.publish('NEW_MESSAGE', { message });
 
       return message;
@@ -245,7 +242,7 @@ const resolvers = {
       // rootValue is same as the event published above ({ message: string })
       // but our subscription should return just a string, so we're going to use resolve
       // to extract message from an event
-      resolve: rootValue => rootValue.message,
+      resolve: (rootValue) => rootValue.message,
       subscribe: pubSub.subscribe('NEW_MESSAGE'),
     },
   },
@@ -445,9 +442,9 @@ npm install @apollo/client @apollo/link-ws subscriptions-transport-ws
 ```
 
 ```js
-import { WebSocketLink } from '@apollo/link-ws'
-import { SubscriptionClient } from 'subscriptions-transport-ws'
-import { ApolloProvider, ApolloClient, InMemoryCache } from '@apollo/client'
+import { WebSocketLink } from '@apollo/link-ws';
+import { SubscriptionClient } from 'subscriptions-transport-ws';
+import { ApolloProvider, ApolloClient, InMemoryCache } from '@apollo/client';
 
 const wsClient = new SubscriptionClient(
   'ws://localhost:8000', // please provide the uri of the api gateway v2 endpoint
@@ -546,6 +543,7 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/jcane86"><img src="https://avatars0.githubusercontent.com/u/729994?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Pepe Cane</b></sub></a><br /><a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=jcane86" title="Code">💻</a> <a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=jcane86" title="Documentation">📖</a> <a href="#ideas-jcane86" title="Ideas, Planning, & Feedback">🤔</a></td>
     <td align="center"><a href="https://github.com/n1te1337"><img src="https://avatars3.githubusercontent.com/u/1946858?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Pav</b></sub></a><br /><a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=n1te1337" title="Code">💻</a> <a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=n1te1337" title="Documentation">📖</a> <a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=n1te1337" title="Tests">⚠️</a></td>
     <td align="center"><a href="https://github.com/kunhuangau"><img src="https://avatars.githubusercontent.com/u/17120009?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Kun Huang</b></sub></a><br /><a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=kunhuangau" title="Code">💻</a> <a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=kunhuangau" title="Tests">⚠️</a></td>
+    <td align="center"><a href="https://github.com/hally9k"><img src="https://avatars.githubusercontent.com/u/3803536?v=4?s=100" width="100px;" alt=""/><br /><sub><b>hally9k</b></sub></a><br /><a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=hally9k" title="Documentation">📖</a></td>
   </tr>
 </table>
 
