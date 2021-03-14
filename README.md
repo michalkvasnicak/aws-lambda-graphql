@@ -88,7 +88,7 @@ import {
 */
 const subscriptionManager = new DynamoDBSubscriptionManager();
 const connectionManager = new DynamoDBConnectionManager({
-  subscriptionManager,
+  subscription: subscriptionManager,
 });
 ```
 
@@ -226,7 +226,7 @@ const typeDefs = /* GraphQL */ `
     }
 `;
 
-const resolvers: {
+const resolvers = {
   Mutation: {
     broadcastMessage: async (
       root,
@@ -439,16 +439,15 @@ export const handleEvents = server.createEventHandler();
 First install dependencies
 
 ```console
-yarn add apollo-link-ws apollo-cache-inmemory apollo-client subscriptions-transport-ws
+yarn add @apollo/client @apollo/link-ws subscriptions-transport-ws
 # or
-npm install apollo-link-ws apollo-cache-inmemory apollo-client subscriptions-transport-ws
+npm install @apollo/client @apollo/link-ws subscriptions-transport-ws
 ```
 
 ```js
-import { WebSocketLink } from 'apollo-link-ws';
-import { InMemoryCache } from 'apollo-cache-inmemory';
-import { ApolloClient } from 'apollo-client';
-import { SubscriptionClient } from 'subscriptions-transport-ws';
+import { WebSocketLink } from '@apollo/link-ws'
+import { SubscriptionClient } from 'subscriptions-transport-ws'
+import { ApolloProvider, ApolloClient, InMemoryCache } from '@apollo/client'
 
 const wsClient = new SubscriptionClient(
   'ws://localhost:8000', // please provide the uri of the api gateway v2 endpoint
