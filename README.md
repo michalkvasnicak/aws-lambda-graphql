@@ -78,7 +78,7 @@ import {
 } from 'aws-lambda-graphql';
 
 /*
- By default subscriptions and connections use TTL of 2 hours. 
+ By default subscriptions and connections use TTL of 2 hours.
  This can be changed by `ttl` option in DynamoDBSubscriptionManager and DynamoDBConnectionManager.
 
  ttl accepts a number in seconds (default is 7200 seconds) or
@@ -88,7 +88,7 @@ import {
 */
 const subscriptionManager = new DynamoDBSubscriptionManager();
 const connectionManager = new DynamoDBConnectionManager({
-  subscription: subscriptionManager,
+  subscriptions: subscriptionManager,
 });
 ```
 
@@ -129,7 +129,7 @@ import {
 } from 'aws-lambda-graphql';
 
 /*
- By default event stores uses TTL of 2 hours on every event. 
+ By default event stores uses TTL of 2 hours on every event.
  This can be changed by `ttl` option in DynamoDBEventStore.
  ttl accepts a number in seconds (default is 7200 seconds) or
  false to turn it off.
@@ -271,7 +271,7 @@ const eventStore = new DynamoDBEventStore();
 const eventProcessor = new DynamoDBEventProcessor();
 const subscriptionManager = new DynamoDBSubscriptionManager();
 const connectionManager = new DynamoDBConnectionManager({
-  subscriptionManager,
+  subscriptions: subscriptionManager,
 });
 const pubSub = new PubSub({ eventStore });
 
@@ -292,7 +292,7 @@ const typeDefs = /* GraphQL */ `
     }
 `;
 
-const resolvers: {
+const resolvers = {
   Mutation: {
     broadcastMessage: async (
       root,
@@ -363,7 +363,7 @@ const eventStore = new DynamoDBEventStore();
 const eventProcessor = new DynamoDBEventProcessor();
 const subscriptionManager = new DynamoDBSubscriptionManager();
 const connectionManager = new DynamoDBConnectionManager({
-  subscriptionManager,
+  subscriptions: subscriptionManager,
 });
 const pubSub = new PubSub({ eventStore });
 
@@ -384,7 +384,7 @@ const typeDefs = /* GraphQL */ `
     }
 `;
 
-const resolvers: {
+const resolvers = {
   Mutation: {
     broadcastMessage: async (
       root,

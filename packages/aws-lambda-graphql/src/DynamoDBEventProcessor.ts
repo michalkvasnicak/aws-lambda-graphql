@@ -64,7 +64,7 @@ export class DynamoDBEventProcessor<TServer extends Server = Server>
         //  - execute operation from event againt schema
         //  - if iterator returns a result, send it to client
         //  - clean up subscriptions and follow with next page of subscriptions
-        //  - if the are no more subscriptions, process next event
+        //  - if they are no more subscriptions, process next event
         // make sure that you won't throw any errors otherwise dynamo will call
         // handler with same events again
         for await (const subscribers of subscriptionManager.subscribersByEvent(
