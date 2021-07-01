@@ -117,9 +117,8 @@ export class DynamoDBEventProcessor<TServer extends Server = Server>
               const iterator = getAsyncIterator(iterable);
               const result: IteratorResult<ExecutionResult> = await iterator.next();
 
-              if (this.debug) this.log('Send event ', result);
-
               if (result.value != null) {
+                if (this.debug) this.log('Send event ', result);
                 return connectionManager.sendToConnection(
                   subscriber.connection,
                   formatMessage({
