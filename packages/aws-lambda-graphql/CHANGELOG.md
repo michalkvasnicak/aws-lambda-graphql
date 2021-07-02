@@ -3,6 +3,11 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 1.0.0-alpha.23 (2021-07-02)
+
+- feat(modularity): allow inject log fn in handler (#149) ([57614bd](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/57614bd)), closes [#149](https://github.com/michalkvasnicak/aws-lambda-graphql/issues/149)
+- Just fixing some typos in README (#142) ([4a2e826](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/4a2e826)), closes [#142](https://github.com/michalkvasnicak/aws-lambda-graphql/issues/142)
+
 ## 1.0.0-alpha.22 (2021-03-14)
 
 - feat: update graphql (#138) ([05e8a71](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/05e8a71)), closes [#138](https://github.com/michalkvasnicak/aws-lambda-graphql/issues/138)
