@@ -4,7 +4,7 @@
 <!-- markdownlint-disable -->
 [![CircleCI](https://img.shields.io/circleci/project/github/michalkvasnicak/aws-lambda-graphql/master.svg?style=flat-square)](https://circleci.com/gh/michalkvasnicak/aws-lambda-graphql)
 [![aws-lambda-graphql package version](https://img.shields.io/npm/v/aws-lambda-graphql?color=green&label=aws-lambda-graphql&style=flat-square)](https://www.npmjs.com/package/aws-lambda-graphql)<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-14-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-16-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
@@ -277,27 +277,24 @@ const pubSub = new PubSub({ eventStore });
 
 const typeDefs = /* GraphQL */ `
   type Mutation {
-      broadcastMessage(message: String!): String!
-    }
+    broadcastMessage(message: String!): String!
+  }
 
-    type Query {
-      """
-      Dummy query so out server won't fail during instantiation
-      """
-      dummy: String!
-    }
+  type Query {
+    """
+    Dummy query so out server won't fail during instantiation
+    """
+    dummy: String!
+  }
 
-    type Subscription {
-      messageBroadcast: String!
-    }
+  type Subscription {
+    messageBroadcast: String!
+  }
 `;
 
 const resolvers = {
   Mutation: {
-    broadcastMessage: async (
-      root,
-      { message },
-    ) => {
+    broadcastMessage: async (root, { message }) => {
       await pubSub.publish('NEW_MESSAGE', { message });
 
       return message;
@@ -311,7 +308,7 @@ const resolvers = {
       // rootValue is same as the event published above ({ message: string })
       // but our subscription should return just a string, so we're going to use resolve
       // to extract message from an event
-      resolve: rootValue => rootValue.message,
+      resolve: (rootValue) => rootValue.message,
       subscribe: pubSub.subscribe('NEW_MESSAGE'),
     },
   },
@@ -369,28 +366,24 @@ const pubSub = new PubSub({ eventStore });
 
 const typeDefs = /* GraphQL */ `
   type Mutation {
-      broadcastMessage(message: String!): String!
-    }
+    broadcastMessage(message: String!): String!
+  }
 
-    type Query {
-      """
-      Dummy query so out server won't fail during instantiation
-      """
-      dummy: String!
-    }
+  type Query {
+    """
+    Dummy query so out server won't fail during instantiation
+    """
+    dummy: String!
+  }
 
-    type Subscription {
-      messageBroadcast: String!
-    }
+  type Subscription {
+    messageBroadcast: String!
+  }
 `;
 
 const resolvers = {
   Mutation: {
-    broadcastMessage: async (
-      root,
-      { message },
-      ctx,
-    ) => {
+    broadcastMessage: async (root, { message }, ctx) => {
       await ctx.pubSub.publish('NEW_MESSAGE', { message });
 
       return message;
@@ -401,7 +394,7 @@ const resolvers = {
   },
   Subscription: {
     messageBroadcast: {
-      resolve: rootValue => rootValue.message,
+      resolve: (rootValue) => rootValue.message,
       // subscribe works similarly as resolve in any other GraphQL type
       // pubSub.subscribe() returns a resolver so we need to pass it all the args as were received
       // so we can be sure that everything works correctly internally
@@ -544,6 +537,10 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
     <td align="center"><a href="https://github.com/n1te1337"><img src="https://avatars3.githubusercontent.com/u/1946858?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Pav</b></sub></a><br /><a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=n1te1337" title="Code">💻</a> <a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=n1te1337" title="Documentation">📖</a> <a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=n1te1337" title="Tests">⚠️</a></td>
     <td align="center"><a href="https://github.com/kunhuangau"><img src="https://avatars.githubusercontent.com/u/17120009?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Kun Huang</b></sub></a><br /><a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=kunhuangau" title="Code">💻</a> <a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=kunhuangau" title="Tests">⚠️</a></td>
     <td align="center"><a href="https://github.com/hally9k"><img src="https://avatars.githubusercontent.com/u/3803536?v=4?s=100" width="100px;" alt=""/><br /><sub><b>hally9k</b></sub></a><br /><a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=hally9k" title="Documentation">📖</a></td>
+  </tr>
+  <tr>
+    <td align="center"><a href="https://github.com/geymed"><img src="https://avatars.githubusercontent.com/u/2660715?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Gilad Foyer</b></sub></a><br /><a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=geymed" title="Code">💻</a> <a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=geymed" title="Tests">⚠️</a></td>
+    <td align="center"><a href="https://www.j0k3r.net/"><img src="https://avatars.githubusercontent.com/u/62333?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Jérémy Benoist</b></sub></a><br /><a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=j0k3r" title="Documentation">📖</a></td>
   </tr>
 </table>
 

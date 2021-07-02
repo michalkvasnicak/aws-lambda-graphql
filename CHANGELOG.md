@@ -7,7 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## `aws-lambda-graphql`
 
-### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.21...HEAD)
+### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.23...HEAD)
+
+### [v1.0.0-alpha.23](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.22..aws-lambda-graphql@1.0.0-alpha.23) - 2021-03-14
+
+- Allow custom log function in DynamoDBEventProcessor by [@geymed](https://github.com/geymed), see [#149](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/149)
+
+### [v1.0.0-alpha.22](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.21..aws-lambda-graphql@1.0.0-alpha.22) - 2021-03-14
+
+- GraphQL peer dependency update, see [#138](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/138)
 
 ### [v1.0.0-alpha.21](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.20..aws-lambda-graphql@1.0.0-alpha.21) - 2021-01-22
 

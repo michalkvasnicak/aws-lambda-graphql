@@ -161,6 +161,25 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "geymed",
+      "name": "Gilad Foyer",
+      "avatar_url": "https://avatars.githubusercontent.com/u/2660715?v=4",
+      "profile": "https://github.com/geymed",
+      "contributions": [
+        "code",
+        "test"
+      ]
+    },
+    {
+      "login": "j0k3r",
+      "name": "Jérémy Benoist",
+      "avatar_url": "https://avatars.githubusercontent.com/u/62333?v=4",
+      "profile": "https://www.j0k3r.net/",
+      "contributions": [
+        "doc"
+      ]
     }
   ],
   "commitConvention": "none"
