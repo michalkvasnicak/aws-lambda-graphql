@@ -19,6 +19,7 @@ const query = parse(/* GraphQL */ `
 
 describe('DynamoDBEventProcessor', () => {
   it('supports payload as JSON', async () => {
+    const mockLog = jest.fn();
     const connectionManager = {
       sendToConnection: jest.fn(),
     };
@@ -71,7 +72,10 @@ describe('DynamoDBEventProcessor', () => {
         pubSub: new PubSub({ eventStore: {} as any }),
       },
       connectionManager: connectionManager as any,
-      eventProcessor: new DynamoDBEventProcessor(),
+      eventProcessor: new DynamoDBEventProcessor({
+        log: mockLog,
+        debug: true,
+      }),
       schema: createSchema(),
       subscriptionManager: subscriptionManager as any,
     });
@@ -142,6 +146,14 @@ describe('DynamoDBEventProcessor', () => {
         type: SERVER_EVENT_TYPES.GQL_DATA,
       }),
     );
+    expect(mockLog).toHaveBeenCalledWith('Send event ', {
+      done: false,
+      value: {
+        data: {
+          textFeed: 'test 1',
+        },
+      },
+    });
   });
 
   it('supports payload as object', async () => {

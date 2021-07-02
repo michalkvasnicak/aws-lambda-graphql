@@ -14,9 +14,14 @@ import { isTTLExpired } from './helpers/isTTLExpired';
 interface DynamoDBEventProcessorOptions {
   onError?: (err: any) => void;
   /**
-   * Enable console.log
+   * Enable log
    */
   debug?: boolean;
+
+  /**
+   * Allow injecting a logging function
+   */
+  log?: (message: any, ...optionalParams: any[]) => void;
 }
 
 /**
@@ -30,8 +35,11 @@ export class DynamoDBEventProcessor<TServer extends Server = Server>
 
   private debug: boolean;
 
+  private log: (message: any, ...optionalParams: any[]) => void;
+
   constructor(options: DynamoDBEventProcessorOptions = {}) {
-    this.onError = options.onError || ((err: any) => console.log(err));
+    this.log = options.log || console.log;
+    this.onError = options.onError || ((err: any) => this.log(err));
     this.debug = options.debug || false;
   }
 
@@ -54,7 +62,7 @@ export class DynamoDBEventProcessor<TServer extends Server = Server>
 
         // skip if event is expired
         if (isTTLExpired(event.ttl)) {
-          if (this.debug) console.log('Discarded event : TTL expired', event);
+          if (this.debug) this.log('Discarded event : TTL expired', event);
           continue;
         }
 
@@ -109,9 +117,8 @@ export class DynamoDBEventProcessor<TServer extends Server = Server>
               const iterator = getAsyncIterator(iterable);
               const result: IteratorResult<ExecutionResult> = await iterator.next();
 
-              if (this.debug) console.log('Send event ', result);
-
               if (result.value != null) {
+                if (this.debug) this.log('Send event ', result);
                 return connectionManager.sendToConnection(
                   subscriber.connection,
                   formatMessage({
