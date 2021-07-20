@@ -32,7 +32,7 @@ With this library you can do:
     - [1.4 Create a PubSub instance](#14-create-a-pubsub-instance)
     - [1.5 Create WebSocket/HTTP event handlers and event processor handler](#15-create-websockethttp-event-handlers-and-event-processor-handler)
     - [1.6 Pass PubSub to resolvers using GraphQL context](#16-pass-pubsub-to-resolvers-using-graphql-context)
-  - [2 Connect to the server using Apollo Client and `subscriptions-transport-ts`](#2-connect-to-the-server-using-apollo-client-and-subscriptions-transport-ts)
+  - [2 Connect to the server using Apollo Client and `subscriptions-transport-ws`](#2-connect-to-the-server-using-apollo-client-and-subscriptions-transport-ws)
   - [3 Deploy and development](#3-deploy-and-development)
     - [3.1 Serverless support](#31-serverless-support)
     - [3.2 Serverless-offline support](#32-serverless-offline-support)
@@ -340,7 +340,7 @@ You need to map:
 
 In order to do that you can use [Serverless framework](https://serverless.com), see [`serverless.yml` file](./docs/serverless.yml).
 
-To connect to this server you can use [`Apollo Client + subscriptions-transport-ts`](https://github.com/apollographql/subscriptions-transport-ws) - see example in section 2
+To connect to this server you can use [`Apollo Client + subscriptions-transport-ws`](https://github.com/apollographql/subscriptions-transport-ws) - see example in section 2
 
 #### 1.6 Pass PubSub to resolvers using GraphQL context
 
@@ -424,7 +424,7 @@ export const handleHTTP = server.createHttpHandler();
 export const handleEvents = server.createEventHandler();
 ```
 
-### 2 Connect to the server using Apollo Client and `subscriptions-transport-ts`
+### 2 Connect to the server using Apollo Client and `subscriptions-transport-ws`
 
 First install dependencies
 
