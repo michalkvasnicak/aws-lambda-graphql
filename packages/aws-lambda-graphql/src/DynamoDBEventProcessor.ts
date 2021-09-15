@@ -1,7 +1,7 @@
 import { DynamoDBStreamHandler } from 'aws-lambda';
-import { DynamoDB } from 'aws-sdk';
-import { isAsyncIterable, getAsyncIterator } from 'iterall';
+import { getAsyncIterator, isAsyncIterable } from 'iterall';
 import { ExecutionResult } from 'graphql';
+import { unmarshall } from '@aws-sdk/util-dynamodb';
 import { ArrayPubSub } from './ArrayPubSub';
 import { IEventProcessor } from './types';
 import { formatMessage } from './formatMessage';
@@ -56,7 +56,7 @@ export class DynamoDBEventProcessor<TServer extends Server = Server>
         }
 
         // now construct event from dynamodb image
-        const event: IDynamoDBSubscriptionEvent = DynamoDB.Converter.unmarshall(
+        const event: IDynamoDBSubscriptionEvent = unmarshall(
           record.dynamodb!.NewImage as any,
         ) as any;
 

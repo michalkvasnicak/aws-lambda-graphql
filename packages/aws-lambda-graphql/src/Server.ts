@@ -273,12 +273,16 @@ export class Server<
     context: LambdaContext,
   ) => Promise<APIGatewayProxyResult> {
     return async (event, lambdaContext) => {
+      console.debug('=== event', event);
       try {
         // based on routeKey, do actions
         switch (event.requestContext.routeKey) {
           case '$connect': {
             const { onWebsocketConnect, connectionEndpoint } =
               this.subscriptionOptions || {};
+            console.debug('=== connectionEndpoint', connectionEndpoint);
+            console.debug('=== subscriptionOptions', this.subscriptionOptions);
+            console.debug('=== onWebsocketConnect', onWebsocketConnect);
 
             // register connection
             // if error is thrown during registration, connection is rejected
@@ -326,6 +330,8 @@ export class Server<
               ...connection.data,
               context: newConnectionContext,
             };
+
+            console.info('=== connectionData', connectionData);
 
             await this.connectionManager.setConnectionData(
               connectionData,

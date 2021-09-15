@@ -1,5 +1,14 @@
 import assert from 'assert';
-import { DynamoDB } from 'aws-sdk';
+import {
+  BatchWriteItemCommand,
+  DynamoDBClient,
+  GetItemCommand,
+  QueryCommand,
+  ScanCommand,
+  TransactWriteItemsCommand,
+} from '@aws-sdk/client-dynamodb';
+import { AttributeValue } from '@aws-sdk/client-dynamodb/models/models_0';
+import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 import {
   IConnection,
   ISubscriber,
@@ -32,7 +41,7 @@ interface DynamoDBSubscriptionManagerOptions {
   /**
    * Use this to override default document client (for example if you want to use local dynamodb)
    */
-  dynamoDbClient?: DynamoDB.DocumentClient;
+  dynamoDbClient?: DynamoDBClient;
   /**
    * Subscriptions table name (default is Subscriptions)
    */
@@ -89,7 +98,7 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
 
   private subscriptionOperationsTableName: string;
 
-  private db: DynamoDB.DocumentClient;
+  private db: DynamoDBClient;
 
   private ttl: number | false;
 
@@ -122,12 +131,12 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
     );
     assert.ok(
       dynamoDbClient == null || typeof dynamoDbClient === 'object',
-      'Please provide dynamoDbClient as an instance of DynamoDB.DocumentClient',
+      'Please provide dynamoDbClient as an instance of DynamoDBClient',
     );
 
     this.subscriptionsTableName = subscriptionsTableName;
     this.subscriptionOperationsTableName = subscriptionOperationsTableName;
-    this.db = dynamoDbClient || new DynamoDB.DocumentClient();
+    this.db = dynamoDbClient || new DynamoDBClient({});
     this.ttl = ttl;
     this.getSubscriptionNameFromEvent = getSubscriptionNameFromEvent;
     this.getSubscriptionNameFromConnection = getSubscriptionNameFromConnection;
@@ -136,7 +145,7 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
   subscribersByEvent = (
     event: ISubscriptionEvent,
   ): AsyncIterable<ISubscriber[]> & AsyncIterator<ISubscriber[]> => {
-    let ExclusiveStartKey: DynamoDB.DocumentClient.Key | undefined;
+    let ExclusiveStartKey: { [key: string]: AttributeValue } | undefined;
     let done = false;
 
     const name = this.getSubscriptionNameFromEvent(event);
@@ -148,22 +157,22 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
         }
 
         const time = Math.round(Date.now() / 1000);
-        const result = await this.db
-          .query({
+        const result = await this.db.send(
+          new QueryCommand({
             ExclusiveStartKey,
             TableName: this.subscriptionsTableName,
             Limit: 50,
             KeyConditionExpression: 'event = :event',
             FilterExpression: '#ttl > :time OR attribute_not_exists(#ttl)',
-            ExpressionAttributeValues: {
+            ExpressionAttributeValues: marshall({
               ':event': name,
               ':time': time,
-            },
+            }),
             ExpressionAttributeNames: {
               '#ttl': 'ttl',
             },
-          })
-          .promise();
+          }),
+        );
 
         ExclusiveStartKey = result.LastEvaluatedKey;
 
@@ -173,7 +182,9 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
 
         // we store connectionData on subscription too so we don't
         // need to load data from connections table
-        const value = result.Items as DynamoDBSubscriber[];
+        const value: DynamoDBSubscriber[] =
+          result.Items?.map((item) => unmarshall(item) as DynamoDBSubscriber) ??
+          [];
 
         return { value, done: done && value.length === 0 };
       },
@@ -205,37 +216,37 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
         ? {}
         : { ttl: computeTTL(this.ttl) };
 
-    await this.db
-      .batchWrite({
+    await this.db.send(
+      new BatchWriteItemCommand({
         RequestItems: {
           [this.subscriptionsTableName]: [
             {
               PutRequest: {
-                Item: {
+                Item: marshall({
                   connection,
                   operation,
                   event: name,
                   subscriptionId,
                   operationId: operation.operationId,
                   ...ttlField,
-                } as DynamoDBSubscriber,
+                }),
               },
             },
           ],
           [this.subscriptionOperationsTableName]: [
             {
               PutRequest: {
-                Item: {
+                Item: marshall({
                   subscriptionId,
                   event: name,
                   ...ttlField,
-                },
+                }),
               },
             },
           ],
         },
-      })
-      .promise();
+      }),
+    );
   };
 
   unsubscribe = async (subscriber: ISubscriber) => {
@@ -244,111 +255,111 @@ export class DynamoDBSubscriptionManager implements ISubscriptionManager {
       subscriber.operationId,
     );
 
-    await this.db
-      .transactWrite({
+    await this.db.send(
+      new TransactWriteItemsCommand({
         TransactItems: [
           {
             Delete: {
               TableName: this.subscriptionsTableName,
-              Key: {
+              Key: marshall({
                 event: subscriber.event,
                 subscriptionId,
-              },
+              }),
             },
           },
           {
             Delete: {
               TableName: this.subscriptionOperationsTableName,
-              Key: {
+              Key: marshall({
                 subscriptionId,
-              },
+              }),
             },
           },
         ],
-      })
-      .promise();
+      }),
+    );
   };
 
   unsubscribeOperation = async (connectionId: string, operationId: string) => {
-    const operation = await this.db
-      .get({
+    const operation = await this.db.send(
+      new GetItemCommand({
         TableName: this.subscriptionOperationsTableName,
-        Key: {
+        Key: marshall({
           subscriptionId: this.generateSubscriptionId(
             connectionId,
             operationId,
           ),
-        },
-      })
-      .promise();
+        }),
+      }),
+    );
 
     if (operation.Item) {
-      await this.db
-        .transactWrite({
+      await this.db.send(
+        new TransactWriteItemsCommand({
           TransactItems: [
             {
               Delete: {
                 TableName: this.subscriptionsTableName,
-                Key: {
+                Key: marshall({
                   event: operation.Item.event,
                   subscriptionId: operation.Item.subscriptionId,
-                },
+                }),
               },
             },
             {
               Delete: {
                 TableName: this.subscriptionOperationsTableName,
-                Key: {
+                Key: marshall({
                   subscriptionId: operation.Item.subscriptionId,
-                },
+                }),
               },
             },
           ],
-        })
-        .promise();
+        }),
+      );
     }
   };
 
   unsubscribeAllByConnectionId = async (connectionId: string) => {
-    let cursor: DynamoDB.DocumentClient.Key | undefined;
+    let cursor: { [key: string]: AttributeValue } | undefined;
 
     do {
-      const { Items, LastEvaluatedKey } = await this.db
-        .scan({
+      const { Items, LastEvaluatedKey } = await this.db.send(
+        new ScanCommand({
           TableName: this.subscriptionsTableName,
           ExclusiveStartKey: cursor,
           FilterExpression: 'begins_with(subscriptionId, :connection_id)',
-          ExpressionAttributeValues: {
+          ExpressionAttributeValues: marshall({
             ':connection_id': connectionId,
-          },
+          }),
           Limit: 12, // Maximum of 25 request items sent to DynamoDB a time
-        })
-        .promise();
+        }),
+      );
 
       if (Items == null || (LastEvaluatedKey == null && Items.length === 0)) {
         return;
       }
 
       if (Items.length > 0) {
-        await this.db
-          .batchWrite({
+        await this.db.send(
+          new BatchWriteItemCommand({
             RequestItems: {
               [this.subscriptionsTableName]: Items.map((item) => ({
                 DeleteRequest: {
-                  Key: {
+                  Key: marshall({
                     event: item.event,
                     subscriptionId: item.subscriptionId,
-                  },
+                  }),
                 },
               })),
               [this.subscriptionOperationsTableName]: Items.map((item) => ({
                 DeleteRequest: {
-                  Key: { subscriptionId: item.subscriptionId },
+                  Key: marshall({ subscriptionId: item.subscriptionId }),
                 },
               })),
             },
-          })
-          .promise();
+          }),
+        );
       }
 
       cursor = LastEvaluatedKey;

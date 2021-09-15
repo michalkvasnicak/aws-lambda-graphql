@@ -4,3 +4,4 @@ dist
 .netlify
 tsconfig.tsbuildinfo
 .vscode
+.idea

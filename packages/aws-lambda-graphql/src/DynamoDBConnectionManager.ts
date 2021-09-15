@@ -1,5 +1,17 @@
 import assert from 'assert';
-import { ApiGatewayManagementApi, DynamoDB } from 'aws-sdk';
+import {
+  DeleteItemCommand,
+  DynamoDBClient,
+  GetItemCommand,
+  PutItemCommand,
+  UpdateItemCommand,
+} from '@aws-sdk/client-dynamodb';
+import {
+  ApiGatewayManagementApiClient,
+  DeleteConnectionCommand,
+  PostToConnectionCommand,
+} from '@aws-sdk/client-apigatewaymanagementapi';
+import { marshall, unmarshall } from '@aws-sdk/util-dynamodb';
 import { ConnectionNotFoundError } from './errors';
 import {
   IConnection,
@@ -27,7 +39,10 @@ interface DynamoDBConnectionManagerOptions {
    *
    * If not provided it will be created with endpoint from connections
    */
-  apiGatewayManager?: ApiGatewayManagementApi;
+  apiGatewayManager?: ApiGatewayManagementApiClient;
+
+  region: string;
+
   /**
    * Connections table name (default is Connections)
    */
@@ -35,7 +50,7 @@ interface DynamoDBConnectionManagerOptions {
   /**
    * Use this to override default document client (for example if you want to use local dynamodb)
    */
-  dynamoDbClient?: DynamoDB.DocumentClient;
+  dynamoDbClient?: DynamoDBClient;
   subscriptions: ISubscriptionManager;
   /**
    * Optional TTL for connections (stored in ttl field) in seconds
@@ -58,11 +73,13 @@ interface DynamoDBConnectionManagerOptions {
  * Stores connections in DynamoDB table (default table name is Connections, you can override that)
  */
 export class DynamoDBConnectionManager implements IConnectionManager {
-  private apiGatewayManager: ApiGatewayManagementApi | undefined;
+  private apiGatewayManager: ApiGatewayManagementApiClient | undefined;
+
+  private region: string;
 
   private connectionsTable: string;
 
-  private db: DynamoDB.DocumentClient;
+  private db: DynamoDBClient;
 
   private subscriptions: ISubscriptionManager;
 
@@ -72,12 +89,14 @@ export class DynamoDBConnectionManager implements IConnectionManager {
 
   constructor({
     apiGatewayManager,
+    region,
     connectionsTable = 'Connections',
     dynamoDbClient,
     subscriptions,
     ttl = DEFAULT_TTL,
     debug = false,
   }: DynamoDBConnectionManagerOptions) {
+    assert.ok(typeof region === 'string', 'Please provide region as a string');
     assert.ok(
       typeof connectionsTable === 'string',
       'Please provide connectionsTable as a string',
@@ -101,8 +120,9 @@ export class DynamoDBConnectionManager implements IConnectionManager {
     assert.ok(typeof debug === 'boolean', 'Please provide debug as a boolean');
 
     this.apiGatewayManager = apiGatewayManager;
+    this.region = region;
     this.connectionsTable = connectionsTable;
-    this.db = dynamoDbClient || new DynamoDB.DocumentClient();
+    this.db = dynamoDbClient || new DynamoDBClient({});
     this.subscriptions = subscriptions;
     this.ttl = ttl;
     this.debug = debug;
@@ -117,18 +137,18 @@ export class DynamoDBConnectionManager implements IConnectionManager {
     let connection;
 
     for (let i = 0; i <= retryCount; i++) {
-      const result = await this.db
-        .get({
+      const result = await this.db.send(
+        new GetItemCommand({
           TableName: this.connectionsTable,
-          Key: {
+          Key: marshall({
             id: connectionId,
-          },
-        })
-        .promise();
+          }),
+        }),
+      );
 
       if (result.Item) {
         // Jump out of loop
-        connection = result.Item as DynamoDBConnection;
+        connection = unmarshall(result.Item) as DynamoDBConnection;
         break;
       }
 
@@ -147,21 +167,21 @@ export class DynamoDBConnectionManager implements IConnectionManager {
     data: IConnectionData,
     { id }: DynamoDBConnection,
   ): Promise<void> => {
-    await this.db
-      .update({
+    await this.db.send(
+      new UpdateItemCommand({
         TableName: this.connectionsTable,
-        Key: {
+        Key: marshall({
           id,
-        },
+        }),
         UpdateExpression: 'set #data = :data',
-        ExpressionAttributeValues: {
+        ExpressionAttributeValues: marshall({
           ':data': data,
-        },
+        }),
         ExpressionAttributeNames: {
           '#data': 'data',
         },
-      })
-      .promise();
+      }),
+    );
   };
 
   registerConnection = async ({
@@ -173,10 +193,10 @@ export class DynamoDBConnectionManager implements IConnectionManager {
       data: { endpoint, context: {}, isInitialized: false },
     };
     if (this.debug) console.log(`Connected ${connection.id}`, connection.data);
-    await this.db
-      .put({
+    await this.db.send(
+      new PutItemCommand({
         TableName: this.connectionsTable,
-        Item: {
+        Item: marshall({
           createdAt: new Date().toString(),
           id: connection.id,
           data: connection.data,
@@ -185,51 +205,58 @@ export class DynamoDBConnectionManager implements IConnectionManager {
             : {
                 ttl: computeTTL(this.ttl),
               }),
-        },
-      })
-      .promise();
+        }),
+      }),
+    );
 
     return connection;
   };
 
   sendToConnection = async (
     connection: DynamoDBConnection,
-    payload: string | Buffer,
+    payload: Buffer,
   ): Promise<void> => {
     try {
-      await this.createApiGatewayManager(connection.data.endpoint)
-        .postToConnection({ ConnectionId: connection.id, Data: payload })
-        .promise();
+      // TODO filter on region of connection (dont' try to send to wrong region in the 1st place)
+      console.debug('=== sendToConnection', connection.data.endpoint);
+      await this.createApiGatewayManager(connection.data.endpoint).send(
+        new PostToConnectionCommand({
+          ConnectionId: connection.id,
+          Data: payload,
+        }),
+      );
     } catch (e) {
       // this is stale connection
       // remove it from DB
       if (e && e.statusCode === 410) {
         await this.unregisterConnection(connection);
       } else {
-        throw e;
+        console.warn('=== error in sendToConnection', e);
       }
     }
   };
 
   unregisterConnection = async ({ id }: DynamoDBConnection): Promise<void> => {
     await Promise.all([
-      this.db
-        .delete({
-          Key: {
+      this.db.send(
+        new DeleteItemCommand({
+          Key: marshall({
             id,
-          },
+          }),
           TableName: this.connectionsTable,
-        })
-        .promise(),
+        }),
+      ),
       this.subscriptions.unsubscribeAllByConnectionId(id),
     ]);
   };
 
   closeConnection = async ({ id, data }: DynamoDBConnection): Promise<void> => {
     if (this.debug) console.log('Disconnected ', id);
-    await this.createApiGatewayManager(data.endpoint)
-      .deleteConnection({ ConnectionId: id })
-      .promise();
+    await this.createApiGatewayManager(data.endpoint).send(
+      new DeleteConnectionCommand({
+        ConnectionId: id,
+      }),
+    );
   };
 
   /**
@@ -237,12 +264,14 @@ export class DynamoDBConnectionManager implements IConnectionManager {
    *
    * If custom api gateway manager is provided, uses it instead
    */
-  private createApiGatewayManager(endpoint: string): ApiGatewayManagementApi {
+  private createApiGatewayManager(
+    endpoint: string,
+  ): ApiGatewayManagementApiClient {
     if (this.apiGatewayManager) {
       return this.apiGatewayManager;
     }
 
-    this.apiGatewayManager = new ApiGatewayManagementApi({ endpoint });
+    this.apiGatewayManager = new ApiGatewayManagementApiClient({ endpoint });
 
     return this.apiGatewayManager;
   }

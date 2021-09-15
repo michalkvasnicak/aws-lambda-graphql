@@ -1,7 +1,6 @@
 {
   "private": true,
   "dependencies": {
-    "aws-sdk": "^2.577.0",
     "graphql": "^15.5.0",
     "graphql-subscriptions": "^1.1.0"
   },

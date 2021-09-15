@@ -8,7 +8,7 @@
     "forceConsistentCasingInFileNames": true,
     "incremental": true,
     "jsx": "react",
-    "lib": ["es2018"],
+    "lib": ["es2018", "dom"],
     "module": "esnext",
     "moduleResolution": "node",
     "sourceMap": true,
