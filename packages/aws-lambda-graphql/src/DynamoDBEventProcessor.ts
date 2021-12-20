@@ -66,6 +66,8 @@ export class DynamoDBEventProcessor<TServer extends Server = Server>
           continue;
         }
 
+        this.log('Processing event', event);
+
         // iterate over subscribers that listen to this event
         // and for each connection:
         //  - create a schema (so we have subscribers registered in PubSub)
@@ -111,6 +113,7 @@ export class DynamoDBEventProcessor<TServer extends Server = Server>
 
               if (!isAsyncIterable(iterable)) {
                 // something went wrong, probably there is an error
+                this.log('Execution result: non iterable', event);
                 return Promise.resolve();
               }
 
