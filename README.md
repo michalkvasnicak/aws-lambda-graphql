@@ -4,7 +4,7 @@
 <!-- markdownlint-disable -->
 [![CircleCI](https://img.shields.io/circleci/project/github/michalkvasnicak/aws-lambda-graphql/master.svg?style=flat-square)](https://circleci.com/gh/michalkvasnicak/aws-lambda-graphql)
 [![aws-lambda-graphql package version](https://img.shields.io/npm/v/aws-lambda-graphql?color=green&label=aws-lambda-graphql&style=flat-square)](https://www.npmjs.com/package/aws-lambda-graphql)<!-- ALL-CONTRIBUTORS-BADGE:START - Do not remove or modify this section -->
-[![All Contributors](https://img.shields.io/badge/all_contributors-16-orange.svg?style=flat-square)](#contributors-)
+[![All Contributors](https://img.shields.io/badge/all_contributors-18-orange.svg?style=flat-square)](#contributors-)
 <!-- ALL-CONTRIBUTORS-BADGE:END -->
 <!-- markdownlint-enable -->
 <!-- prettier-ignore-end -->
@@ -541,6 +541,8 @@ Thanks goes to these wonderful people ([emoji key](https://allcontributors.org/d
   <tr>
     <td align="center"><a href="https://github.com/geymed"><img src="https://avatars.githubusercontent.com/u/2660715?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Gilad Foyer</b></sub></a><br /><a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=geymed" title="Code">💻</a> <a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=geymed" title="Tests">⚠️</a></td>
     <td align="center"><a href="https://www.j0k3r.net/"><img src="https://avatars.githubusercontent.com/u/62333?v=4?s=100" width="100px;" alt=""/><br /><sub><b>Jérémy Benoist</b></sub></a><br /><a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=j0k3r" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://fossamagna.github.io/"><img src="https://avatars.githubusercontent.com/u/1638848?v=4?s=100" width="100px;" alt=""/><br /><sub><b>MURAKAMI Masahiko</b></sub></a><br /><a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=fossamagna" title="Documentation">📖</a></td>
+    <td align="center"><a href="https://github.com/dorsev"><img src="https://avatars.githubusercontent.com/u/11272438?v=4?s=100" width="100px;" alt=""/><br /><sub><b>dorsev</b></sub></a><br /><a href="https://github.com/michalkvasnicak/aws-lambda-graphql/commits?author=dorsev" title="Code">💻</a></td>
   </tr>
 </table>
 

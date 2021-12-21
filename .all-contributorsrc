@@ -180,6 +180,24 @@
       "contributions": [
         "doc"
       ]
+    },
+    {
+      "login": "fossamagna",
+      "name": "MURAKAMI Masahiko",
+      "avatar_url": "https://avatars.githubusercontent.com/u/1638848?v=4",
+      "profile": "https://fossamagna.github.io/",
+      "contributions": [
+        "doc"
+      ]
+    },
+    {
+      "login": "dorsev",
+      "name": "dorsev",
+      "avatar_url": "https://avatars.githubusercontent.com/u/11272438?v=4",
+      "profile": "https://github.com/dorsev",
+      "contributions": [
+        "code"
+      ]
     }
   ],
   "commitConvention": "none"
