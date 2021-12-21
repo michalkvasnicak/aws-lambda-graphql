@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## `aws-lambda-graphql`
 
-### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.23...HEAD)
+### [Unreleased](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.24...HEAD)
+
+### [v1.0.0-alpha.24](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.23..aws-lambda-graphql@1.0.0-alpha.24) - 2021-12-21
+
+- Added visibility to DynamoDBEventProcessor by [@dorsev](https://github.com/dorsev), see [#158](https://github.com/michalkvasnicak/aws-lambda-graphql/pull/158)
 
 ### [v1.0.0-alpha.23](https://github.com/michalkvasnicak/aws-lambda-graphql/compare/aws-lambda-graphql@1.0.0-alpha.22..aws-lambda-graphql@1.0.0-alpha.23) - 2021-03-14
 
