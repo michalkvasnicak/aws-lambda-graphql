@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 1.0.0-alpha.24 (2021-12-21)
+
+**Note:** Version bump only for package serverless-chat-example-server
+
 ## 1.0.0-alpha.23 (2021-07-02)
 
 **Note:** Version bump only for package serverless-chat-example-server

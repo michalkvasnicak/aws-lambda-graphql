@@ -3,6 +3,10 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## 1.0.0-alpha.24 (2021-12-21)
+
+- chore: add visibility into the dynamodb event processor (#158) ([0e723bb](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/0e723bb)), closes [#158](https://github.com/michalkvasnicak/aws-lambda-graphql/issues/158)
+
 ## 1.0.0-alpha.23 (2021-07-02)
 
 - feat(modularity): allow inject log fn in handler (#149) ([57614bd](https://github.com/michalkvasnicak/aws-lambda-graphql/commit/57614bd)), closes [#149](https://github.com/michalkvasnicak/aws-lambda-graphql/issues/149)
