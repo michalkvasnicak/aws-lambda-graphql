@@ -53,7 +53,7 @@ All options from Apollo Lambda Server and
   - **`onOperation(message: OperationRequest, params: ExecutionParams, connection: IConnection): Promise<ExecutionParams>|ExecutionParams`** (`optional`)
   - **`onOperationComplete(connection: IConnection, operationId: string): void`** (`optional`)
   - **`onDisconnect(connection: IConnection): void`** (`optional`)
-  - **waitForInitialization** (`optional`) - if connection is not initialised on GraphQL operation, wait for connection to be initialised or throw prohibited connection error. If `onConnect` is specified then we wait for initialisation otherwise we don't wait. (this is usefull if you're performing authentication in `onConnect`).
+  - **waitForInitialization** (`optional`) - if connection is not initialized on GraphQL operation, wait for connection to be initialized or throw prohibited connection error. If `onConnect` is specified then we wait for initialization otherwise we don't wait. (this is usefull if you're performing authentication in `onConnect`).
     - **retryCount** (`number`, `optional`, `default 10`) - how many times should we try to check the connection state?
     - **timeout** (`number`, `optional`, `default 50ms`) - how long should we wait (in milliseconds) until we try to check the connection state again?
   - **connectionEndpoint** (`string`, `optional`) - if specified, the connection endpoint will be registered with this value as opposed to extracted from the event payload (as `${domainName}/${stage}`)
@@ -151,7 +151,7 @@ Stores subscription operations to a subscription operations table as `subscripti
 ### `IConnectionData`
 
 - **context** (`object`) - connection context data provided from `GQL_CONNECTION_INIT` or `onConnect`. This data is passed to graphql resolvers' context. All values should be JSON seriablizable.
-- **isInitialized** (`boolean`) - is connection initialised? Basically if you use `onConnect` then this value is `false` until the `onConnect` successfully resolves with non `false` value.
+- **isInitialized** (`boolean`) - is connection initialized? Basically if you use `onConnect` then this value is `false` until the `onConnect` successfully resolves with non `false` value.
 
 ### Context creator function
 
