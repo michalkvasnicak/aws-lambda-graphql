@@ -1,4 +1,4 @@
-import { IConnection } from './connections';
+import { IConnection } from './connection';
 import { IdentifiedOperationRequest, OperationRequest } from './operations';
 
 export interface ISubscriptionEvent {
@@ -51,5 +51,5 @@ export interface ISubscriptionManager {
    *
    * @param connectionId
    */
-  unsubscribeAllByConnectionId(connectionId: string): Promise<any>;
+  unsubscribeAllByConnectionId(connectionId: string): Promise<ISubscriber[]>;
 }

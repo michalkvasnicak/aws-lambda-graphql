@@ -7,6 +7,7 @@ import {
   IConnectionManager,
   ISubscriptionManager,
   IConnectionData,
+  ISubscriber,
   HydrateConnectionOptions,
 } from './types';
 import { computeTTL } from './helpers';
@@ -211,8 +212,10 @@ export class DynamoDBConnectionManager implements IConnectionManager {
     }
   };
 
-  unregisterConnection = async ({ id }: DynamoDBConnection): Promise<void> => {
-    await Promise.all([
+  unregisterConnection = async ({
+    id,
+  }: DynamoDBConnection): Promise<ISubscriber[]> => {
+    const [, subscribers] = await Promise.all([
       this.db
         .delete({
           Key: {
@@ -223,6 +226,8 @@ export class DynamoDBConnectionManager implements IConnectionManager {
         .promise(),
       this.subscriptions.unsubscribeAllByConnectionId(id),
     ]);
+
+    return subscribers;
   };
 
   closeConnection = async ({ id, data }: DynamoDBConnection): Promise<void> => {

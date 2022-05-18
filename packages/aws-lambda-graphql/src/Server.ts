@@ -11,7 +11,7 @@ import {
   Context as LambdaContext,
   Handler as LambdaHandler,
 } from 'aws-lambda';
-import { isAsyncIterable } from 'iterall';
+import { isAsyncIterable, getAsyncIterator } from 'iterall';
 import { ExecutionResult } from 'graphql';
 import { PubSub } from 'graphql-subscriptions';
 import {
@@ -358,7 +358,43 @@ export class Server<
               onDisconnect(connection);
             }
 
-            await this.connectionManager.unregisterConnection(connection);
+            const subscribers = await this.connectionManager.unregisterConnection(
+              connection,
+            );
+
+            const promises = subscribers.map(async (subscriber) => {
+              const pubSub = new PubSub();
+
+              const options = await this.createGraphQLServerOptions(
+                event,
+                lambdaContext,
+                {
+                  connection,
+                  operation: subscriber.operation,
+                  pubSub,
+                },
+              );
+
+              const iterable = await execute({
+                ...options,
+                connection,
+                connectionManager: this.connectionManager,
+                event,
+                lambdaContext,
+                operation: subscriber.operation,
+                pubSub,
+                registerSubscriptions: false,
+                subscriptionManager: this.subscriptionManager,
+              });
+
+              if (!isAsyncIterable(iterable)) {
+                return;
+              }
+
+              const iterator = getAsyncIterator(iterable);
+              await iterator.return?.();
+            });
+            await Promise.all(promises);
 
             return {
               body: '',
