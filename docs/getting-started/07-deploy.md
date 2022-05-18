@@ -1,0 +1,166 @@
+---
+title: Deploy
+description: How to deploy our Graphl service using serverless framework.
+---
+
+# Deploy
+
+In order to test our service we need to deploy it to AWS. We'll use [Serverless framework](https://serverless.com) to do so (also you can find out about Serverless offline support in [Serverless Support](../advanced/serverless-support.md)).
+
+Our `serverless.yml` file should look like this:
+
+```yaml
+service: graphql-server-demo # NOTE: update this with your service name
+
+provider:
+  name: aws
+  runtime: nodejs10.x
+  region: eu-central-1 # NOTE: change with your preferred region
+
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - execute-api:ManageConnections
+      Resource: 'arn:aws:execute-api:*:*:*/development/POST/@connections/*'
+    - Effect: Allow
+      Action:
+        - dynamodb:DeleteItem
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+      Resource: !GetAtt ConnectionsDynamoDBTable.Arn
+    - Effect: Allow
+      Action:
+        - dynamodb:DescribeStream
+        - dynamodb:GetRecords
+        - dynamodb:GetShardIterator
+        - dynamodb:ListStreams
+      Resource: !GetAtt EventsDynamoDBTable.StreamArn
+    - Effect: Allow
+      Action:
+        - dynamodb:PutItem
+      Resource: !GetAtt EventsDynamoDBTable.Arn
+    - Effect: Allow
+      Action:
+        - dynamodb:BatchWriteItem
+        - dynamodb:DeleteItem
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+        - dynamodb:Query
+        - dynamodb:Scan
+      Resource: !GetAtt SubscriptionsDynamoDBTable.Arn
+    - Effect: Allow
+      Action:
+        - dynamodb:BatchWriteItem
+        - dynamodb:DeleteItem
+        - dynamodb:GetItem
+        - dynamodb:PutItem
+      Resource: !GetAtt SubscriptionOperationsDynamoDBTable.Arn
+
+functions:
+  wsHandler:
+    handler: index.handleWebSocket
+    events:
+      - websocket:
+          route: $connect
+      - websocket:
+          route: $disconnect
+      - websocket:
+          route: $default
+  eventProcessorHandler:
+    handler: index.handleEvents
+    events:
+      - stream:
+          enabled: true
+          type: dynamodb
+          arn:
+            Fn::GetAtt: [EventsDynamoDBTable, StreamArn]
+  # this one is optional (if you want to support HTTP)
+  httpHandler:
+    handler: index.handleHTTP
+    events:
+      - http:
+          path: /
+          method: any
+          cors: true
+
+resources:
+  Resources:
+    ConnectionsDynamoDBTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        # see DynamoDBConnectionManager
+        TableName: Connections
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        BillingMode: PAY_PER_REQUEST
+        KeySchema:
+          # connection id
+          - AttributeName: id
+            KeyType: HASH
+        # This one is optional (all connections have 2 hours of lifetime in ttl field but enabling TTL is up to you)
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
+
+    SubscriptionsDynamoDBTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        # see DynamoDBSubscriptionManager
+        TableName: Subscriptions
+        AttributeDefinitions:
+          - AttributeName: event
+            AttributeType: S
+          - AttributeName: subscriptionId
+            AttributeType: S
+        BillingMode: PAY_PER_REQUEST
+        KeySchema:
+          - AttributeName: event
+            KeyType: HASH
+          - AttributeName: subscriptionId
+            KeyType: RANGE
+        # This one is optional (all subscriptions have 2 hours of lifetime in ttl field but enabling TTL is up to you)
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
+
+    SubscriptionOperationsDynamoDBTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        # see DynamoDBSubscriptionManager
+        TableName: SubscriptionOperations
+        AttributeDefinitions:
+          - AttributeName: subscriptionId
+            AttributeType: S
+        BillingMode: PAY_PER_REQUEST
+        KeySchema:
+          - AttributeName: subscriptionId
+            KeyType: HASH
+        # This one is optional (all subscription operations have 2 hours of lifetime in ttl field but enabling TTL is up to you)
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
+
+    EventsDynamoDBTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        # see DynamoDBEventStore
+        TableName: Events
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+        # see ISubscriptionEvent
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+        StreamSpecification:
+          StreamViewType: NEW_IMAGE
+        # This one is optional (all events have 2 hours of lifetime in ttl field but enabling TTL is up to you)
+        TimeToLiveSpecification:
+          AttributeName: ttl
+          Enabled: true
+```
+
+Now we've deployed our first GraphQL service with real-time capabilities. Let's test it by creating a simple client app described in next section.
