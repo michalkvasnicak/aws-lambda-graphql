@@ -387,7 +387,15 @@ export class Server<
             } = this.subscriptionOptions || {};
 
             // parse operation from body
-            const operation = parseOperationFromEvent(event);
+            let operation;
+            try {
+              operation = parseOperationFromEvent(event);
+            }
+            catch (e) {
+              console.debug('=== ParseOperationFromEvent ',e)
+              break;
+            }
+
 
             // hydrate connection
             let connection = await this.connectionManager.hydrateConnection(
